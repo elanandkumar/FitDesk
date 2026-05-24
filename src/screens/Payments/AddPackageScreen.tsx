@@ -1,13 +1,25 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Modal as RNModal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { IconButton, List, Surface, Text, TextInput } from 'react-native-paper';
+import {
+  KeyboardAvoidingView,
+  Modal as RNModal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { Button, IconButton, List, Surface, Text, TextInput } from 'react-native-paper';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '../../theme';
+import { Brand } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { Trainee } from '../../types';
 import { getAllTrainees } from '../../database/repositories/traineeRepository';
 import { createTraineePackage } from '../../database/repositories/paymentRepository';
+import GradientButton from '../../components/common/GradientButton';
 
 type Nav = StackNavigationProp<RootStackParamList, 'AddPackage'>;
 type Route = RouteProp<RootStackParamList, 'AddPackage'>;
@@ -25,10 +37,20 @@ function formatMonth(ym: string): string {
   });
 }
 
+function FormSection({ label }: { label: string }) {
+  return (
+    <View style={styles.sectionHeader}>
+      <View style={styles.sectionAccent} />
+      <Text style={styles.sectionLabel}>{label}</Text>
+    </View>
+  );
+}
+
 export default function AddPackageScreen() {
   const { theme } = useAppTheme();
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
+  const insets = useSafeAreaInsets();
 
   const [trainees, setTrainees] = useState<Trainee[]>([]);
   const [traineePickerVisible, setTraineePickerVisible] = useState(false);
@@ -81,99 +103,85 @@ export default function AddPackageScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-    <ScrollView
-      contentContainerStyle={styles.content}
-      keyboardShouldPersistTaps="handled"
+    <KeyboardAvoidingView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      {/* Trainee picker */}
-      <Text variant="labelMedium" style={[styles.label, { color: theme.colors.onSurfaceVariant }]}>
-        Trainee *
-      </Text>
-      <TouchableOpacity
-        onPress={() => setTraineePickerVisible(true)}
-        style={[styles.pickerButton, { borderColor: theme.colors.outline }]}
-      >
-        {selectedTrainee ? (
-          <Text style={{ color: theme.colors.onSurface }}>{selectedTrainee.name}</Text>
-        ) : trainees.length === 0 ? (
-          <Text style={{ color: theme.colors.onSurfaceVariant }}>No trainees added yet</Text>
-        ) : (
-          <Text style={{ color: theme.colors.onSurfaceVariant }}>Select trainee...</Text>
-        )}
-      </TouchableOpacity>
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <FormSection label="Trainee" />
+        <View style={styles.card}>
+          <TouchableOpacity
+            onPress={() => setTraineePickerVisible(true)}
+            style={styles.pickerRow}
+          >
+            <MaterialCommunityIcons name="account" size={20} color={Brand.purple} />
+            <Text style={[styles.pickerText, !selectedTrainee && styles.pickerPlaceholder]}>
+              {selectedTrainee
+                ? selectedTrainee.name
+                : trainees.length === 0
+                  ? 'No trainees added yet'
+                  : 'Select trainee...'}
+            </Text>
+            <MaterialCommunityIcons name="chevron-down" size={20} color={Brand.textMuted} />
+          </TouchableOpacity>
+        </View>
 
-      {/* Month */}
-      <Text variant="labelMedium" style={[styles.label, { color: theme.colors.onSurfaceVariant }]}>
-        Month *
-      </Text>
-      <View style={styles.monthRow}>
-        <IconButton
-          icon="chevron-left"
-          size={24}
-          onPress={() => adjustMonth(-1)}
-          iconColor={theme.colors.onSurface}
-        />
-        <Text variant="bodyLarge" style={[styles.monthText, { color: theme.colors.onSurface }]}>
-          {formatMonth(month)}
-        </Text>
-        <IconButton
-          icon="chevron-right"
-          size={24}
-          onPress={() => adjustMonth(1)}
-          iconColor={theme.colors.onSurface}
-        />
-      </View>
+        <FormSection label="Month" />
+        <View style={[styles.card, styles.monthCard]}>
+          <IconButton icon="chevron-left" size={24} onPress={() => adjustMonth(-1)} iconColor={Brand.textPrimary} />
+          <Text style={styles.monthText}>{formatMonth(month)}</Text>
+          <IconButton icon="chevron-right" size={24} onPress={() => adjustMonth(1)} iconColor={Brand.textPrimary} />
+        </View>
 
-      <TextInput
-        label="Total Sessions *"
-        value={totalSessions}
-        onChangeText={(v) => setTotalSessions(v.replace(/[^0-9]/g, ''))}
-        keyboardType="numeric"
-        mode="outlined"
-        style={styles.input}
-      />
-      <TextInput
-        label="Amount (₹) *"
-        value={amount}
-        onChangeText={(v) => setAmount(v.replace(/[^0-9.]/g, ''))}
-        keyboardType="decimal-pad"
-        mode="outlined"
-        style={styles.input}
-      />
-      <TextInput
-        label="Notes (optional)"
-        value={notes}
-        onChangeText={setNotes}
-        mode="outlined"
-        style={styles.input}
-        multiline
-        numberOfLines={3}
-      />
+        <FormSection label="Package Details" />
+        <View style={styles.card}>
+          <TextInput
+            label="Total Sessions *"
+            value={totalSessions}
+            onChangeText={(v) => setTotalSessions(v.replace(/[^0-9]/g, ''))}
+            keyboardType="numeric"
+            mode="outlined"
+          />
+          <View style={styles.fieldGap} />
+          <TextInput
+            label="Amount (₹) *"
+            value={amount}
+            onChangeText={(v) => setAmount(v.replace(/[^0-9.]/g, ''))}
+            keyboardType="decimal-pad"
+            mode="outlined"
+          />
+          <View style={styles.fieldGap} />
+          <TextInput
+            label="Notes (optional)"
+            value={notes}
+            onChangeText={setNotes}
+            mode="outlined"
+            multiline
+            numberOfLines={3}
+          />
+        </View>
 
-      <View style={styles.actions}>
-        <TouchableOpacity
-          style={[styles.actionBtn, styles.cancelBtn, { borderColor: theme.colors.outline }]}
+        <View style={{ height: 100 }} />
+      </ScrollView>
+
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
+        <Button
+          mode="outlined"
           onPress={() => navigation.goBack()}
+          style={styles.cancelBtn}
+          textColor={Brand.textSecondary}
         >
-          <Text style={{ color: theme.colors.onSurface }}>Cancel</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.actionBtn,
-            styles.saveBtn,
-            { backgroundColor: isValid && !saving ? theme.colors.primary : theme.colors.surfaceDisabled },
-          ]}
+          Cancel
+        </Button>
+        <GradientButton
+          label={saving ? 'Saving...' : 'Save'}
           onPress={handleSave}
-          disabled={!isValid || saving}
-        >
-          <Text style={{ color: isValid && !saving ? theme.colors.onPrimary : theme.colors.onSurfaceDisabled }}>
-            {saving ? 'Saving...' : 'Save'}
-          </Text>
-        </TouchableOpacity>
+          loading={saving}
+          disabled={!isValid}
+          style={styles.saveBtn}
+        />
       </View>
 
-      {/* Trainee picker sheet */}
       <RNModal
         visible={traineePickerVisible}
         transparent
@@ -185,15 +193,13 @@ export default function AddPackageScreen() {
           onPress={() => setTraineePickerVisible(false)}
           activeOpacity={1}
         >
-          <Surface style={[styles.sheet, { backgroundColor: theme.colors.surface }]}>
-            <Text variant="titleMedium" style={[styles.sheetTitle, { color: theme.colors.onSurface }]}>
-              Select Trainee
-            </Text>
+          <Surface style={[styles.sheet, { backgroundColor: Brand.surfaceElevated }]}>
+            <Text style={styles.sheetTitle}>Select Trainee</Text>
             {trainees.map((t) => (
               <List.Item
                 key={t.id}
                 title={t.name}
-                titleStyle={{ color: theme.colors.onSurface }}
+                titleStyle={{ color: Brand.textPrimary }}
                 onPress={() => {
                   setTraineeId(t.id);
                   setTraineePickerVisible(false);
@@ -203,50 +209,84 @@ export default function AddPackageScreen() {
           </Surface>
         </TouchableOpacity>
       </RNModal>
-    </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: 16, gap: 4 },
-  label: { marginBottom: 6, marginTop: 8 },
-  input: { marginBottom: 4 },
-  pickerButton: {
-    borderWidth: 1,
-    borderRadius: 4,
-    padding: 14,
-    minHeight: 52,
-    justifyContent: 'center',
-    marginBottom: 4,
-  },
-  monthRow: {
+  content: { padding: 16 },
+  sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    gap: 8,
+    marginBottom: 10,
+    marginTop: 20,
   },
-  monthText: { flex: 1, textAlign: 'center' },
-  actions: { flexDirection: 'row', gap: 12, marginTop: 16 },
-  actionBtn: {
-    flex: 1,
-    height: 48,
-    borderRadius: 4,
+  sectionAccent: { width: 3, height: 14, borderRadius: 2, backgroundColor: Brand.orange },
+  sectionLabel: {
+    color: Brand.textSecondary,
+    fontSize: 12,
+    fontWeight: '600',
+    fontFamily: 'Montserrat_600SemiBold',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  card: {
+    backgroundColor: Brand.surfaceDark,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Brand.borderSubtle,
+    padding: 14,
+  },
+  monthCard: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+    padding: 4,
   },
-  cancelBtn: { borderWidth: 1 },
-  saveBtn: {},
+  monthText: { color: Brand.textPrimary, fontSize: 16, fontWeight: '600', flex: 1, textAlign: 'center' },
+  pickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    minHeight: 44,
+  },
+  pickerText: { flex: 1, color: Brand.textPrimary, fontSize: 15 },
+  pickerPlaceholder: { color: Brand.textMuted },
+  fieldGap: { height: 10 },
+  footer: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    backgroundColor: Brand.backgroundDark,
+    borderTopWidth: 1,
+    borderTopColor: Brand.borderSubtle,
+  },
+  cancelBtn: {
+    flex: 0,
+    justifyContent: 'center',
+    width: 100,
+    borderColor: Brand.borderSubtle,
+  },
+  saveBtn: { flex: 1 },
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'flex-end',
   },
   sheet: {
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     paddingBottom: 32,
     maxHeight: '60%',
   },
-  sheetTitle: { padding: 16, paddingBottom: 8 },
+  sheetTitle: {
+    color: Brand.textPrimary,
+    fontSize: 16,
+    fontWeight: '600',
+    padding: 16,
+    paddingBottom: 8,
+  },
 });

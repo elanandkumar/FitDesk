@@ -7,45 +7,63 @@
 | Dark/Light toggle | **REMOVE** | Brand has no light palette. Dark-only. |
 | Accent color picker | **REMOVE** | Brand colors are semantic, not preference. |
 | Theme system | Simplify to single static dark theme | No toggle = no runtime state needed |
-| Icon library | Keep MaterialCommunityIcons for nav, add Phosphor for new UI elements | Avoid 15-file churn |
+| Icon library | Keep MaterialCommunityIcons for nav, add Phosphor for tab bar | Avoid churn |
+| Moti | **NOT used** — Reanimated 4 used directly | Moti version compat risk with Reanimated 4.x |
+
+---
+
+## Gradient Usage Policy
+
+Gradients are **selective**, not universal. Overuse makes them lose impact.
+
+| Element | Treatment |
+|---|---|
+| Primary form CTA | `GradientButton` (Gradients.purpleOrange) ✅ |
+| FABs | Solid `Brand.orange` — distinct from buttons ✅ |
+| Dashboard HeroCard | Gradient background (Gradients.hero) ✅ |
+| Session Detail hero strip | Class type color or thin gradient strip |
+| List cards | No gradient — solid `Brand.surfaceDark` ✅ |
+| Status badges | Solid color at 20% opacity ✅ |
+| Secondary actions | Solid `Brand.purple` or outline only |
+| Income/earnings numbers | `Brand.orange` text color, no gradient |
 
 ---
 
 ## Brand Tokens (source of truth)
 
 ```ts
-// src/theme/brandColors.ts  ← new file
+// src/theme/brandColors.ts
 
 export const Brand = {
-  // Backgrounds
-  backgroundDark:  '#1B102F',   // screen bg
-  surfaceDark:     '#241640',   // card/surface
-  surfaceElevated: '#2E1D50',   // modals, elevated cards
-  borderSubtle:    '#33254F',   // dividers, input borders
-
-  // Brand palette
-  purple:          '#5B2EFF',   // primary identity, active states, CTA
-  orange:          '#FF7A00',   // earnings, revenue, primary FAB/CTA action
-  pink:            '#FF3D81',   // completed status, alerts, energy accent
-
-  // Text
+  backgroundDark:  '#1B102F',
+  surfaceDark:     '#241640',
+  surfaceElevated: '#2E1D50',
+  borderSubtle:    '#33254F',
+  purple:          '#5B2EFF',
+  orange:          '#FF7A00',
+  pink:            '#FF3D81',
   textPrimary:     '#FFFFFF',
   textSecondary:   '#B8B3C7',
   textMuted:       '#6B6480',
-
-  // Status semantics
-  statusUpcoming:  '#5B2EFF',   // purple
-  statusCompleted: '#FF3D81',   // pink
-  statusCancelled: '#6B6480',   // muted
-  statusSkipped:   '#FF7A00',   // orange dim
+  statusUpcoming:  '#5B2EFF',
+  statusCompleted: '#FF3D81',
+  statusCancelled: '#6B6480',
+  statusSkipped:   '#FF7A00',
 } as const;
 
-// Gradient definitions
 export const Gradients = {
-  hero:         ['#3D1DB5', '#1B102F'] as const,   // diagonal, dashboard hero
-  purpleOrange: ['#5B2EFF', '#FF7A00'] as const,   // button CTAs
-  cardBorder:   ['#5B2EFF', '#FF3D81'] as const,   // card accent borders
-  orangePink:   ['#FF7A00', '#FF3D81'] as const,   // earnings highlight
+  hero:         ['#3D1DB5', '#1B102F'] as const,
+  purpleOrange: ['#5B2EFF', '#FF7A00'] as const,
+  cardBorder:   ['#5B2EFF', '#FF3D81'] as const,
+  orangePink:   ['#FF7A00', '#FF3D81'] as const,
+} as const;
+
+// Layout constants (floating tab bar clearance)
+export const Layout = {
+  TAB_BAR_HEIGHT: 80,
+  FAB_BOTTOM: 96,           // FAB bottom: above tab bar + 16px gap
+  LIST_PAD_WITH_FAB: 160,   // list paddingBottom: clears FAB + tab bar
+  LIST_PAD_NO_FAB: 96,      // list paddingBottom: clears tab bar only
 } as const;
 ```
 
@@ -53,126 +71,52 @@ export const Gradients = {
 
 ## Typography
 
-Three fonts from brand kit:
-
 | Font | Weight | Use |
 |---|---|---|
 | Poppins | Bold (700) | Screen titles, hero numbers, big stats |
 | Montserrat | SemiBold (600) | Section headers, card titles, tab labels |
 | Outfit | Regular (400) | Body text, labels, metadata, descriptions |
 
-Install:
-```bash
-npx expo install expo-font @expo-google-fonts/poppins @expo-google-fonts/montserrat @expo-google-fonts/outfit
-```
-
-Font loading in `App.tsx` via `useFonts()` hook. Hold splash until loaded.
-
----
-
-## Packages to Add
-
-```bash
-npx expo install expo-linear-gradient
-npx expo install expo-blur
-npx expo install react-native-reanimated
-npx expo install moti
-npx expo install phosphor-react-native
-npx expo install @expo-google-fonts/poppins @expo-google-fonts/montserrat @expo-google-fonts/outfit
-```
-
-`react-native-reanimated` requires plugin in `babel.config.js`:
-```js
-plugins: ['react-native-reanimated/plugin']
-```
-Clear Metro cache after: `npx expo start --clear`
-
----
-
-## Files to Delete
-
-```
-src/theme/lightTheme.ts         ← no light mode
-src/theme/darkTheme.ts          ← replaced by brandColors.ts + new theme
-src/theme/accentColors.ts       ← no accent picker
-```
-
----
-
-## Files to Rewrite
-
-### `src/theme/index.tsx`
-Before: `buildTheme(isDark, accentKey)` with toggle state, DB read for theme/accent  
-After: Single static `FitDeskTheme` object built from `Brand` tokens. `ThemeProvider` just wraps `PaperProvider` — no state, no DB reads.
-
-```ts
-// Shape stays same so useAppTheme() callers don't break
-// Remove: isDark, accentKey, toggleTheme, setAccentColor from context
-// Keep: theme object (Paper-compatible)
-// Add: expose Brand tokens directly for LinearGradient etc.
-```
-
-### `src/screens/Settings/SettingsScreen.tsx`
-Remove: Theme toggle row, Accent color picker section  
-Add: App version info card, branded grouped card layout
-
-### `PLAN.md`
-Update Phase 7/8 completed items — accent color picker removed from feature list.
-
 ---
 
 ## Component Design Specs
 
-### Session Cards (currently flat TouchableOpacity)
+### Session / List Cards
 ```
-Background:  Brand.surfaceDark (#241640)
+Background:  Brand.surfaceDark
 Border:      1px Brand.borderSubtle, borderRadius 20
-Left accent: 4px wide colored bar (class type color) — KEEP existing
-Shadow:      elevation 4, shadowColor Brand.purple 30% opacity
-Spacing:     paddingVertical 14, paddingHorizontal 12
-Separator:   none (cards float, gap 8 between them)
+Shadow:      elevation 4, shadowColor Brand.purple 15-30% opacity
+Spacing:     paddingVertical 14, paddingHorizontal 14
+Gap:         8px between cards, no dividers
+Press:       activeOpacity 0.75 (cards) or Reanimated scale 0.96 (CTAs)
 ```
 
 ### Dashboard Hero Card
 ```
-Component:  LinearGradient (Gradients.hero diagonal)
-Height:     ~160px
-Content:    
-  - "Good morning 👋" (Outfit Regular, textSecondary)
-  - Today's class count (Poppins Bold 48px, textPrimary)
-  - Subtitle: "classes today" (Montserrat SemiBold, textSecondary)
-  - Right side: Week total + earnings pill (orange accent)
-BorderRadius: 24
-Margin: 16
+Component:   LinearGradient (Gradients.hero diagonal)
+Height:      ~160px, borderRadius 24, margin 16
 ```
 
 ### FAB
 ```
-Primary FAB:   Brand.orange (#FF7A00) — action color
-Secondary FAB: Brand.purple gradient
-BorderRadius:  16 (pill-ish)
-Icon:          Phosphor icon
-Reanimated:    scale press animation (0.95 on press)
+Color:       Brand.orange (solid, not gradient)
+BorderRadius: 16
+Bottom:      Layout.FAB_BOTTOM (96px) on tab screens, 16px on stack-only screens
 ```
 
-### Bottom Tab Bar (floating dock)
+### Bottom Tab Bar
 ```
-Custom tabBar component (tabBar prop in Tab.Navigator)
-Background:    Brand.surfaceDark with expo-blur BlurView overlay
-BorderRadius:  24 (top only, or fully floating with margin bottom 16)
-Active:        Purple pill indicator behind icon + label
-                OR purple glow dot under icon
-Inactive:      Brand.textMuted icons
-Height:        72px
-Shadow:        elevation 8
+Custom FitDeskTabBar — BlurView bg, floating, borderRadius 24
+Active indicator: filled Phosphor icon + Brand.purple label (pill indicator removed)
+Height: 72px, paddingBottom: insets.bottom + 8
 ```
 
-### Status Badges
+### GradientButton
 ```
-upcoming:   bg Brand.purple 20% opacity, text Brand.purple
-completed:  bg Brand.pink 20% opacity,   text Brand.pink
-cancelled:  bg Brand.textMuted 15% opacity, text Brand.textMuted
-skipped:    bg Brand.orange 20% opacity,  text Brand.orange
+Gradient:    Gradients.purpleOrange (left→right)
+BorderRadius: 12, minHeight 52
+Press scale: withSpring(0.96) via Reanimated
+Use only for: primary form CTAs (sticky footer on add/edit screens)
 ```
 
 ### Input Fields
@@ -180,152 +124,185 @@ skipped:    bg Brand.orange 20% opacity,  text Brand.orange
 Background:  Brand.surfaceDark
 Border:      1px Brand.borderSubtle, focus → Brand.purple
 BorderRadius: 12
-LabelColor:  Brand.textSecondary
-Filled variant (Paper TextInput mode="flat" customized)
+Label:       Brand.textSecondary
 ```
 
-### Buttons
+### Status Badges
 ```
-Primary CTA:
-  LinearGradient (Gradients.purpleOrange)
-  BorderRadius: 12
-  Text: Poppins SemiBold white
-  Press: Reanimated scale 0.97
-
-Secondary:
-  Border 1px Brand.purple, transparent bg
-  Text: Brand.purple
+upcoming:   bg Brand.purple 20%, text Brand.purple
+completed:  bg Brand.pink 20%, text Brand.pink
+cancelled:  bg Brand.textMuted 15%, text Brand.textMuted
+skipped:    bg Brand.orange 20%, text Brand.orange
 ```
 
 ---
 
-## Screen-by-Screen Revamp
+## Screen-by-Screen Status
 
-### Dashboard
-- [ ] Remove plain `summaryCard` view
-- [ ] Add `HeroCard` component (LinearGradient, today count, week earnings)
-- [ ] Add "Quick actions" row (3 icon buttons: Add Session, View Calendar, Reports)
-- [ ] Sessions list: floating cards (gap 8, no dividers)
-- [ ] Section headers: Montserrat SemiBold, orange accent line left
-- [ ] Moti fade-in on list items (staggered 50ms per item)
+### Dashboard ✅
+- [x] HeroCard (LinearGradient, today count, week earnings)
+- [x] Session cards — floating, elevated
+- [x] Section headers — Montserrat + orange accent bar
+- [x] Orange FAB — positioned above tab bar
+- [x] Status badges
+- [x] Screen entry FadeIn + list item stagger
+- [x] Quick Actions row — Add Session, Calendar, Reports icon buttons below HeroCard
 
-### Calendar
-- [ ] Calendar header: brand purple selected date
-- [ ] Session dots: brand colors by class type
-- [ ] Day sessions bottom sheet: floating card style
+### Calendar ✅
+- [x] Brand purple selected date highlight
+- [x] Session dots: brand colors by class type (markingType multiDot)
+- [x] Day session list: floating card style
+- [x] FAB: Brand.orange, Layout.FAB_BOTTOM
+- [x] List paddingBottom: `Layout.LIST_PAD_NO_FAB`
 
-### Session Detail
-- [ ] Hero section with class type color gradient strip
-- [ ] Action buttons: gradient primary CTA
-- [ ] Stats row (student count etc.) in floating card
+### Session Detail (`ClassSessionDetailScreen`) ✅
+- [x] Hero section: class type color top strip
+- [x] Action buttons: GradientButton (Mark Complete), outline (Skip)
+- [x] Details + Notes in floating cards
+- [x] Brand tokens throughout
 
-### Manager / Trainee Lists
-- [ ] List items → elevated cards (not flat rows)
-- [ ] Avatar circle: initials on brand.surfaceElevated
-- [ ] Outstanding balance badge: orange pill
+### Manager / Trainee Lists ✅
+- [x] Elevated cards, avatar circles, outstanding balance badge
 
-### Payments Screens
-- [ ] Earnings numbers: Poppins Bold, orange color
-- [ ] Pending: subtle orange bg pill
-- [ ] Paid: pink pill with checkmark
+### Manager Detail (`ManagerDetailScreen`) ✅
+- [x] Brand tokens
+- [x] Payment history list → floating cards
+- [x] Earnings totals → Poppins Bold, Brand.orange
+- [x] Section headers → Montserrat SemiBold
+- [x] FAB → Brand.orange
 
-### Add/Edit Forms (ClassSeries, Manager, Trainee, Package)
-- [ ] Section grouping with Montserrat SemiBold headers
-- [ ] Inputs: filled, rounded, animated focus
-- [ ] Sticky bottom CTA (gradient button, safe area aware)
-- [ ] Cards per section (not flat list)
+### Trainee Detail (`TraineeDetailScreen`) ✅
+- [x] Brand tokens
+- [x] Package cards → floating card style, amounts Brand.orange
+- [x] Session history → floating cards
+- [x] FAB → Brand.orange
 
-### Settings
-- [ ] Remove: Theme toggle, Accent color picker
-- [ ] Grouped card layout (Notifications card, Data card, About card)
-- [ ] Section headers: Montserrat SemiBold + brand.textSecondary
-- [ ] Toggle switches: purple accent
-- [ ] App version/logo at bottom
+### Payments Screens ✅ (Phase D)
+- [x] Earnings numbers — orange, Poppins Bold
+- [x] Paid badge — pink pill
+- [x] Pending badge — orange pill
+- [x] FAB and list padding fixed for tab bar
 
-### Onboarding
-- [ ] Slide backgrounds: LinearGradient variants
-- [ ] Brand logo on slide 1
-- [ ] Animated dot indicators (Moti)
-- [ ] "Get Started" button: gradient CTA
+### Add/Edit Forms ✅ (Phase D)
+- [x] AddEditManager, AddEditTrainee, AddPackage — sectioned cards + GradientButton CTA
+
+### AddEditClassSeries ✅
+- [x] Brand tokens
+- [x] Sectioned card layout matching other add/edit screens
+- [x] GradientButton sticky footer CTA
+- [x] Recurrence day selector → Brand.purple active chips
+
+### AddSession (`Calendar/AddSessionScreen`) ✅
+- [x] Brand tokens
+- [x] Sectioned card layout
+- [x] GradientButton CTA
+
+### Settings ✅ (Phase D)
+- [x] Grouped card layout, no toggle/accent picker
+
+### ClassTypes Screen (`Settings/ClassTypesScreen`) ✅
+- [x] Brand tokens
+- [x] List items → floating card style
+- [x] Color dot preview → class type color
+
+### Data Screen (`Settings/DataScreen`) ✅
+- [x] Brand tokens
+- [x] Export → GradientButton, Import → outlined Brand.pink
+
+### Income Summary (`Reports/IncomeSummaryScreen`) ✅
+- [x] Brand tokens
+- [x] Month cards → floating card style
+- [x] Income amounts → Poppins Bold, Brand.orange
+- [x] Summary bar → Brand.surfaceElevated
+
+### Income Month Detail (`Reports/IncomeMonthDetailScreen`) ✅
+- [x] Brand tokens
+- [x] Item rows → floating cards
+- [x] Income amounts → Brand.orange (Poppins Bold)
+- [x] Total earnings summary card → Brand.orange highlight
+
+### Onboarding ✅ (Phase D)
+- [x] Gradient slides, brand logo, GradientButton CTA
 
 ---
 
 ## Animation Inventory
 
-| Element | Library | Animation |
+| Element | Library | Status |
 |---|---|---|
-| Screen entry | Moti | `from={{ opacity: 0, translateY: 10 }}` |
-| List items | Moti | Staggered fade-in (50ms delay per index) |
-| FAB | Reanimated | Scale 0.95 on press |
-| Button press | Reanimated | Scale 0.97 on press |
-| Tab active indicator | Reanimated | Slide/scale pill |
-| Status badge | Moti | Fade in on mount |
-| Card press | Reanimated | Scale 0.98 |
-
-Keep animations subtle. 200ms max duration. No bouncy spring on data-heavy lists.
+| Screen entry FadeIn | Reanimated 4 | ✅ Dashboard, Managers, Trainees, ClassSeriesList |
+| List item stagger FadeInDown | Reanimated 4 | ✅ same screens |
+| GradientButton press scale | Reanimated 4 | ✅ |
+| Tab item press scale | Reanimated 4 | ✅ FitDeskTabBar |
+| Tab active pill | **removed** — icon fill + color change only | ✅ |
+| Session Detail actions | GradientButton (Reanimated spring) | ✅ |
+| Calendar day tap | not planned | — |
 
 ---
 
 ## Implementation Phases
 
-### Phase A — Theme foundation (do first, everything depends on this)
-**Estimated: 1 session** ✅ COMPLETE
-- [x] Create `src/theme/brandColors.ts` with all tokens + gradients
-- [x] Rewrite `src/theme/index.tsx` — static theme, remove toggle/accent logic
-- [x] Delete `lightTheme.ts`, `darkTheme.ts`, `accentColors.ts`
-- [x] Update `app.json`: `userInterfaceStyle → "dark"`
-- [x] Load Poppins + Montserrat + Outfit in `App.tsx`
-- [x] Apply fonts to Paper theme
-- [x] Fix `roundness: 3` (= ~24px border radius in Paper)
-- [x] Remove theme/accent settings rows from `SettingsScreen`
-- [x] Remove `theme` and `accent_color` from settings DB reads
+### Phase A — Theme foundation ✅ COMPLETE
+- [x] `brandColors.ts` tokens + gradients + Layout constants
+- [x] Static dark theme, remove toggle/accent logic
+- [x] Delete light/dark/accent theme files
+- [x] Poppins + Montserrat + Outfit fonts in App.tsx
+- [x] Remove theme/accent DB reads
 
-> Checkpoint: App uses brand colors + Poppins everywhere. No features broken.
+### Phase B — Dashboard hero + card polish ✅ COMPLETE
+- [x] HeroCard component (LinearGradient)
+- [x] Floating session cards
+- [x] Section headers (Montserrat + orange accent)
+- [x] Orange FAB
+- [x] StatusBadge component
 
-### Phase B — Dashboard hero + card polish
-**Estimated: 1 session**
-- [ ] Build `HeroCard` component (LinearGradient, today stats)
-- [ ] Redesign session cards (floating, elevated, gap-separated)
-- [ ] Redesign section headers (Montserrat + orange accent)
-- [ ] Orange FAB for primary action
-- [ ] Status badges with brand semantics
+### Phase C — Floating tab bar ✅ COMPLETE
+- [x] FitDeskTabBar with BlurView + Reanimated
+- [x] Phosphor icons
+- [x] Active pill indicator (later removed — icon fill/color sufficient)
 
-> Checkpoint: Dashboard looks premium.
+### Phase D — Forms + lists polish ✅ COMPLETE
+- [x] Manager, Trainee, ClassSeries list screens
+- [x] ManagerPayments, TraineePackages screens
+- [x] AddEditManager, AddEditTrainee, AddPackage forms
+- [x] SettingsScreen grouped cards
+- [x] OnboardingScreen gradient slides
 
-### Phase C — Floating tab bar
-**Estimated: 1 session**
-- [ ] Write custom `FitDeskTabBar` component
-- [ ] BlurView background + floating elevation
-- [ ] Active pill indicator with Reanimated
-- [ ] Phosphor icons for tab items
+### Phase E — Animations ✅ COMPLETE
+- [x] Screen entry FadeIn (Dashboard, Managers, Trainees, ClassSeriesList)
+- [x] List item FadeInDown stagger (index * 60ms, cap at 8)
+- [x] GradientButton press scale withSpring(0.96)
+- [x] Tab pill removed — active state = fill icon + purple color
 
-> Checkpoint: Nav feels modern.
+### Phase F — Remaining screens ✅ COMPLETE
 
-### Phase D — Forms + lists polish
-**Estimated: 1-2 sessions**
-- [ ] Redesign all list screens (Manager, Trainee, ClassSeries, Payments)
-- [ ] Redesign form screens (AddEdit flows, sticky CTA buttons)
-- [ ] Redesign Settings screen (grouped cards, no toggle)
-- [ ] Redesign Onboarding (gradient slides, brand logo)
+**F1 — Dashboard Quick Actions + Calendar**
+- [x] Dashboard: Quick Actions row below HeroCard (Add Session, Calendar, Reports icon buttons)
+- [x] CalendarScreen: brand purple theme, multiDot session markers, floating day list cards
+- [x] CalendarScreen: list padding for floating tab bar
 
-> Checkpoint: Full app feels consistent.
+**F2 — Session + Detail screens**
+- [x] ClassSessionDetailScreen: hero strip, GradientButton actions, floating stats card
+- [x] ManagerDetailScreen: Brand tokens, payment history cards, orange earnings
+- [x] TraineeDetailScreen: Brand tokens, package cards, session history cards
 
-### Phase E — Animations
-**Estimated: 1 session**
-- [ ] Screen entry fade-ins (Moti)
-- [ ] List item stagger (Moti)
-- [ ] Press scale animations (Reanimated) on buttons/cards
-- [ ] Tab indicator animation
-
-> Checkpoint: App feels alive.
+**F3 — Secondary screens**
+- [x] AddEditClassSeriesScreen: Brand tokens, sectioned card layout, GradientButton CTA
+- [x] AddSessionScreen: Brand tokens, sectioned layout, GradientButton CTA
+- [x] ClassTypesScreen: Brand tokens, floating card list, color dot preview
+- [x] DataScreen: Brand tokens, GradientButton or outlined buttons
+- [x] IncomeSummaryScreen: Brand tokens, floating month cards, orange income numbers
+- [x] IncomeMonthDetailScreen: Brand tokens, floating session rows, earnings summary
 
 ---
 
-## Settings DB Migration
+## Known Issues Fixed
 
-Remove `theme` and `accent_color` from settings table reads.
-No migration needed — keys can stay in DB, just never read/written.
-Settings screen no longer shows those options.
+| Issue | Fix |
+|---|---|
+| FAB behind floating tab bar | `Layout.FAB_BOTTOM = 96` on all tab-visible screens |
+| List content cut off by tab bar | `Layout.LIST_PAD_WITH_FAB = 160` / `LIST_PAD_NO_FAB = 96` |
+| Horizontal pill line on active tab | Removed — active = filled icon + Brand.purple color |
 
 ---
 
@@ -335,33 +312,6 @@ Settings screen no longer shows those options.
 - All navigation structure and types
 - All business logic (session generation, payments, etc.)
 - SQLite schema
-- Date/currency utilities
+- Date/currency/formatting utilities
 - Export/import logic
 - Notification scheduling
-
----
-
-## Files Touched Summary
-
-```
-MODIFY:
-  src/theme/index.tsx              ← strip to static dark theme
-  src/screens/Settings/SettingsScreen.tsx  ← remove toggle/accent UI
-  src/navigation/TabNavigator.tsx  ← swap for custom FitDeskTabBar
-  src/screens/Dashboard/DashboardScreen.tsx
-  src/components/common/StatusBadge.tsx
-  App.tsx                          ← font loading
-
-CREATE:
-  src/theme/brandColors.ts
-  src/components/navigation/FitDeskTabBar.tsx
-  src/components/common/HeroCard.tsx
-  src/components/common/GradientButton.tsx
-
-DELETE:
-  src/theme/lightTheme.ts
-  src/theme/darkTheme.ts
-  src/theme/accentColors.ts
-```
-
-Total files: ~15 modified, 4 created, 3 deleted. No business logic touched.

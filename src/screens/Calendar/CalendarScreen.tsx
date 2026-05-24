@@ -1,11 +1,14 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Divider, FAB, IconButton, Text } from 'react-native-paper';
+import { Divider, IconButton, Text } from 'react-native-paper';
+import GradientFAB from '../../components/common/GradientFAB';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Calendar, CalendarProvider, WeekCalendar } from 'react-native-calendars';
 import type { DateData } from 'react-native-calendars';
-import { useAppTheme } from '../../theme';
+import { useAppTheme, Brand } from '../../theme';
+import { Layout } from '../../theme/brandColors';
 import { EnrichedSession } from '../../types';
 import { getEnrichedSessionsByDateRange } from '../../database/repositories/classSessionRepository';
 import { formatDisplayDate, formatDisplayTime, todayISO } from '../../utils/dateUtils';
@@ -49,19 +52,20 @@ const CALENDAR_THEME = (theme: ReturnType<typeof useAppTheme>['theme']) => ({
   backgroundColor: theme.colors.surface,
   calendarBackground: theme.colors.surface,
   textSectionTitleColor: theme.colors.onSurfaceVariant,
-  selectedDayBackgroundColor: theme.colors.primary,
-  selectedDayTextColor: theme.colors.onPrimary,
-  todayTextColor: theme.colors.primary,
+  selectedDayBackgroundColor: Brand.purple,
+  selectedDayTextColor: Brand.textPrimary,
+  todayTextColor: Brand.orange,
   dayTextColor: theme.colors.onSurface,
   textDisabledColor: theme.colors.onSurfaceVariant,
-  arrowColor: theme.colors.primary,
-  monthTextColor: theme.colors.onSurface,
-  dotColor: theme.colors.primary,
-  selectedDotColor: theme.colors.onPrimary,
+  arrowColor: Brand.purple,
+  monthTextColor: Brand.textPrimary,
+  dotColor: Brand.purple,
+  selectedDotColor: Brand.textPrimary,
 });
 
 export default function CalendarScreen() {
   const { theme } = useAppTheme();
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const today = todayISO();
   const [helpVisible, setHelpVisible] = useState(false);
@@ -87,7 +91,7 @@ export default function CalendarScreen() {
         <View style={{ flexDirection: 'row' }}>
           <IconButton
             icon={viewMode === 'week' ? 'calendar-month' : 'calendar-week'}
-            iconColor={theme.colors.primary}
+            iconColor={Brand.purple}
             onPress={() =>
               setViewMode((prev) => {
                 const next = prev === 'week' ? 'month' : 'week';
@@ -99,13 +103,13 @@ export default function CalendarScreen() {
           />
           <IconButton
             icon="help-circle-outline"
-            iconColor={theme.colors.primary}
+            iconColor={Brand.purple}
             onPress={() => setHelpVisible(true)}
           />
         </View>
       ),
     });
-  }, [navigation, theme.colors.primary, viewMode, selectedDate]);
+  }, [navigation, viewMode, selectedDate]);
 
   const loadRange = useCallback(async (start: string, end: string) => {
     const data = await getEnrichedSessionsByDateRange(start, end);
@@ -150,19 +154,19 @@ export default function CalendarScreen() {
     marked[selectedDate] = {
       ...(marked[selectedDate] ?? { dots: [] }),
       selected: true,
-      selectedColor: theme.colors.primary,
+      selectedColor: Brand.purple,
     };
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View style={styles.container}>
       <View style={{ flex: 0, backgroundColor: theme.colors.surface }}>
         {viewMode === 'week' ? (
           <CalendarProvider
             date={selectedDate}
             onDateChanged={handleDateChanged}
             style={{ flex: 0 }}
-            theme={{ todayButtonTextColor: theme.colors.primary }}
+            theme={{ todayButtonTextColor: Brand.orange }}
           >
             <WeekCalendar
               markingType="multi-dot"
@@ -183,13 +187,13 @@ export default function CalendarScreen() {
         )}
       </View>
 
-      <Divider />
+      <Divider style={{ backgroundColor: Brand.borderSubtle }} />
 
       <View style={styles.dayHeader}>
-        <Text variant="labelLarge" style={{ color: theme.colors.onSurfaceVariant }}>
+        <Text variant="labelLarge" style={{ color: Brand.textSecondary, fontFamily: 'Montserrat_600SemiBold' }}>
           {selectedDate === today ? 'Today' : formatDisplayDate(selectedDate)}
         </Text>
-        <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+        <Text variant="bodySmall" style={{ color: Brand.textMuted }}>
           {daySessions.length === 0 ? 'No sessions' : `${daySessions.length} session${daySessions.length > 1 ? 's' : ''}`}
         </Text>
       </View>
@@ -197,10 +201,10 @@ export default function CalendarScreen() {
       <FlatList
         data={daySessions}
         keyExtractor={(item) => String(item.id)}
-        contentContainerStyle={{ flexGrow: 1 }}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: Layout.LIST_PAD_NO_FAB, paddingTop: 8 }}
         ListEmptyComponent={
           <View style={styles.emptyDay}>
-            <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
+            <Text variant="bodyMedium" style={{ color: Brand.textMuted }}>
               No sessions on this date
             </Text>
           </View>
@@ -208,18 +212,19 @@ export default function CalendarScreen() {
         renderItem={({ item }) => (
           <TouchableOpacity
             onPress={() => navigation.navigate('ClassSessionDetail', { sessionId: item.id })}
-            style={[styles.sessionCard, { backgroundColor: theme.colors.surface }]}
+            style={styles.sessionCard}
+            activeOpacity={0.75}
           >
             <View style={[styles.colorBar, { backgroundColor: item.class_type_color }]} />
             <View style={styles.sessionInfo}>
-              <Text variant="titleSmall" style={{ color: theme.colors.onSurface }}>
+              <Text variant="titleSmall" style={{ color: Brand.textPrimary }}>
                 {item.series_title}
               </Text>
-              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+              <Text variant="bodySmall" style={{ color: Brand.textSecondary }}>
                 {formatDisplayTime(item.class_time)} · {item.class_type_name} · {item.duration_minutes} min
               </Text>
               {item.location && (
-                <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                <Text variant="bodySmall" style={{ color: Brand.textMuted }}>
                   {item.location}
                 </Text>
               )}
@@ -227,15 +232,12 @@ export default function CalendarScreen() {
             <StatusBadge status={item.status} />
           </TouchableOpacity>
         )}
-        ItemSeparatorComponent={() => (
-          <View style={{ height: 1, backgroundColor: theme.colors.surfaceVariant }} />
-        )}
+        ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
       />
 
-      <FAB
+      <GradientFAB
         icon="plus"
-        style={[styles.fab, { backgroundColor: theme.colors.primary }]}
-        color={theme.colors.onPrimary}
+        style={[styles.fab, { bottom: Layout.FAB_BOTTOM + insets.bottom }]}
         onPress={() => navigation.navigate('AddSession', { initialDate: selectedDate })}
       />
 
@@ -245,23 +247,36 @@ export default function CalendarScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: Brand.backgroundDark },
   dayHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 10,
   },
   emptyDay: { flex: 1, alignItems: 'center', paddingTop: 32 },
   sessionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    marginHorizontal: 16,
+    paddingVertical: 14,
     paddingRight: 12,
     gap: 12,
+    backgroundColor: Brand.surfaceDark,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Brand.borderSubtle,
+    elevation: 4,
+    shadowColor: Brand.purple,
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
   },
   colorBar: { width: 4, alignSelf: 'stretch', borderRadius: 2, marginLeft: 8 },
   sessionInfo: { flex: 1, gap: 2 },
-  fab: { position: 'absolute', bottom: 16, right: 16, borderRadius: 4 },
+  fab: {
+    position: 'absolute',
+    right: 16,
+  },
 });

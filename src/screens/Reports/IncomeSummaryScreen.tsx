@@ -1,10 +1,11 @@
 import React, { useCallback, useLayoutEffect, useState } from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
-import { Card, Divider, IconButton, Text } from 'react-native-paper';
+import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { IconButton, Text } from 'react-native-paper';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { useAppTheme } from '../../theme';
+import { Brand, Gradients } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { MonthlyIncomeSummary } from '../../types';
 import { getMonthlyIncomeSummary } from '../../database/repositories/paymentRepository';
@@ -26,7 +27,6 @@ function formatMonth(ym: string): string {
 }
 
 export default function IncomeSummaryScreen() {
-  const { theme } = useAppTheme();
   const navigation = useNavigation<Nav>();
   const [rows, setRows] = useState<MonthlyIncomeSummary[]>([]);
   const [helpVisible, setHelpVisible] = useState(false);
@@ -34,10 +34,10 @@ export default function IncomeSummaryScreen() {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <IconButton icon="help-circle-outline" iconColor={theme.colors.primary} onPress={() => setHelpVisible(true)} />
+        <IconButton icon="help-circle-outline" iconColor={Brand.purple} onPress={() => setHelpVisible(true)} />
       ),
     });
-  }, [navigation, theme.colors.primary]);
+  }, [navigation]);
 
   useFocusEffect(
     useCallback(() => {
@@ -49,87 +49,81 @@ export default function IncomeSummaryScreen() {
   const totalPending = rows.reduce((s, r) => s + r.total_pending, 0);
 
   const renderItem = ({ item }: { item: MonthlyIncomeSummary }) => (
-    <Card style={[styles.card, { backgroundColor: theme.colors.surface }]} mode="outlined" onPress={() => navigation.navigate('IncomeMonthDetail', { month: item.month })}>
-      <Card.Content>
-        <View style={styles.cardTopRow}>
-          <Text variant="titleMedium" style={{ color: theme.colors.onSurface, fontWeight: '700' }}>
-            {formatMonth(item.month)}
-          </Text>
-          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.onSurfaceVariant} />
+    <TouchableOpacity
+      style={styles.monthCard}
+      activeOpacity={0.75}
+      onPress={() => navigation.navigate('IncomeMonthDetail', { month: item.month })}
+    >
+      <View style={styles.monthCardTop}>
+        <Text style={styles.monthTitle}>{formatMonth(item.month)}</Text>
+        <MaterialCommunityIcons name="chevron-right" size={20} color={Brand.textSecondary} />
+      </View>
+
+      {(item.manager_paid > 0 || item.manager_pending > 0) && (
+        <View style={styles.monthRow}>
+          <Text variant="bodySmall" style={{ color: Brand.textSecondary }}>Manager classes</Text>
+          <View style={styles.monthAmounts}>
+            {item.manager_paid > 0 && (
+              <Text variant="bodySmall" style={{ color: Brand.orange }}>
+                {formatCurrency(item.manager_paid)} paid
+              </Text>
+            )}
+            {item.manager_pending > 0 && (
+              <Text variant="bodySmall" style={{ color: Brand.pink }}>
+                {formatCurrency(item.manager_pending)} due
+              </Text>
+            )}
+          </View>
         </View>
+      )}
 
-        {(item.manager_paid > 0 || item.manager_pending > 0) && (
-          <>
-            <Divider style={styles.divider} />
-            <View style={styles.row}>
-              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                Manager classes
+      {(item.trainee_paid > 0 || item.trainee_pending > 0) && (
+        <View style={styles.monthRow}>
+          <Text variant="bodySmall" style={{ color: Brand.textSecondary }}>Trainee packages</Text>
+          <View style={styles.monthAmounts}>
+            {item.trainee_paid > 0 && (
+              <Text variant="bodySmall" style={{ color: Brand.orange }}>
+                {formatCurrency(item.trainee_paid)} paid
               </Text>
-              <View style={styles.rowRight}>
-                {item.manager_paid > 0 && (
-                  <Text variant="bodySmall" style={{ color: theme.colors.onSurface }}>
-                    {formatCurrency(item.manager_paid)} paid
-                  </Text>
-                )}
-                {item.manager_pending > 0 && (
-                  <Text variant="bodySmall" style={{ color: theme.colors.error }}>
-                    {formatCurrency(item.manager_pending)} due
-                  </Text>
-                )}
-              </View>
-            </View>
-          </>
-        )}
-
-        {(item.trainee_paid > 0 || item.trainee_pending > 0) && (
-          <>
-            <Divider style={styles.divider} />
-            <View style={styles.row}>
-              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                Trainee packages
+            )}
+            {item.trainee_pending > 0 && (
+              <Text variant="bodySmall" style={{ color: Brand.pink }}>
+                {formatCurrency(item.trainee_pending)} due
               </Text>
-              <View style={styles.rowRight}>
-                {item.trainee_paid > 0 && (
-                  <Text variant="bodySmall" style={{ color: theme.colors.onSurface }}>
-                    {formatCurrency(item.trainee_paid)} paid
-                  </Text>
-                )}
-                {item.trainee_pending > 0 && (
-                  <Text variant="bodySmall" style={{ color: theme.colors.error }}>
-                    {formatCurrency(item.trainee_pending)} due
-                  </Text>
-                )}
-              </View>
-            </View>
-          </>
-        )}
-      </Card.Content>
-    </Card>
+            )}
+          </View>
+        </View>
+      )}
+    </TouchableOpacity>
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View style={styles.container}>
       {rows.length > 0 && (
-        <View style={[styles.summary, { backgroundColor: theme.colors.primaryContainer }]}>
-          <View style={styles.summaryItem}>
-            <Text variant="labelMedium" style={{ color: theme.colors.onPrimaryContainer }}>
-              Total Earned
-            </Text>
-            <Text variant="titleLarge" style={{ color: theme.colors.onPrimaryContainer, fontWeight: '700' }}>
-              {formatCurrency(totalEarned)}
-            </Text>
+        <LinearGradient
+          colors={Gradients.hero}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.heroCard}
+        >
+          <View style={styles.heroLeft}>
+            <Text style={styles.heroLabel}>Total Income</Text>
+            <Text style={styles.heroAmount}>{formatCurrency(totalEarned + totalPending)}</Text>
+            <Text style={styles.heroSub}>all time</Text>
           </View>
-          {totalPending > 0 && (
-            <View style={styles.summaryItem}>
-              <Text variant="labelMedium" style={{ color: theme.colors.onPrimaryContainer }}>
-                Pending
-              </Text>
-              <Text variant="titleLarge" style={{ color: theme.colors.error, fontWeight: '700' }}>
-                {formatCurrency(totalPending)}
-              </Text>
+          <View style={styles.heroRight}>
+            <View style={styles.pill}>
+              <Text style={styles.pillLabel}>Earned</Text>
+              <Text style={[styles.pillValue, { color: Brand.orange }]}>{formatCurrency(totalEarned)}</Text>
             </View>
-          )}
-        </View>
+            {totalPending > 0 && (
+              <View style={[styles.pill, styles.pendingPill]}>
+                <Text style={styles.pillLabel}>Pending</Text>
+                <Text style={[styles.pillValue, { color: Brand.pink }]}>{formatCurrency(totalPending)}</Text>
+              </View>
+            )}
+          </View>
+        </LinearGradient>
       )}
 
       <FlatList
@@ -152,24 +146,83 @@ export default function IncomeSummaryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  summary: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-  },
-  summaryItem: { alignItems: 'center', gap: 4 },
-  listContent: { padding: 12, gap: 8 },
-  emptyContainer: { flex: 1 },
-  card: { marginBottom: 4 },
-  cardTopRow: {
+  container: { flex: 1, backgroundColor: Brand.backgroundDark },
+  heroCard: {
+    margin: 16,
+    borderRadius: 24,
+    paddingVertical: 24,
+    paddingHorizontal: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4,
+    minHeight: 140,
   },
-  divider: { marginVertical: 8 },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  rowRight: { alignItems: 'flex-end', gap: 2 },
+  heroLeft: { flex: 1, gap: 4 },
+  heroLabel: {
+    fontFamily: 'Outfit_400Regular',
+    fontSize: 13,
+    color: Brand.textSecondary,
+  },
+  heroAmount: {
+    fontFamily: 'Poppins_700Bold',
+    fontSize: 32,
+    lineHeight: 40,
+    color: Brand.textPrimary,
+  },
+  heroSub: {
+    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 12,
+    color: Brand.textSecondary,
+  },
+  heroRight: { gap: 10, alignItems: 'flex-end' },
+  pill: {
+    backgroundColor: 'rgba(255, 122, 0, 0.20)',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    alignItems: 'center',
+    minWidth: 100,
+  },
+  pendingPill: { backgroundColor: 'rgba(255, 45, 85, 0.15)' },
+  pillLabel: {
+    fontFamily: 'Outfit_400Regular',
+    fontSize: 11,
+    color: Brand.textSecondary,
+  },
+  pillValue: {
+    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 14,
+  },
+  listContent: { padding: 16, gap: 8 },
+  emptyContainer: { flex: 1 },
+  monthCard: {
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    backgroundColor: Brand.surfaceDark,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Brand.borderSubtle,
+    elevation: 4,
+    shadowColor: Brand.purple,
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    gap: 8,
+  },
+  monthCardTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  monthTitle: {
+    color: Brand.textPrimary,
+    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 14,
+  },
+  monthRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  monthAmounts: { alignItems: 'flex-end', gap: 2 },
 });

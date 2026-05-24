@@ -1,23 +1,36 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { Button, Text, TextInput } from 'react-native-paper';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '../../theme';
+import { Brand } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import {
   createTrainee,
   updateTrainee,
   getTraineeById,
 } from '../../database/repositories/traineeRepository';
+import GradientButton from '../../components/common/GradientButton';
 
 type Nav = StackNavigationProp<RootStackParamList, 'AddEditTrainee'>;
 type Route = RouteProp<RootStackParamList, 'AddEditTrainee'>;
+
+function FormSection({ label }: { label: string }) {
+  return (
+    <View style={styles.sectionHeader}>
+      <View style={styles.sectionAccent} />
+      <Text style={styles.sectionLabel}>{label}</Text>
+    </View>
+  );
+}
 
 export default function AddEditTraineeScreen() {
   const { theme } = useAppTheme();
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
+  const insets = useSafeAreaInsets();
   const { traineeId } = route.params ?? {};
 
   const [name, setName] = useState('');
@@ -69,72 +82,121 @@ export default function AddEditTraineeScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-    <ScrollView
-      contentContainerStyle={styles.content}
-      keyboardShouldPersistTaps="handled"
+    <KeyboardAvoidingView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <TextInput
-        label="Name *"
-        value={name}
-        onChangeText={setName}
-        mode="outlined"
-        error={!!nameError}
-        autoFocus
-      />
-      {nameError ? (
-        <Text variant="bodySmall" style={{ color: theme.colors.error }}>
-          {nameError}
-        </Text>
-      ) : null}
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <FormSection label="Contact" />
+        <View style={styles.card}>
+          <TextInput
+            label="Name *"
+            value={name}
+            onChangeText={setName}
+            mode="outlined"
+            error={!!nameError}
+            autoFocus
+          />
+          {nameError ? (
+            <Text variant="bodySmall" style={{ color: theme.colors.error, marginTop: 4 }}>
+              {nameError}
+            </Text>
+          ) : null}
+          <View style={styles.fieldGap} />
+          <TextInput
+            label="Phone (optional)"
+            value={phone}
+            onChangeText={setPhone}
+            mode="outlined"
+            keyboardType="phone-pad"
+          />
+          <View style={styles.fieldGap} />
+          <TextInput
+            label="Email (optional)"
+            value={email}
+            onChangeText={setEmail}
+            mode="outlined"
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+        </View>
 
-      <TextInput
-        label="Phone (optional)"
-        value={phone}
-        onChangeText={setPhone}
-        mode="outlined"
-        keyboardType="phone-pad"
-      />
+        <FormSection label="Notes" />
+        <View style={styles.card}>
+          <TextInput
+            label="Notes (optional)"
+            value={notes}
+            onChangeText={setNotes}
+            mode="outlined"
+            multiline
+            numberOfLines={3}
+          />
+        </View>
 
-      <TextInput
-        label="Email (optional)"
-        value={email}
-        onChangeText={setEmail}
-        mode="outlined"
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
+        <View style={{ height: 100 }} />
+      </ScrollView>
 
-      <TextInput
-        label="Notes (optional)"
-        value={notes}
-        onChangeText={setNotes}
-        mode="outlined"
-        multiline
-        numberOfLines={3}
-      />
-
-      <View style={styles.actions}>
-        <Button mode="outlined" onPress={() => navigation.goBack()} style={{ flex: 1 }}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
+        <Button
+          mode="outlined"
+          onPress={() => navigation.goBack()}
+          style={styles.cancelBtn}
+          textColor={Brand.textSecondary}
+        >
           Cancel
         </Button>
-        <Button
-          mode="contained"
+        <GradientButton
+          label={saving ? 'Saving...' : 'Save'}
           onPress={handleSave}
           loading={saving}
-          disabled={saving}
-          style={{ flex: 1 }}
-        >
-          Save
-        </Button>
+          style={styles.saveBtn}
+        />
       </View>
-    </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: 16, gap: 12 },
-  actions: { flexDirection: 'row', gap: 12, marginTop: 8 },
+  content: { padding: 16 },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 10,
+    marginTop: 20,
+  },
+  sectionAccent: { width: 3, height: 14, borderRadius: 2, backgroundColor: Brand.orange },
+  sectionLabel: {
+    color: Brand.textSecondary,
+    fontSize: 12,
+    fontWeight: '600',
+    fontFamily: 'Montserrat_600SemiBold',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  card: {
+    backgroundColor: Brand.surfaceDark,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Brand.borderSubtle,
+    padding: 14,
+  },
+  fieldGap: { height: 10 },
+  footer: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    backgroundColor: Brand.backgroundDark,
+    borderTopWidth: 1,
+    borderTopColor: Brand.borderSubtle,
+  },
+  cancelBtn: {
+    flex: 0,
+    justifyContent: 'center',
+    width: 100,
+    borderColor: Brand.borderSubtle,
+  },
+  saveBtn: { flex: 1 },
 });

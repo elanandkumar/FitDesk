@@ -1,13 +1,17 @@
 import React, { useCallback, useLayoutEffect, useMemo, useState } from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
-import { FAB, IconButton, List, Searchbar, Text } from 'react-native-paper';
+import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { IconButton, Searchbar, Text } from 'react-native-paper';
+import GradientFAB from '../../components/common/GradientFAB';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '../../theme';
-import { ClassSeries } from '../../types';
+import { Brand } from '../../theme/brandColors';
+import { ClassSeries, ClassType } from '../../types';
 import { getAllClassSeries } from '../../database/repositories/classSeriesRepository';
 import { getAllClassTypes } from '../../database/repositories/classTypeRepository';
-import { ClassType } from '../../types';
 import { formatDisplayTime, formatRecurrenceSummary } from '../../utils/dateUtils';
 import EmptyState from '../../components/common/EmptyState';
 import { RootStackParamList } from '../../navigation/types';
@@ -20,6 +24,7 @@ type Nav = StackNavigationProp<RootStackParamList>;
 
 export default function ClassSeriesListScreen() {
   const { theme } = useAppTheme();
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const [series, setSeries] = useState<ClassSeries[]>([]);
   const [classTypes, setClassTypes] = useState<Map<number, ClassType>>(new Map());
@@ -55,17 +60,20 @@ export default function ClassSeriesListScreen() {
   }, [series, query]);
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <Animated.View entering={FadeIn.duration(350)} style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <Searchbar
         placeholder="Search class series"
         value={query}
         onChangeText={setQuery}
-        style={styles.searchbar}
+        style={[styles.searchbar, { backgroundColor: Brand.surfaceDark }]}
+        inputStyle={{ color: Brand.textPrimary }}
+        iconColor={Brand.textMuted}
+        placeholderTextColor={Brand.textMuted}
       />
       <FlatList
         data={filtered}
         keyExtractor={(item) => String(item.id)}
-        contentContainerStyle={{ flexGrow: 1 }}
+        contentContainerStyle={[styles.listContent, { flexGrow: 1 }]}
         ListEmptyComponent={
           !loading ? (
             <EmptyState
@@ -74,58 +82,85 @@ export default function ClassSeriesListScreen() {
             />
           ) : null
         }
-        renderItem={({ item }) => {
+        renderItem={({ item, index }) => {
           const ct = classTypes.get(item.class_type_id);
+          const accentColor = ct?.color ?? Brand.purple;
           const recurrenceText = formatRecurrenceSummary(item.recurrence_type, item.recurrence_days);
           return (
-            <List.Item
-              title={item.title}
-              description={`${formatDisplayTime(item.class_time)} · ${recurrenceText}`}
-              titleStyle={{ color: item.is_active ? theme.colors.onSurface : theme.colors.onSurfaceVariant }}
-              descriptionStyle={{ color: theme.colors.onSurfaceVariant }}
-              style={{ backgroundColor: theme.colors.surface }}
-              left={() => (
-                <View
-                  style={[
-                    styles.colorBar,
-                    { backgroundColor: ct?.color ?? theme.colors.primary, opacity: item.is_active ? 1 : 0.4 },
-                  ]}
-                />
-              )}
-              right={() => (
-                <View style={styles.rightContent}>
-                  {!item.is_active && (
-                    <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                      Cancelled
-                    </Text>
-                  )}
-                  <List.Icon icon="chevron-right" />
+            <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 60).duration(350)}>
+            <TouchableOpacity
+              style={[styles.card, !item.is_active && styles.cardInactive]}
+              onPress={() => navigation.navigate('AddEditClassSeries', { seriesId: item.id })}
+              activeOpacity={0.75}
+            >
+              <View style={[styles.colorBar, { backgroundColor: accentColor, opacity: item.is_active ? 1 : 0.4 }]} />
+              <View style={styles.cardContent}>
+                <Text style={[styles.cardTitle, !item.is_active && styles.textInactive]}>
+                  {item.title}
+                </Text>
+                <Text style={styles.cardSub}>
+                  {formatDisplayTime(item.class_time)} · {recurrenceText}
+                </Text>
+              </View>
+              {!item.is_active && (
+                <View style={styles.cancelledBadge}>
+                  <Text style={styles.cancelledText}>Cancelled</Text>
                 </View>
               )}
-              onPress={() => navigation.navigate('AddEditClassSeries', { seriesId: item.id })}
-            />
+              <MaterialCommunityIcons name="chevron-right" size={20} color={Brand.textMuted} />
+            </TouchableOpacity>
+            </Animated.View>
           );
         }}
-        ItemSeparatorComponent={() => (
-          <View style={{ height: 1, backgroundColor: theme.colors.surfaceVariant }} />
-        )}
       />
-      <FAB
+      <GradientFAB
         icon="plus"
-        style={[styles.fab, { backgroundColor: theme.colors.primary }]}
-        color={theme.colors.onPrimary}
+        style={[styles.fab, { bottom: 16 + insets.bottom }]}
         onPress={() => navigation.navigate('AddEditClassSeries', {})}
       />
 
       <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP} />
-    </View>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  searchbar: { margin: 8, borderRadius: 0 },
-  fab: { position: 'absolute', bottom: 16, right: 16, borderRadius: 4 },
-  colorBar: { width: 4, borderRadius: 2, marginVertical: 8, marginLeft: 8, marginRight: 4 },
-  rightContent: { flexDirection: 'row', alignItems: 'center' },
+  searchbar: { margin: 12, borderRadius: 12, elevation: 0 },
+  listContent: { paddingHorizontal: 12, paddingBottom: 96 },
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Brand.surfaceDark,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Brand.borderSubtle,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    marginBottom: 8,
+    elevation: 4,
+    shadowColor: Brand.purple,
+    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
+    gap: 12,
+    overflow: 'hidden',
+  },
+  cardInactive: { opacity: 0.6 },
+  colorBar: { width: 4, height: 40, borderRadius: 2 },
+  cardContent: { flex: 1 },
+  cardTitle: { color: Brand.textPrimary, fontSize: 15, fontWeight: '600' },
+  textInactive: { color: Brand.textSecondary },
+  cardSub: { color: Brand.textSecondary, fontSize: 13, marginTop: 2 },
+  cancelledBadge: {
+    backgroundColor: `${Brand.textMuted}26`,
+    borderRadius: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  cancelledText: { color: Brand.textMuted, fontSize: 11, fontWeight: '600' },
+  fab: {
+    position: 'absolute',
+    right: 16,
+  },
 });

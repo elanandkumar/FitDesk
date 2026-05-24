@@ -4,6 +4,7 @@ import ThemedDatePickerModal from './ThemedDatePickerModal';
 import ThemedTimePickerModal from './ThemedTimePickerModal';
 import { Button, List, Modal, Portal, SegmentedButtons, Surface, Text, TextInput } from 'react-native-paper';
 import { useAppTheme } from '../../theme';
+import { Brand } from '../../theme/brandColors';
 import { ClassType, LocationType, Manager, SourceType } from '../../types';
 import { getAllClassTypes } from '../../database/repositories/classTypeRepository';
 import { getAllManagers } from '../../database/repositories/managerRepository';
@@ -166,6 +167,7 @@ export default function QuickAddSessionModal({ visible, initialDate, onDismiss, 
               { value: 'personal', label: 'Personal', style: { borderRadius: 4 } },
             ]}
             style={{ marginBottom: 8, borderRadius: 4 }}
+            theme={{ colors: { secondaryContainer: Brand.purple, onSecondaryContainer: Brand.textPrimary } }}
           />
 
           {/* Manager picker */}
@@ -230,6 +232,7 @@ export default function QuickAddSessionModal({ visible, initialDate, onDismiss, 
               { value: 'online', label: 'Online', style: { borderRadius: 4 } },
             ]}
             style={{ marginBottom: 8, borderRadius: 4 }}
+            theme={{ colors: { secondaryContainer: Brand.purple, onSecondaryContainer: Brand.textPrimary } }}
           />
           <TextInput
             label="Location / Link (optional)"

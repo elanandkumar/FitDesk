@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Modal as RNModal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, Modal as RNModal, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import ThemedDatePickerModal from '../../components/common/ThemedDatePickerModal';
 import ThemedTimePickerModal from '../../components/common/ThemedTimePickerModal';
-import { List, SegmentedButtons, Surface, Text, TextInput } from 'react-native-paper';
+import { Button, List, SegmentedButtons, Surface, Text, TextInput } from 'react-native-paper';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { useAppTheme } from '../../theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Brand } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { ClassType, LocationType, Manager, SourceType } from '../../types';
 import { getAllClassTypes } from '../../database/repositories/classTypeRepository';
@@ -16,6 +17,7 @@ import {
 } from '../../database/repositories/classSessionRepository';
 import { todayISO } from '../../utils/dateUtils';
 import { DEFAULT_DURATION_MINUTES } from '../../constants';
+import GradientButton from '../../components/common/GradientButton';
 
 type Nav = StackNavigationProp<RootStackParamList, 'AddSession'>;
 type Route = RouteProp<RootStackParamList, 'AddSession'>;
@@ -36,16 +38,24 @@ function timeToDisplay(hhmm: string): string {
   return `${hour}:${String(m).padStart(2, '0')} ${suffix}`;
 }
 
-
 function displayDate(iso: string): string {
   if (!iso) return 'Select date';
   return isoToDate(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
+function FormSection({ label }: { label: string }) {
+  return (
+    <View style={styles.sectionHeader}>
+      <View style={styles.sectionAccent} />
+      <Text style={styles.sectionLabel}>{label}</Text>
+    </View>
+  );
+}
+
 export default function AddSessionScreen() {
-  const { theme } = useAppTheme();
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
+  const insets = useSafeAreaInsets();
 
   const [classTypes, setClassTypes] = useState<ClassType[]>([]);
   const [managers, setManagers] = useState<Manager[]>([]);
@@ -110,284 +120,317 @@ export default function AddSessionScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-    <ScrollView
-      contentContainerStyle={styles.content}
-      keyboardShouldPersistTaps="handled"
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      {/* Class Type */}
-      <Text variant="labelMedium" style={[styles.label, { color: theme.colors.onSurfaceVariant }]}>
-        Class Type *
-      </Text>
-      <TouchableOpacity
-        onPress={() => setClassTypePickerVisible(true)}
-        style={[styles.pickerButton, { borderColor: theme.colors.outline }]}
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
       >
-        {selectedClassType ? (
-          <View style={styles.pickerSelected}>
-            <View style={[styles.colorDot, { backgroundColor: selectedClassType.color }]} />
-            <Text style={{ color: theme.colors.onSurface }}>{selectedClassType.name}</Text>
-          </View>
-        ) : (
-          <Text style={{ color: theme.colors.onSurfaceVariant }}>Select class type...</Text>
-        )}
-      </TouchableOpacity>
-
-      {/* Title */}
-      <TextInput
-        label={`Title (default: ${selectedClassType?.name ?? 'Class'} (Ad-hoc))`}
-        value={title}
-        onChangeText={setTitle}
-        mode="outlined"
-        style={styles.input}
-      />
-
-      {/* Source */}
-      <Text variant="labelMedium" style={[styles.label, { color: theme.colors.onSurfaceVariant }]}>
-        Source *
-      </Text>
-      <SegmentedButtons
-        value={sourceType}
-        onValueChange={(v) => {
-          setSourceType(v as SourceType);
-          setManagerId(null);
-        }}
-        buttons={[
-          { value: 'manager', label: 'Manager', style: { borderRadius: 4 } },
-          { value: 'personal', label: 'Personal', style: { borderRadius: 4 } },
-        ]}
-        style={{ marginBottom: 8, borderRadius: 4 }}
-      />
-
-      {/* Manager */}
-      {sourceType === 'manager' && (
-        <>
-          <Text variant="labelMedium" style={[styles.label, { color: theme.colors.onSurfaceVariant }]}>
-            Manager *
-          </Text>
+        {/* Session Info section */}
+        <FormSection label="Session Info" />
+        <View style={styles.card}>
+          <Text variant="labelMedium" style={styles.fieldLabel}>Class Type *</Text>
           <TouchableOpacity
-            onPress={() => setManagerPickerVisible(true)}
-            style={[styles.pickerButton, { borderColor: theme.colors.outline }]}
+            onPress={() => setClassTypePickerVisible(true)}
+            style={styles.pickerButton}
           >
-            {selectedManager ? (
-              <Text style={{ color: theme.colors.onSurface }}>{selectedManager.name}</Text>
-            ) : managers.length === 0 ? (
-              <Text style={{ color: theme.colors.onSurfaceVariant }}>No managers added yet</Text>
+            {selectedClassType ? (
+              <View style={styles.pickerSelected}>
+                <View style={[styles.colorDot, { backgroundColor: selectedClassType.color }]} />
+                <Text style={{ color: Brand.textPrimary }}>{selectedClassType.name}</Text>
+              </View>
             ) : (
-              <Text style={{ color: theme.colors.onSurfaceVariant }}>Select manager...</Text>
+              <Text style={{ color: Brand.textMuted }}>Select class type...</Text>
             )}
           </TouchableOpacity>
-        </>
-      )}
 
-      {/* Date & Time */}
-      <Text variant="labelMedium" style={[styles.label, { color: theme.colors.onSurfaceVariant }]}>
-        Date & Time *
-      </Text>
-      <View style={styles.dateTimeRow}>
-        <TouchableOpacity
-          onPress={() => setShowDatePicker(true)}
-          style={[styles.pickerButton, styles.dateTimeCell, { borderColor: theme.colors.outline }]}
-        >
-          <Text style={{ color: theme.colors.onSurface }}>{displayDate(sessionDate)}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setShowTimePicker(true)}
-          style={[styles.pickerButton, styles.dateTimeCell, { borderColor: theme.colors.outline }]}
-        >
-          <Text style={{ color: theme.colors.onSurface }}>{timeToDisplay(classTime)}</Text>
-        </TouchableOpacity>
-      </View>
+          <View style={styles.fieldGap} />
+          <TextInput
+            label={`Title (default: ${selectedClassType?.name ?? 'Class'} (Ad-hoc))`}
+            value={title}
+            onChangeText={setTitle}
+            mode="outlined"
+          />
 
-      {/* Duration */}
-      <TextInput
-        label="Duration (min) (optional)"
-        value={duration}
-        onChangeText={(v) => setDuration(v.replace(/[^0-9]/g, ''))}
-        keyboardType="numeric"
-        mode="outlined"
-        style={styles.input}
-      />
+          <View style={styles.fieldGap} />
+          <Text variant="labelMedium" style={styles.fieldLabel}>Source *</Text>
+          <SegmentedButtons
+            value={sourceType}
+            onValueChange={(v) => {
+              setSourceType(v as SourceType);
+              setManagerId(null);
+            }}
+            buttons={[
+              { value: 'manager', label: 'Manager' },
+              { value: 'personal', label: 'Personal' },
+            ]}
+            theme={{ colors: { secondaryContainer: Brand.purple, onSecondaryContainer: Brand.textPrimary } }}
+          />
 
-      {/* Location */}
-      <Text variant="labelMedium" style={[styles.label, { color: theme.colors.onSurfaceVariant }]}>
-        Location
-      </Text>
-      <SegmentedButtons
-        value={locationType}
-        onValueChange={(v) => setLocationType(v as LocationType)}
-        buttons={[
-          { value: 'offline', label: 'In-person', style: { borderRadius: 4 } },
-          { value: 'online', label: 'Online', style: { borderRadius: 4 } },
-        ]}
-        style={{ marginBottom: 8, borderRadius: 4 }}
-      />
-      <TextInput
-        label="Location / Link (optional)"
-        value={location}
-        onChangeText={setLocation}
-        mode="outlined"
-        style={styles.input}
-      />
-
-      {/* Notes */}
-      <TextInput
-        label="Notes (optional)"
-        value={notes}
-        onChangeText={setNotes}
-        mode="outlined"
-        style={styles.input}
-        multiline
-        numberOfLines={2}
-      />
-
-      <View style={styles.actions}>
-        <TouchableOpacity
-          style={[styles.actionBtn, styles.cancelBtn, { borderColor: theme.colors.outline }]}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={{ color: theme.colors.onSurface }}>Cancel</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.actionBtn,
-            styles.saveBtn,
-            { backgroundColor: isValid && !saving ? theme.colors.primary : theme.colors.surfaceDisabled },
-          ]}
-          onPress={handleSave}
-          disabled={!isValid || saving}
-        >
-          <Text style={{ color: isValid && !saving ? theme.colors.onPrimary : theme.colors.onSurfaceDisabled }}>
-            {saving ? 'Saving...' : 'Add Session'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      <ThemedDatePickerModal
-        visible={showDatePicker}
-        value={sessionDate}
-        onConfirm={(date) => {
-          setShowDatePicker(false);
-          setSessionDate(date);
-        }}
-        onDismiss={() => setShowDatePicker(false)}
-      />
-      <ThemedTimePickerModal
-        visible={showTimePicker}
-        value={classTime || '09:00'}
-        onConfirm={(time) => {
-          setShowTimePicker(false);
-          setClassTime(time);
-        }}
-        onDismiss={() => setShowTimePicker(false)}
-      />
-
-      {/* Class Type Picker */}
-      <RNModal
-        visible={classTypePickerVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setClassTypePickerVisible(false)}
-      >
-        <TouchableOpacity
-          style={styles.backdrop}
-          onPress={() => setClassTypePickerVisible(false)}
-          activeOpacity={1}
-        >
-          <Surface style={[styles.sheet, { backgroundColor: theme.colors.surface }]}>
-            <Text variant="titleMedium" style={[styles.sheetTitle, { color: theme.colors.onSurface }]}>
-              Select Class Type
-            </Text>
-            {classTypes.map((ct) => (
-              <List.Item
-                key={ct.id}
-                title={ct.name}
-                titleStyle={{ color: theme.colors.onSurface }}
-                left={() => (
-                  <View style={[styles.colorDot, { backgroundColor: ct.color, marginVertical: 'auto', marginLeft: 8 }]} />
+          {sourceType === 'manager' && (
+            <>
+              <View style={styles.fieldGap} />
+              <Text variant="labelMedium" style={styles.fieldLabel}>Manager *</Text>
+              <TouchableOpacity
+                onPress={() => setManagerPickerVisible(true)}
+                style={styles.pickerButton}
+              >
+                {selectedManager ? (
+                  <Text style={{ color: Brand.textPrimary }}>{selectedManager.name}</Text>
+                ) : managers.length === 0 ? (
+                  <Text style={{ color: Brand.textMuted }}>No managers added yet</Text>
+                ) : (
+                  <Text style={{ color: Brand.textMuted }}>Select manager...</Text>
                 )}
-                onPress={() => {
-                  setClassTypeId(ct.id);
-                  setClassTypePickerVisible(false);
-                }}
-              />
-            ))}
-          </Surface>
-        </TouchableOpacity>
-      </RNModal>
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
 
-      {/* Manager Picker */}
-      <RNModal
-        visible={managerPickerVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setManagerPickerVisible(false)}
-      >
-        <TouchableOpacity
-          style={styles.backdrop}
-          onPress={() => setManagerPickerVisible(false)}
-          activeOpacity={1}
+        {/* Date & Time section */}
+        <FormSection label="Date & Time" />
+        <View style={styles.card}>
+          <View style={styles.twoColRow}>
+            <View style={styles.twoColCell}>
+              <Text variant="labelMedium" style={styles.fieldLabel}>Date *</Text>
+              <TouchableOpacity
+                onPress={() => setShowDatePicker(true)}
+                style={styles.pickerButton}
+              >
+                <Text style={{ color: Brand.textPrimary }}>{displayDate(sessionDate)}</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.twoColCell}>
+              <Text variant="labelMedium" style={styles.fieldLabel}>Time *</Text>
+              <TouchableOpacity
+                onPress={() => setShowTimePicker(true)}
+                style={styles.pickerButton}
+              >
+                <Text style={{ color: Brand.textPrimary }}>{timeToDisplay(classTime)}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View style={styles.fieldGap} />
+          <TextInput
+            label="Duration (min) (optional)"
+            value={duration}
+            onChangeText={(v) => setDuration(v.replace(/[^0-9]/g, ''))}
+            keyboardType="numeric"
+            mode="outlined"
+          />
+        </View>
+
+        {/* Location section */}
+        <FormSection label="Location" />
+        <View style={styles.card}>
+          <SegmentedButtons
+            value={locationType}
+            onValueChange={(v) => setLocationType(v as LocationType)}
+            buttons={[
+              { value: 'offline', label: 'In-person' },
+              { value: 'online', label: 'Online' },
+            ]}
+            theme={{ colors: { secondaryContainer: Brand.purple, onSecondaryContainer: Brand.textPrimary } }}
+          />
+          <View style={styles.fieldGap} />
+          <TextInput
+            label="Location / Link (optional)"
+            value={location}
+            onChangeText={setLocation}
+            mode="outlined"
+          />
+        </View>
+
+        {/* Notes section */}
+        <FormSection label="Notes" />
+        <View style={styles.card}>
+          <TextInput
+            label="Notes (optional)"
+            value={notes}
+            onChangeText={setNotes}
+            mode="outlined"
+            multiline
+            numberOfLines={2}
+          />
+        </View>
+
+        <View style={{ height: 100 }} />
+
+        <ThemedDatePickerModal
+          visible={showDatePicker}
+          value={sessionDate}
+          onConfirm={(date) => {
+            setShowDatePicker(false);
+            setSessionDate(date);
+          }}
+          onDismiss={() => setShowDatePicker(false)}
+        />
+        <ThemedTimePickerModal
+          visible={showTimePicker}
+          value={classTime || '09:00'}
+          onConfirm={(time) => {
+            setShowTimePicker(false);
+            setClassTime(time);
+          }}
+          onDismiss={() => setShowTimePicker(false)}
+        />
+
+        {/* Class Type Picker */}
+        <RNModal
+          visible={classTypePickerVisible}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setClassTypePickerVisible(false)}
         >
-          <Surface style={[styles.sheet, { backgroundColor: theme.colors.surface }]}>
-            <Text variant="titleMedium" style={[styles.sheetTitle, { color: theme.colors.onSurface }]}>
-              Select Manager
-            </Text>
-            {managers.map((m) => (
-              <List.Item
-                key={m.id}
-                title={m.name}
-                titleStyle={{ color: theme.colors.onSurface }}
-                onPress={() => {
-                  setManagerId(m.id);
-                  setManagerPickerVisible(false);
-                }}
-              />
-            ))}
-          </Surface>
-        </TouchableOpacity>
-      </RNModal>
-    </ScrollView>
-    </View>
+          <TouchableOpacity
+            style={styles.backdrop}
+            onPress={() => setClassTypePickerVisible(false)}
+            activeOpacity={1}
+          >
+            <Surface style={styles.sheet}>
+              <Text style={styles.sheetTitle}>Select Class Type</Text>
+              {classTypes.map((ct) => (
+                <List.Item
+                  key={ct.id}
+                  title={ct.name}
+                  titleStyle={{ color: Brand.textPrimary }}
+                  left={() => (
+                    <View style={[styles.colorDot, { backgroundColor: ct.color, marginVertical: 'auto', marginLeft: 8 }]} />
+                  )}
+                  onPress={() => {
+                    setClassTypeId(ct.id);
+                    setClassTypePickerVisible(false);
+                  }}
+                />
+              ))}
+            </Surface>
+          </TouchableOpacity>
+        </RNModal>
+
+        {/* Manager Picker */}
+        <RNModal
+          visible={managerPickerVisible}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setManagerPickerVisible(false)}
+        >
+          <TouchableOpacity
+            style={styles.backdrop}
+            onPress={() => setManagerPickerVisible(false)}
+            activeOpacity={1}
+          >
+            <Surface style={styles.sheet}>
+              <Text style={styles.sheetTitle}>Select Manager</Text>
+              {managers.map((m) => (
+                <List.Item
+                  key={m.id}
+                  title={m.name}
+                  titleStyle={{ color: Brand.textPrimary }}
+                  onPress={() => {
+                    setManagerId(m.id);
+                    setManagerPickerVisible(false);
+                  }}
+                />
+              ))}
+            </Surface>
+          </TouchableOpacity>
+        </RNModal>
+      </ScrollView>
+
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
+        <Button
+          mode="outlined"
+          onPress={() => navigation.goBack()}
+          style={styles.cancelBtn}
+          textColor={Brand.textSecondary}
+        >
+          Cancel
+        </Button>
+        <GradientButton
+          label={saving ? 'Saving...' : 'Add Session'}
+          onPress={handleSave}
+          loading={saving}
+          disabled={!isValid || saving}
+          style={styles.saveBtn}
+        />
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  content: { padding: 16, gap: 4 },
-  label: { marginBottom: 6, marginTop: 8 },
-  input: { marginBottom: 4 },
+  container: { flex: 1, backgroundColor: Brand.backgroundDark },
+  content: { padding: 16 },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 10,
+    marginTop: 20,
+  },
+  sectionAccent: { width: 3, height: 14, borderRadius: 2, backgroundColor: Brand.orange },
+  sectionLabel: {
+    color: Brand.textSecondary,
+    fontSize: 11,
+    fontWeight: '600',
+    fontFamily: 'Montserrat_600SemiBold',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  card: {
+    backgroundColor: Brand.surfaceDark,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Brand.borderSubtle,
+    padding: 14,
+  },
+  fieldLabel: { color: Brand.textSecondary, marginBottom: 6 },
+  fieldGap: { height: 10 },
   pickerButton: {
     borderWidth: 1,
-    borderRadius: 4,
+    borderRadius: 8,
+    borderColor: Brand.borderSubtle,
     padding: 14,
     minHeight: 52,
     justifyContent: 'center',
-    marginBottom: 8,
   },
   pickerSelected: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   colorDot: { width: 16, height: 16, borderRadius: 8 },
-  dateTimeRow: { flexDirection: 'row', gap: 8 },
-  dateTimeCell: { flex: 1 },
-  actions: { flexDirection: 'row', gap: 12, marginTop: 16, marginBottom: 8 },
-  actionBtn: {
-    flex: 1,
-    height: 48,
-    borderRadius: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
+  twoColRow: { flexDirection: 'row', gap: 12 },
+  twoColCell: { flex: 1 },
+  footer: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    backgroundColor: Brand.backgroundDark,
+    borderTopWidth: 1,
+    borderTopColor: Brand.borderSubtle,
   },
-  cancelBtn: { borderWidth: 1 },
-  saveBtn: {},
+  cancelBtn: { flex: 0, width: 100, borderColor: Brand.borderSubtle, justifyContent: 'center' },
+  saveBtn: { flex: 1 },
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'flex-end',
   },
   sheet: {
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
+    backgroundColor: Brand.surfaceElevated,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     paddingBottom: 32,
     maxHeight: '60%',
+    borderTopWidth: 1,
+    borderTopColor: Brand.borderSubtle,
   },
-  sheetTitle: { padding: 16, paddingBottom: 8 },
+  sheetTitle: {
+    padding: 16,
+    paddingBottom: 8,
+    color: Brand.textPrimary,
+    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 15,
+  },
 });

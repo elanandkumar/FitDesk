@@ -1,9 +1,13 @@
 import React, { useCallback, useState } from 'react';
-import { Alert, SectionList, StyleSheet, View } from 'react-native';
-import { Button, Chip, Divider, FAB, IconButton, Text } from 'react-native-paper';
+import { Alert, SectionList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { IconButton, Text } from 'react-native-paper';
+import GradientFAB from '../../components/common/GradientFAB';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '../../theme';
+import { Brand, Layout } from '../../theme/brandColors';
 import { EnrichedTraineePackage } from '../../types';
 import {
   getAllEnrichedTraineePackages,
@@ -32,21 +36,14 @@ function groupByTrainee(packages: EnrichedTraineePackage[]): Section[] {
   const map = new Map<number, Section>();
   for (const p of packages) {
     if (!map.has(p.trainee_id)) {
-      map.set(p.trainee_id, {
-        trainee: p.trainee_name,
-        traineeId: p.trainee_id,
-        pendingTotal: 0,
-        data: [],
-      });
+      map.set(p.trainee_id, { trainee: p.trainee_name, traineeId: p.trainee_id, pendingTotal: 0, data: [] });
     }
     const sec = map.get(p.trainee_id)!;
     sec.data.push(p);
     if (p.status === 'pending') sec.pendingTotal += p.amount;
   }
   return Array.from(map.values()).sort((a, b) =>
-    b.pendingTotal !== a.pendingTotal
-      ? b.pendingTotal - a.pendingTotal
-      : a.trainee.localeCompare(b.trainee)
+    b.pendingTotal !== a.pendingTotal ? b.pendingTotal - a.pendingTotal : a.trainee.localeCompare(b.trainee)
   );
 }
 
@@ -56,9 +53,9 @@ function formatMonth(ym: string): string {
   return date.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
 }
 
-
 export default function TraineePackagesScreen() {
   const { theme } = useAppTheme();
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const [sections, setSections] = useState<Section[]>([]);
   const [confirmPkg, setConfirmPkg] = useState<EnrichedTraineePackage | null>(null);
@@ -81,9 +78,7 @@ export default function TraineePackagesScreen() {
           <IconButton icon="help-circle-outline" iconColor={theme.colors.primary} onPress={() => setHelpVisible(true)} />
         ),
       });
-      return () => {
-        navigation.getParent()?.setOptions({ headerRight: undefined });
-      };
+      return () => { navigation.getParent()?.setOptions({ headerRight: undefined }); };
     }, [load, navigation, theme.colors.primary])
   );
 
@@ -100,56 +95,37 @@ export default function TraineePackagesScreen() {
   };
 
   const renderItem = ({ item }: { item: EnrichedTraineePackage }) => (
-    <View style={[styles.item, { backgroundColor: theme.colors.surface }]}>
+    <View style={styles.item}>
       <View style={styles.itemLeft}>
-        <View>
-          <Text variant="bodyMedium" style={{ color: theme.colors.onSurface }}>
-            {formatMonth(item.month)}
-          </Text>
-          <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-            {item.used_sessions}/{item.total_sessions} sessions used
-          </Text>
-          {item.notes ? (
-            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }} numberOfLines={1}>
-              {item.notes}
-            </Text>
-          ) : null}
-        </View>
+        <Text style={styles.itemTitle}>{formatMonth(item.month)}</Text>
+        <Text style={styles.itemSub}>{item.used_sessions}/{item.total_sessions} sessions used</Text>
+        {item.notes ? (
+          <Text style={styles.itemNote} numberOfLines={1}>{item.notes}</Text>
+        ) : null}
       </View>
       <View style={styles.itemRight}>
-        <Text variant="bodyMedium" style={{ color: theme.colors.onSurface, fontWeight: '600' }}>
-          {formatCurrency(item.amount)}
-        </Text>
+        <Text style={styles.amount}>{formatCurrency(item.amount)}</Text>
         {item.status === 'pending' ? (
-          <Button
-            compact
-            mode="outlined"
-            onPress={() => setConfirmPkg(item)}
-            style={styles.markPaidBtn}
-            labelStyle={{ fontSize: 11, marginHorizontal: 8, marginVertical: 4 }}
-          >
-            Mark Paid
-          </Button>
+          <TouchableOpacity style={styles.markPaidBtn} onPress={() => setConfirmPkg(item)}>
+            <Text style={styles.markPaidText}>Mark Paid</Text>
+          </TouchableOpacity>
         ) : (
-          <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-            Paid
-          </Text>
+          <View style={styles.paidBadge}>
+            <MaterialCommunityIcons name="check" size={11} color={Brand.pink} />
+            <Text style={styles.paidText}>Paid</Text>
+          </View>
         )}
       </View>
     </View>
   );
 
   const renderSectionHeader = ({ section }: { section: Section }) => (
-    <View style={[styles.sectionHeader, { backgroundColor: theme.colors.background }]}>
-      <Text variant="titleSmall" style={{ color: theme.colors.onBackground, fontWeight: '700' }}>
-        {section.trainee}
-      </Text>
+    <View style={styles.sectionHeader}>
+      <Text style={styles.sectionTitle}>{section.trainee}</Text>
       {section.pendingTotal > 0 && (
-        <Chip compact mode="flat" style={{ backgroundColor: theme.colors.errorContainer }}>
-          <Text style={{ color: theme.colors.onErrorContainer, fontSize: 12 }}>
-            {formatCurrency(section.pendingTotal)} due
-          </Text>
-        </Chip>
+        <View style={styles.dueBadge}>
+          <Text style={styles.dueText}>{formatCurrency(section.pendingTotal)} due</Text>
+        </View>
       )}
     </View>
   );
@@ -161,8 +137,7 @@ export default function TraineePackagesScreen() {
         keyExtractor={(item) => String(item.id)}
         renderItem={renderItem}
         renderSectionHeader={renderSectionHeader}
-        ItemSeparatorComponent={() => <Divider />}
-        SectionSeparatorComponent={() => <View style={{ height: 8 }} />}
+        SectionSeparatorComponent={() => <View style={{ height: 4 }} />}
         ListEmptyComponent={
           <EmptyState
             icon="package-variant"
@@ -173,10 +148,9 @@ export default function TraineePackagesScreen() {
         contentContainerStyle={sections.length === 0 ? styles.emptyContainer : styles.listContent}
       />
 
-      <FAB
+      <GradientFAB
         icon="plus"
-        style={[styles.fab, { backgroundColor: theme.colors.primary }]}
-        color={theme.colors.onPrimary}
+        style={[styles.fab, { bottom: Layout.FAB_BOTTOM + insets.bottom }]}
         onPress={() => navigation.navigate('AddPackage', {})}
       />
 
@@ -201,33 +175,66 @@ export default function TraineePackagesScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  listContent: { paddingBottom: 88 },
+  listContent: { paddingHorizontal: 12, paddingTop: 8, paddingBottom: Layout.LIST_PAD_WITH_FAB },
   emptyContainer: { flex: 1 },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingHorizontal: 4,
     paddingVertical: 10,
+    marginTop: 8,
   },
+  sectionTitle: {
+    color: Brand.textPrimary,
+    fontSize: 15,
+    fontWeight: '700',
+    fontFamily: 'Montserrat_600SemiBold',
+  },
+  dueBadge: {
+    backgroundColor: `${Brand.orange}33`,
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  dueText: { color: Brand.orange, fontSize: 12, fontWeight: '700' },
   item: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    backgroundColor: Brand.surfaceDark,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Brand.borderSubtle,
+    paddingHorizontal: 14,
     paddingVertical: 12,
+    marginBottom: 6,
   },
   itemLeft: { flex: 1 },
-  itemRight: {
-    alignItems: 'flex-end',
-    gap: 4,
-    marginLeft: 8,
+  itemTitle: { color: Brand.textPrimary, fontSize: 14, fontWeight: '500' },
+  itemSub: { color: Brand.textSecondary, fontSize: 12, marginTop: 2 },
+  itemNote: { color: Brand.textMuted, fontSize: 12, marginTop: 2 },
+  itemRight: { alignItems: 'flex-end', gap: 6, marginLeft: 8 },
+  amount: { color: Brand.orange, fontSize: 15, fontWeight: '700' },
+  markPaidBtn: {
+    backgroundColor: `${Brand.purple}33`,
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
   },
-  markPaidBtn: { borderRadius: 4 },
+  markPaidText: { color: Brand.purple, fontSize: 12, fontWeight: '700' },
+  paidBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: `${Brand.pink}1A`,
+    borderRadius: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  paidText: { color: Brand.pink, fontSize: 11, fontWeight: '600' },
   fab: {
     position: 'absolute',
     right: 16,
-    bottom: 16,
-    borderRadius: 4,
   },
 });

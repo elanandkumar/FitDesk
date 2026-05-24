@@ -19,7 +19,7 @@ import {
   useFocusEffect,
 } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { useAppTheme } from '../../theme';
+import { Brand } from '../../theme/brandColors';
 import { EnrichedSession, Trainee } from '../../types';
 import {
   getEnrichedSessionById,
@@ -36,6 +36,7 @@ import { RootStackParamList } from '../../navigation/types';
 import StatusBadge from '../../components/common/StatusBadge';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import HelpSheet from '../../components/common/HelpSheet';
+import GradientButton from '../../components/common/GradientButton';
 
 const HELP =
   'Mark Complete to record attendance and auto-create a payment record. Skip keeps the series active but marks this session as skipped. Notes are saved separately.';
@@ -44,7 +45,6 @@ type Route = RouteProp<RootStackParamList, 'ClassSessionDetail'>;
 type Nav = StackNavigationProp<RootStackParamList>;
 
 export default function ClassSessionDetailScreen() {
-  const { theme } = useAppTheme();
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const { sessionId } = route.params;
@@ -83,10 +83,10 @@ export default function ClassSessionDetailScreen() {
     navigation.setOptions({
       title: session?.series_title ?? 'Session Detail',
       headerRight: () => (
-        <IconButton icon="help-circle-outline" iconColor={theme.colors.primary} onPress={() => setHelpVisible(true)} />
+        <IconButton icon="help-circle-outline" iconColor={Brand.purple} onPress={() => setHelpVisible(true)} />
       ),
     });
-  }, [navigation, session, theme.colors.primary]);
+  }, [navigation, session]);
 
   async function openCompleteDialog() {
     if (!session) return;
@@ -168,16 +168,16 @@ export default function ClassSessionDetailScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.center, { backgroundColor: theme.colors.background }]}>
-        <ActivityIndicator />
+      <View style={styles.center}>
+        <ActivityIndicator color={Brand.purple} />
       </View>
     );
   }
 
   if (!session) {
     return (
-      <View style={[styles.center, { backgroundColor: theme.colors.background }]}>
-        <Text style={{ color: theme.colors.onSurface }}>Session not found.</Text>
+      <View style={styles.center}>
+        <Text style={{ color: Brand.textPrimary }}>Session not found.</Text>
       </View>
     );
   }
@@ -187,19 +187,20 @@ export default function ClassSessionDetailScreen() {
 
   return (
     <ScrollView
-      style={{ backgroundColor: theme.colors.background }}
+      style={styles.container}
       contentContainerStyle={styles.content}
     >
-      {/* Title & badges */}
-      <View style={[styles.titleRow, { borderLeftColor: session.class_type_color }]}>
-        <Text variant="titleLarge" style={{ color: theme.colors.onBackground }}>
-          {session.series_title}
-        </Text>
+      {/* Hero strip */}
+      <View style={[styles.heroStrip, {
+        borderLeftColor: session.class_type_color,
+        backgroundColor: session.class_type_color + '18',
+      }]}>
+        <Text style={styles.heroTitle}>{session.series_title}</Text>
         <View style={styles.badgeRow}>
           <Chip
             compact
             style={{ backgroundColor: session.class_type_color + '33' }}
-            textStyle={{ color: session.class_type_color }}
+            textStyle={{ color: session.class_type_color, fontSize: 11 }}
           >
             {session.class_type_name}
           </Chip>
@@ -207,18 +208,19 @@ export default function ClassSessionDetailScreen() {
         </View>
       </View>
 
-      <Divider />
-
-      {/* Details */}
-      <View style={styles.detailsBlock}>
-        <DetailRow label="Date" value={formatDisplayDate(session.session_date)} theme={theme} />
-        <DetailRow label="Time" value={formatDisplayTime(session.class_time)} theme={theme} />
-        <DetailRow label="Duration" value={`${session.duration_minutes} min`} theme={theme} />
+      {/* Details card */}
+      <View style={styles.detailCard}>
+        <DetailRow label="Date" value={formatDisplayDate(session.session_date)} />
+        <Divider style={styles.rowDivider} />
+        <DetailRow label="Time" value={formatDisplayTime(session.class_time)} />
+        <Divider style={styles.rowDivider} />
+        <DetailRow label="Duration" value={`${session.duration_minutes} min`} />
+        <Divider style={styles.rowDivider} />
         <DetailRow
           label="Location"
           value={`${session.location_type === 'online' ? 'Online' : 'Offline'}${session.location ? ` · ${session.location}` : ''}`}
-          theme={theme}
         />
+        <Divider style={styles.rowDivider} />
         {isManager ? (
           <DetailRow
             label="Manager"
@@ -227,27 +229,21 @@ export default function ClassSessionDetailScreen() {
                 ? `${session.manager_name} · ${formatCurrency(session.per_class_rate)}/class`
                 : '—'
             }
-            theme={theme}
           />
         ) : (
-          <DetailRow label="Source" value="Personal Training" theme={theme} />
+          <DetailRow label="Source" value="Personal Training" />
         )}
         {session.status === 'completed' && (
-          <DetailRow
-            label="Students"
-            value={String(session.student_count)}
-            theme={theme}
-          />
+          <>
+            <Divider style={styles.rowDivider} />
+            <DetailRow label="Students" value={String(session.student_count)} />
+          </>
         )}
       </View>
 
-      <Divider />
-
-      {/* Notes */}
-      <View style={styles.section}>
-        <Text variant="labelLarge" style={{ color: theme.colors.onSurfaceVariant }}>
-          Notes
-        </Text>
+      {/* Notes card */}
+      <View style={styles.detailCard}>
+        <Text variant="labelLarge" style={styles.cardLabel}>Notes</Text>
         {isUpcoming ? (
           <>
             <TextInput
@@ -257,6 +253,7 @@ export default function ClassSessionDetailScreen() {
               multiline
               numberOfLines={3}
               placeholder="Add notes..."
+              contentStyle={{ textAlignVertical: 'top', paddingTop: 8 }}
             />
             {notesChanged && (
               <Button
@@ -264,6 +261,7 @@ export default function ClassSessionDetailScreen() {
                 onPress={handleSaveNotes}
                 loading={saving}
                 disabled={saving}
+                textColor={Brand.purple}
                 style={{ alignSelf: 'flex-end' }}
               >
                 Save Notes
@@ -271,7 +269,7 @@ export default function ClassSessionDetailScreen() {
             )}
           </>
         ) : (
-          <Text variant="bodyMedium" style={{ color: theme.colors.onSurface }}>
+          <Text variant="bodyMedium" style={{ color: Brand.textSecondary }}>
             {session.notes || '—'}
           </Text>
         )}
@@ -281,21 +279,22 @@ export default function ClassSessionDetailScreen() {
       {isUpcoming && (
         <View style={styles.actions}>
           <Button
-            mode="contained"
-            onPress={openCompleteDialog}
-            style={{ flex: 1 }}
-            disabled={saving}
-          >
-            Mark Complete
-          </Button>
-          <Button
             mode="outlined"
             onPress={() => setShowSkipDialog(true)}
-            style={{ flex: 1 }}
+            style={styles.skipBtn}
+            contentStyle={styles.skipBtnContent}
+            textColor={Brand.textSecondary}
             disabled={saving}
           >
             Skip
           </Button>
+          <GradientButton
+            label="Mark Complete"
+            onPress={openCompleteDialog}
+            loading={saving}
+            disabled={saving}
+            style={{ flex: 1, margin: 1 }}
+          />
         </View>
       )}
 
@@ -304,18 +303,15 @@ export default function ClassSessionDetailScreen() {
         <Modal
           visible={showCompleteDialog}
           onDismiss={() => setShowCompleteDialog(false)}
-          contentContainerStyle={[styles.modal, { backgroundColor: theme.colors.surface }]}
+          contentContainerStyle={styles.modal}
         >
-          <Text variant="titleMedium" style={{ color: theme.colors.onSurface, marginBottom: 12 }}>
+          <Text variant="titleMedium" style={{ color: Brand.textPrimary, marginBottom: 12, fontFamily: 'Montserrat_600SemiBold' }}>
             Mark Session Complete
           </Text>
 
           {isManager ? (
             <>
-              <Text
-                variant="bodySmall"
-                style={{ color: theme.colors.onSurfaceVariant, marginBottom: 8 }}
-              >
+              <Text variant="bodySmall" style={{ color: Brand.textSecondary, marginBottom: 8 }}>
                 How many students attended?
               </Text>
               <TextInput
@@ -328,18 +324,12 @@ export default function ClassSessionDetailScreen() {
             </>
           ) : (
             <>
-              <Text
-                variant="bodySmall"
-                style={{ color: theme.colors.onSurfaceVariant, marginBottom: 8 }}
-              >
+              <Text variant="bodySmall" style={{ color: Brand.textSecondary, marginBottom: 8 }}>
                 Select attending trainees ({attendingIds.size} selected):
               </Text>
               <ScrollView style={{ maxHeight: 260 }}>
                 {allTrainees.length === 0 ? (
-                  <Text
-                    variant="bodyMedium"
-                    style={{ color: theme.colors.onSurfaceVariant, paddingVertical: 8 }}
-                  >
+                  <Text variant="bodyMedium" style={{ color: Brand.textMuted, paddingVertical: 8 }}>
                     No trainees added yet.
                   </Text>
                 ) : (
@@ -349,7 +339,7 @@ export default function ClassSessionDetailScreen() {
                       label={t.name}
                       status={attendingIds.has(t.id) ? 'checked' : 'unchecked'}
                       onPress={() => toggleTrainee(t.id)}
-                      labelStyle={{ color: theme.colors.onSurface }}
+                      labelStyle={{ color: Brand.textPrimary }}
                     />
                   ))
                 )}
@@ -365,8 +355,8 @@ export default function ClassSessionDetailScreen() {
             style={{ marginTop: 12 }}
           />
 
-          <View style={[styles.dialogActions]}>
-            <Button onPress={() => setShowCompleteDialog(false)} disabled={saving}>
+          <View style={styles.dialogActions}>
+            <Button textColor={Brand.textSecondary} onPress={() => setShowCompleteDialog(false)} disabled={saving}>
               Cancel
             </Button>
             <Button
@@ -374,6 +364,7 @@ export default function ClassSessionDetailScreen() {
               onPress={handleComplete}
               loading={saving}
               disabled={saving}
+              buttonColor={Brand.purple}
             >
               Confirm
             </Button>
@@ -397,42 +388,65 @@ export default function ClassSessionDetailScreen() {
   );
 }
 
-function DetailRow({
-  label,
-  value,
-  theme,
-}: {
-  label: string;
-  value: string;
-  theme: ReturnType<typeof useAppTheme>['theme'];
-}) {
+function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.detailRow}>
-      <Text
-        variant="labelMedium"
-        style={{ color: theme.colors.onSurfaceVariant, width: 88 }}
-      >
-        {label}
-      </Text>
-      <Text
-        variant="bodyMedium"
-        style={{ color: theme.colors.onSurface, flex: 1 }}
-      >
-        {value}
-      </Text>
+      <Text variant="labelMedium" style={styles.detailLabel}>{label}</Text>
+      <Text variant="bodyMedium" style={styles.detailValue}>{value}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  content: { padding: 16, gap: 16, paddingBottom: 32 },
-  titleRow: { borderLeftWidth: 4, paddingLeft: 12, gap: 8 },
+  container: { flex: 1, backgroundColor: Brand.backgroundDark },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Brand.backgroundDark },
+  content: { padding: 16, gap: 12, paddingBottom: 32 },
+  heroStrip: {
+    borderLeftWidth: 4,
+    paddingLeft: 16,
+    paddingRight: 16,
+    paddingVertical: 16,
+    borderRadius: 16,
+    gap: 10,
+  },
+  heroTitle: {
+    color: Brand.textPrimary,
+    fontFamily: 'Poppins_700Bold',
+    fontSize: 18,
+  },
   badgeRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
-  detailsBlock: { gap: 10 },
+  detailCard: {
+    backgroundColor: Brand.surfaceDark,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Brand.borderSubtle,
+    padding: 14,
+    gap: 8,
+    elevation: 4,
+    shadowColor: Brand.purple,
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  cardLabel: {
+    color: Brand.textSecondary,
+    fontFamily: 'Montserrat_600SemiBold',
+    marginBottom: 4,
+  },
+  rowDivider: { backgroundColor: Brand.borderSubtle, marginVertical: 2 },
   detailRow: { flexDirection: 'row', alignItems: 'flex-start' },
-  section: { gap: 8 },
+  detailLabel: { color: Brand.textSecondary, width: 88 },
+  detailValue: { color: Brand.textPrimary, flex: 1 },
   actions: { flexDirection: 'row', gap: 12 },
-  modal: { margin: 20, padding: 20, borderRadius: 12 },
+  skipBtn: { borderColor: Brand.borderSubtle },
+  skipBtnContent: { height: 52, alignItems: 'center', justifyContent: 'center' } as any,
+  modal: {
+    margin: 20,
+    padding: 20,
+    borderRadius: 16,
+    backgroundColor: Brand.surfaceElevated,
+    borderWidth: 1,
+    borderColor: Brand.borderSubtle,
+  },
   dialogActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 16 },
 });

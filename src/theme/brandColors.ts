@@ -28,3 +28,11 @@ export const Gradients = {
   cardBorder:   ['#5B2EFF', '#FF3D81'] as const,
   orangePink:   ['#FF7A00', '#FF3D81'] as const,
 } as const;
+
+// Floating tab bar: 72px height + 8px bottom padding = 80px total
+export const Layout = {
+  TAB_BAR_HEIGHT: 80,
+  FAB_BOTTOM: 96,         // above tab bar (80px) + 16px gap
+  LIST_PAD_WITH_FAB: 160, // clears FAB (56px) + gap + tab bar
+  LIST_PAD_NO_FAB: 96,    // clears tab bar + buffer, no FAB
+} as const;

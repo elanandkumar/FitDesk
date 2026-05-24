@@ -1,9 +1,14 @@
 import React, { useCallback, useLayoutEffect, useState } from 'react';
 import { SectionList, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { FAB, IconButton, Text } from 'react-native-paper';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { IconButton, Text } from 'react-native-paper';
+import GradientFAB from '../../components/common/GradientFAB';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme, Brand } from '../../theme';
+import { Layout } from '../../theme/brandColors';
 import { EnrichedSession } from '../../types';
 import {
   getEnrichedSessionsByDateRange,
@@ -30,8 +35,15 @@ function sectionTitle(isoDate: string, todayStr: string): string {
   return d.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short' });
 }
 
+const QUICK_ACTIONS = [
+  { icon: 'calendar-plus' as const, label: 'Add Session' },
+  { icon: 'calendar-month' as const, label: 'Calendar' },
+  { icon: 'chart-bar' as const, label: 'Reports' },
+];
+
 export default function DashboardScreen() {
   const { theme } = useAppTheme();
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const [sections, setSections] = useState<Section[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,15 +98,42 @@ export default function DashboardScreen() {
   const todayCount = sections[0]?.title === 'Today' ? sections[0].data.length : 0;
   const weekTotal = sections.reduce((acc, s) => acc + s.data.length, 0);
 
+  function handleQuickAction(label: string) {
+    if (label === 'Add Session') {
+      navigation.navigate('AddSession', {});
+    } else if (label === 'Calendar') {
+      (navigation as any).navigate('Calendar');
+    } else if (label === 'Reports') {
+      navigation.navigate('IncomeSummary');
+    }
+  }
+
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <Animated.View entering={FadeIn.duration(350)} style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <SectionList
         sections={sections}
         keyExtractor={(item) => String(item.id)}
         contentContainerStyle={styles.listContent}
         stickySectionHeadersEnabled={false}
         ListHeaderComponent={
-          <HeroCard todayCount={todayCount} weekTotal={weekTotal} weekEarnings={weekEarnings} />
+          <>
+            <HeroCard todayCount={todayCount} weekTotal={weekTotal} weekEarnings={weekEarnings} />
+            <View style={styles.quickActions}>
+              {QUICK_ACTIONS.map(({ icon, label }) => (
+                <TouchableOpacity
+                  key={label}
+                  onPress={() => handleQuickAction(label)}
+                  style={styles.quickActionItem}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.quickActionIcon}>
+                    <MaterialCommunityIcons name={icon} size={22} color={Brand.orange} />
+                  </View>
+                  <Text variant="bodySmall" style={styles.quickActionLabel}>{label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </>
         }
         ListEmptyComponent={
           !loading ? (
@@ -115,10 +154,12 @@ export default function DashboardScreen() {
             </Text>
           </View>
         )}
-        renderItem={({ item }) => (
+        renderItem={({ item, index }) => (
+          <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 55).duration(350)}>
           <TouchableOpacity
             onPress={() => navigation.navigate('ClassSessionDetail', { sessionId: item.id })}
             style={styles.sessionCard}
+            activeOpacity={0.75}
           >
             <View style={[styles.colorBar, { backgroundColor: item.class_type_color }]} />
             <View style={styles.sessionInfo}>
@@ -136,26 +177,50 @@ export default function DashboardScreen() {
             </View>
             <StatusBadge status={item.status} />
           </TouchableOpacity>
+          </Animated.View>
         )}
         ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
         SectionSeparatorComponent={() => <View style={{ height: 4 }} />}
       />
 
-      <FAB
+      <GradientFAB
         icon="view-list"
-        style={styles.fab}
-        color={Brand.textPrimary}
+        style={[styles.fab, { bottom: Layout.FAB_BOTTOM + insets.bottom }]}
         onPress={() => navigation.navigate('ClassSeriesList')}
       />
 
       <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP} />
-    </View>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  listContent: { flexGrow: 1, paddingBottom: 88 },
+  listContent: { flexGrow: 1, paddingBottom: Layout.LIST_PAD_WITH_FAB },
+  quickActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginBottom: 4,
+  },
+  quickActionItem: { alignItems: 'center', flex: 1 },
+  quickActionIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: Brand.surfaceElevated,
+    borderWidth: 1,
+    borderColor: Brand.borderSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickActionLabel: {
+    color: Brand.textSecondary,
+    marginTop: 6,
+    fontSize: 11,
+    textAlign: 'center',
+  },
   sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -194,9 +259,6 @@ const styles = StyleSheet.create({
   sessionInfo: { flex: 1, gap: 2 },
   fab: {
     position: 'absolute',
-    bottom: 16,
     right: 16,
-    borderRadius: 16,
-    backgroundColor: Brand.orange,
   },
 });

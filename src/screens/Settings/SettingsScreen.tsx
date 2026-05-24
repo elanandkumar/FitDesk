@@ -1,11 +1,14 @@
 import React, { useCallback, useLayoutEffect, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
-import { Divider, IconButton, List, SegmentedButtons, Switch, Text } from 'react-native-paper';
+import { Image, ScrollView, StyleSheet, View } from 'react-native';
+import { IconButton, SegmentedButtons, Switch, Text } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { TouchableOpacity } from 'react-native';
 import Constants from 'expo-constants';
 import { useAppTheme } from '../../theme';
+import { Brand } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { getDatabase } from '../../database/db';
 import { scheduleUpcomingNotifications } from '../../notifications/scheduler';
@@ -20,10 +23,10 @@ const HELP =
 type Nav = StackNavigationProp<RootStackParamList>;
 
 const MINUTES_OPTIONS = [
-  { value: '15', label: '15 min', style: { borderRadius: 4 } },
-  { value: '30', label: '30 min', style: { borderRadius: 4 } },
-  { value: '60', label: '1 hr', style: { borderRadius: 4 } },
-  { value: '120', label: '2 hr', style: { borderRadius: 4 } },
+  { value: '15', label: '15 min' },
+  { value: '30', label: '30 min' },
+  { value: '60', label: '1 hr' },
+  { value: '120', label: '2 hr' },
 ];
 
 async function getSetting(key: string): Promise<string | null> {
@@ -37,6 +40,41 @@ async function setSetting(key: string, value: string): Promise<void> {
   await db.runAsync('UPDATE settings SET value = ? WHERE key = ?', [value, key]);
 }
 
+function SectionHeader({ label }: { label: string }) {
+  return (
+    <View style={styles.sectionHeader}>
+      <View style={styles.sectionAccent} />
+      <Text style={styles.sectionLabel}>{label}</Text>
+    </View>
+  );
+}
+
+function SettingsCard({ children }: { children: React.ReactNode }) {
+  return <View style={styles.card}>{children}</View>;
+}
+
+interface NavRowProps {
+  icon: string;
+  label: string;
+  onPress: () => void;
+  isLast?: boolean;
+}
+
+function NavRow({ icon, label, onPress, isLast }: NavRowProps) {
+  return (
+    <>
+      <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.7}>
+        <View style={styles.rowIcon}>
+          <MaterialCommunityIcons name={icon as never} size={20} color={Brand.purple} />
+        </View>
+        <Text style={styles.rowLabel}>{label}</Text>
+        <MaterialCommunityIcons name="chevron-right" size={20} color={Brand.textMuted} />
+      </TouchableOpacity>
+      {!isLast && <View style={styles.divider} />}
+    </>
+  );
+}
+
 export default function SettingsScreen() {
   const { theme } = useAppTheme();
   const navigation = useNavigation<Nav>();
@@ -47,11 +85,7 @@ export default function SettingsScreen() {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <IconButton
-          icon="help-circle-outline"
-          iconColor={theme.colors.primary}
-          onPress={() => setHelpVisible(true)}
-        />
+        <IconButton icon="help-circle-outline" iconColor={theme.colors.primary} onPress={() => setHelpVisible(true)} />
       ),
     });
   }, [navigation, theme.colors.primary]);
@@ -88,90 +122,72 @@ export default function SettingsScreen() {
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <List.Section>
-        <List.Subheader style={{ color: theme.colors.primary }}>Notifications</List.Subheader>
-        <List.Item
-          title="Enable Reminders"
-          titleStyle={{ color: theme.colors.onSurface }}
-          style={{ backgroundColor: theme.colors.surface }}
-          left={(props) => (
-            <List.Icon {...props} icon="bell-outline" color={theme.colors.primary} />
-          )}
-          right={() => (
-            <Switch
-              value={notifEnabled}
-              onValueChange={handleToggleNotifications}
-              color={theme.colors.primary}
-            />
-          )}
-        />
-        {notifEnabled && (
-          <View style={[styles.minutesRow, { backgroundColor: theme.colors.surface }]}>
-            <Text variant="bodyMedium" style={{ color: theme.colors.onSurface, marginBottom: 8 }}>
-              Remind me before class
-            </Text>
-            <SegmentedButtons
-              value={minutesBefore}
-              onValueChange={handleMinutesChange}
-              buttons={MINUTES_OPTIONS}
-              style={{ borderRadius: 4 }}
-            />
+    <ScrollView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+      contentContainerStyle={styles.content}
+    >
+      <SectionHeader label="Notifications" />
+      <SettingsCard>
+        <View style={styles.row}>
+          <View style={styles.rowIcon}>
+            <MaterialCommunityIcons name="bell-outline" size={20} color={Brand.purple} />
           </View>
+          <Text style={[styles.rowLabel, { flex: 1 }]}>Enable Reminders</Text>
+          <Switch
+            value={notifEnabled}
+            onValueChange={handleToggleNotifications}
+            color={Brand.purple}
+          />
+        </View>
+        {notifEnabled && (
+          <>
+            <View style={styles.divider} />
+            <View style={styles.minutesRow}>
+              <Text style={styles.minutesLabel}>Remind me before class</Text>
+              <SegmentedButtons
+                value={minutesBefore}
+                onValueChange={handleMinutesChange}
+                buttons={MINUTES_OPTIONS}
+                theme={{ colors: { secondaryContainer: Brand.purple, onSecondaryContainer: Brand.textPrimary } }}
+              />
+            </View>
+          </>
         )}
-      </List.Section>
+      </SettingsCard>
 
-      <Divider />
-
-      <List.Section>
-        <List.Subheader style={{ color: theme.colors.primary }}>Data</List.Subheader>
-        <List.Item
-          title="Income Summary"
-          titleStyle={{ color: theme.colors.onSurface }}
-          style={{ backgroundColor: theme.colors.surface }}
-          left={(props) => (
-            <List.Icon {...props} icon="chart-bar" color={theme.colors.primary} />
-          )}
-          right={(props) => <List.Icon {...props} icon="chevron-right" />}
+      <SectionHeader label="Data & Reports" />
+      <SettingsCard>
+        <NavRow
+          icon="chart-bar"
+          label="Income Summary"
           onPress={() => navigation.navigate('IncomeSummary')}
         />
-        <List.Item
-          title="Class Types"
-          titleStyle={{ color: theme.colors.onSurface }}
-          style={{ backgroundColor: theme.colors.surface }}
-          left={(props) => (
-            <List.Icon {...props} icon="tag-multiple" color={theme.colors.primary} />
-          )}
-          right={(props) => <List.Icon {...props} icon="chevron-right" />}
+        <NavRow
+          icon="tag-multiple"
+          label="Class Types"
           onPress={() => navigation.navigate('ClassTypes')}
         />
-        <List.Item
-          title="Class Series"
-          titleStyle={{ color: theme.colors.onSurface }}
-          style={{ backgroundColor: theme.colors.surface }}
-          left={(props) => (
-            <List.Icon {...props} icon="calendar-multiselect" color={theme.colors.primary} />
-          )}
-          right={(props) => <List.Icon {...props} icon="chevron-right" />}
+        <NavRow
+          icon="calendar-multiselect"
+          label="Class Series"
           onPress={() => navigation.navigate('ClassSeriesList')}
         />
-        <List.Item
-          title="Export / Import"
-          titleStyle={{ color: theme.colors.onSurface }}
-          style={{ backgroundColor: theme.colors.surface }}
-          left={(props) => (
-            <List.Icon {...props} icon="database-export" color={theme.colors.primary} />
-          )}
-          right={(props) => <List.Icon {...props} icon="chevron-right" />}
+        <NavRow
+          icon="database-export"
+          label="Export / Import"
           onPress={() => navigation.navigate('DataScreen')}
+          isLast
         />
-      </List.Section>
+      </SettingsCard>
 
-      <Divider />
-      <View style={styles.version}>
-        <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-          FitDesk v1.0.0
-        </Text>
+      <View style={styles.about}>
+        <Image
+          source={require('../../../assets/logo-text.png')}
+          style={styles.logoImage}
+          resizeMode="contain"
+        />
+        <Text style={styles.version}>Version 1.0.0</Text>
+        <Text style={styles.tagline}>Your fitness class companion</Text>
       </View>
 
       <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP} />
@@ -181,10 +197,60 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  minutesRow: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 16,
+  content: { padding: 16, paddingBottom: 96 },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 10,
+    marginTop: 20,
   },
-  version: { padding: 24, alignItems: 'center' },
+  sectionAccent: {
+    width: 3,
+    height: 16,
+    borderRadius: 2,
+    backgroundColor: Brand.orange,
+  },
+  sectionLabel: {
+    color: Brand.textSecondary,
+    fontSize: 13,
+    fontWeight: '600',
+    fontFamily: 'Montserrat_600SemiBold',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  card: {
+    backgroundColor: Brand.surfaceDark,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Brand.borderSubtle,
+    overflow: 'hidden',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 12,
+  },
+  rowIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: `${Brand.purple}1A`,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rowLabel: { color: Brand.textPrimary, fontSize: 15 },
+  divider: { height: 1, backgroundColor: Brand.borderSubtle, marginHorizontal: 16 },
+  minutesRow: { padding: 16, gap: 10 },
+  minutesLabel: { color: Brand.textSecondary, fontSize: 13 },
+  about: { alignItems: 'center', paddingTop: 36, paddingBottom: 16, gap: 6 },
+  logoImage: {
+    width: 120,
+    height: 30,
+    marginBottom: 4,
+  },
+  version: { color: Brand.textMuted, fontSize: 13 },
+  tagline: { color: Brand.textMuted, fontSize: 12 },
 });

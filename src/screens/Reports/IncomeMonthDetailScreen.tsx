@@ -1,9 +1,9 @@
 import React, { useCallback, useLayoutEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { Card, Chip, Divider, Text } from 'react-native-paper';
+import { Text } from 'react-native-paper';
 import { useFocusEffect, useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { useAppTheme } from '../../theme';
+import { Brand } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { ManagerMonthIncome, TraineeMonthPackage } from '../../types';
 import { getManagerIncomeForMonth, getTraineePackagesForMonth } from '../../database/repositories/paymentRepository';
@@ -22,7 +22,6 @@ function formatMonth(ym: string): string {
 }
 
 export default function IncomeMonthDetailScreen() {
-  const { theme } = useAppTheme();
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const { month } = route.params;
@@ -42,87 +41,127 @@ export default function IncomeMonthDetailScreen() {
 
   const hasData = managers.length > 0 || packages.length > 0;
 
+  const managerTotal = managers.reduce((s, m) => s + m.paid + m.pending, 0);
+  const packageTotal = packages.reduce((s, p) => s + p.amount, 0);
+  const grandTotal = managerTotal + packageTotal;
+
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {!hasData && (
         <EmptyState icon="chart-bar" title="No data for this month" subtitle="" />
       )}
 
       {managers.length > 0 && (
         <>
-          <Text variant="titleSmall" style={[styles.sectionLabel, { color: theme.colors.onSurfaceVariant }]}>
-            Manager Classes
-          </Text>
+          <Text style={styles.sectionLabel}>Manager Classes</Text>
           {managers.map((m) => (
-            <Card key={m.manager_id} style={[styles.card, { backgroundColor: theme.colors.surface }]} mode="outlined">
-              <Card.Content>
-                <View style={styles.row}>
-                  <Text variant="bodyMedium" style={{ color: theme.colors.onSurface, flex: 1, fontWeight: '600' }}>
-                    {m.manager_name}
-                  </Text>
-                  <View style={styles.amounts}>
-                    {m.paid > 0 && (
-                      <Text variant="bodyMedium" style={{ color: theme.colors.primary }}>
-                        {formatCurrency(m.paid)} paid
-                      </Text>
-                    )}
-                    {m.pending > 0 && (
-                      <Text variant="bodySmall" style={{ color: theme.colors.error }}>
-                        {formatCurrency(m.pending)} due
-                      </Text>
-                    )}
-                  </View>
+            <View key={m.manager_id} style={styles.itemCard}>
+              <View style={styles.itemRow}>
+                <Text variant="bodyMedium" style={styles.itemName}>{m.manager_name}</Text>
+                <View style={styles.amounts}>
+                  {m.paid > 0 && (
+                    <Text style={styles.paidAmount}>{formatCurrency(m.paid)} paid</Text>
+                  )}
+                  {m.pending > 0 && (
+                    <Text variant="bodySmall" style={styles.pendingAmount}>
+                      {formatCurrency(m.pending)} due
+                    </Text>
+                  )}
                 </View>
-              </Card.Content>
-            </Card>
+              </View>
+            </View>
           ))}
         </>
       )}
 
       {packages.length > 0 && (
         <>
-          <Text variant="titleSmall" style={[styles.sectionLabel, { color: theme.colors.onSurfaceVariant, marginTop: managers.length > 0 ? 16 : 0 }]}>
+          <Text style={[styles.sectionLabel, managers.length > 0 && { marginTop: 16 }]}>
             Trainee Packages
           </Text>
           {packages.map((p) => (
-            <Card key={p.trainee_id} style={[styles.card, { backgroundColor: theme.colors.surface }]} mode="outlined">
-              <Card.Content>
-                <View style={styles.row}>
-                  <View style={{ flex: 1 }}>
-                    <Text variant="bodyMedium" style={{ color: theme.colors.onSurface, fontWeight: '600' }}>
-                      {p.trainee_name}
+            <View key={p.trainee_id} style={styles.itemCard}>
+              <View style={styles.itemRow}>
+                <View style={{ flex: 1 }}>
+                  <Text variant="bodyMedium" style={styles.itemName}>{p.trainee_name}</Text>
+                  <Text variant="bodySmall" style={{ color: Brand.textMuted }}>
+                    {p.used_sessions}/{p.total_sessions} sessions
+                  </Text>
+                </View>
+                <View style={styles.amounts}>
+                  <Text style={[styles.paidAmount, p.status === 'pending' && { color: Brand.pink }]}>
+                    {formatCurrency(p.amount)}
+                  </Text>
+                  <View style={[
+                    styles.statusPill,
+                    { backgroundColor: p.status === 'paid' ? Brand.purple + '33' : Brand.pink + '22' },
+                  ]}>
+                    <Text style={{
+                      fontSize: 10,
+                      fontWeight: '600',
+                      color: p.status === 'paid' ? Brand.purple : Brand.pink,
+                    }}>
+                      {p.status === 'paid' ? 'Paid' : 'Pending'}
                     </Text>
-                    <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                      {p.used_sessions}/{p.total_sessions} sessions
-                    </Text>
-                  </View>
-                  <View style={styles.amounts}>
-                    <Text variant="bodyMedium" style={{ color: theme.colors.onSurface }}>
-                      {formatCurrency(p.amount)}
-                    </Text>
-                    <Chip
-                      compact
-                      style={{ backgroundColor: p.status === 'paid' ? theme.colors.primaryContainer : theme.colors.errorContainer }}
-                      textStyle={{ color: p.status === 'paid' ? theme.colors.onPrimaryContainer : theme.colors.onErrorContainer, fontSize: 11 }}
-                    >
-                      {p.status}
-                    </Chip>
                   </View>
                 </View>
-              </Card.Content>
-            </Card>
+              </View>
+            </View>
           ))}
         </>
+      )}
+
+      {hasData && (
+        <View style={styles.totalCard}>
+          <Text variant="labelMedium" style={{ color: Brand.textSecondary }}>Month Total</Text>
+          <Text style={styles.totalAmount}>{formatCurrency(grandTotal)}</Text>
+        </View>
       )}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  content: { padding: 12, gap: 8 },
-  sectionLabel: { marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 },
-  card: { marginBottom: 4 },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  amounts: { alignItems: 'flex-end', gap: 2 },
+  container: { flex: 1, backgroundColor: Brand.backgroundDark },
+  content: { padding: 16, gap: 8, paddingBottom: 32 },
+  sectionLabel: {
+    color: Brand.textSecondary,
+    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 11,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 6,
+  },
+  itemCard: {
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    backgroundColor: Brand.surfaceDark,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Brand.borderSubtle,
+    elevation: 4,
+    shadowColor: Brand.purple,
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  itemRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  itemName: { color: Brand.textPrimary, fontWeight: '600' },
+  paidAmount: { color: Brand.orange, fontFamily: 'Poppins_700Bold', fontSize: 14 },
+  pendingAmount: { color: Brand.pink },
+  amounts: { alignItems: 'flex-end', gap: 4 },
+  statusPill: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 },
+  totalCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 14,
+    backgroundColor: Brand.surfaceElevated,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Brand.borderSubtle,
+    marginTop: 8,
+  },
+  totalAmount: { color: Brand.orange, fontFamily: 'Poppins_700Bold', fontSize: 20 },
 });

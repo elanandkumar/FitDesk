@@ -1,9 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
-import { Button, Card, Chip, Divider, FAB, IconButton, Text } from 'react-native-paper';
+import { Button, Divider, IconButton, Text } from 'react-native-paper';
+import GradientFAB from '../../components/common/GradientFAB';
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { useAppTheme } from '../../theme';
+import { Brand } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { Trainee, TraineePackage, EnrichedSession } from '../../types';
 import { getTraineeById, deleteTrainee } from '../../database/repositories/traineeRepository';
@@ -18,7 +20,6 @@ import HelpSheet from '../../components/common/HelpSheet';
 const HELP =
   'View packages and attended sessions. Packages track monthly session counts and payment status.';
 
-
 type Nav = StackNavigationProp<RootStackParamList, 'TraineeDetail'>;
 type Route = RouteProp<RootStackParamList, 'TraineeDetail'>;
 
@@ -31,7 +32,7 @@ function formatMonth(ym: string): string {
 }
 
 export default function TraineeDetailScreen() {
-  const { theme } = useAppTheme();
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const { traineeId } = route.params;
@@ -64,11 +65,11 @@ export default function TraineeDetailScreen() {
       navigation.setOptions({
         title: trainee.name,
         headerRight: () => (
-          <IconButton icon="help-circle-outline" iconColor={theme.colors.primary} onPress={() => setHelpVisible(true)} />
+          <IconButton icon="help-circle-outline" iconColor={Brand.purple} onPress={() => setHelpVisible(true)} />
         ),
       });
     }
-  }, [trainee, traineeId, navigation, theme.colors.primary]);
+  }, [trainee, traineeId, navigation]);
 
   async function handleDelete() {
     try {
@@ -85,74 +86,62 @@ export default function TraineeDetailScreen() {
   const totalPending = pendingPackages.reduce((s, p) => s + p.amount, 0);
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-    <ScrollView
-      contentContainerStyle={styles.content}
-    >
-      {/* Contact */}
-      <Card style={{ backgroundColor: theme.colors.surface }}>
-        <Card.Content style={styles.cardContent}>
-          <Text variant="titleMedium" style={{ color: theme.colors.onSurface }}>Contact</Text>
-          <Divider style={{ marginVertical: 8 }} />
-          {trainee.phone ? <InfoRow label="Phone" value={trainee.phone} theme={theme} /> : null}
-          {trainee.email ? <InfoRow label="Email" value={trainee.email} theme={theme} /> : null}
-          {!trainee.phone && !trainee.email && (
-            <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>No contact info</Text>
-          )}
-        </Card.Content>
-      </Card>
+    <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.content}>
 
-      {/* Packages */}
-      <Card style={{ backgroundColor: theme.colors.surface }}>
-        <Card.Content style={styles.cardContent}>
-          <View style={styles.sectionHeader}>
-            <Text variant="titleMedium" style={{ color: theme.colors.onSurface }}>Packages</Text>
-            {totalPending > 0 && (
-              <Chip
-                compact
-                style={{ backgroundColor: theme.colors.errorContainer }}
-                textStyle={{ color: theme.colors.onErrorContainer, fontSize: 12 }}
-              >
-                {formatCurrency(totalPending)} due
-              </Chip>
-            )}
-          </View>
-          <Divider style={{ marginVertical: 8 }} />
+        {/* Contact */}
+        <View style={styles.sectionHeader}>
+          <View style={styles.sectionAccent} />
+          <Text style={styles.sectionLabel}>Contact</Text>
+        </View>
+        <View style={styles.card}>
+          {trainee.phone ? <InfoRow label="Phone" value={trainee.phone} /> : null}
+          {trainee.email ? <InfoRow label="Email" value={trainee.email} /> : null}
+          {!trainee.phone && !trainee.email && (
+            <Text variant="bodyMedium" style={{ color: Brand.textMuted }}>No contact info</Text>
+          )}
+        </View>
+
+        {/* Packages */}
+        <View style={styles.sectionHeader}>
+          <View style={styles.sectionAccent} />
+          <Text style={styles.sectionLabel}>Packages</Text>
+          {totalPending > 0 && (
+            <View style={styles.pendingBadge}>
+              <Text style={styles.pendingBadgeText}>{formatCurrency(totalPending)} due</Text>
+            </View>
+          )}
+        </View>
+        <View style={styles.card}>
           {packages.length === 0 ? (
-            <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-              No packages yet
-            </Text>
+            <Text variant="bodyMedium" style={{ color: Brand.textMuted }}>No packages yet</Text>
           ) : (
             packages.map((pkg, i) => (
               <View key={pkg.id}>
-                {i > 0 && <Divider style={{ marginVertical: 6 }} />}
+                {i > 0 && <Divider style={{ backgroundColor: Brand.borderSubtle, marginVertical: 6 }} />}
                 <View style={styles.packageRow}>
-                  <View>
-                    <Text variant="bodyMedium" style={{ color: theme.colors.onSurface }}>
+                  <View style={{ flex: 1 }}>
+                    <Text variant="bodyMedium" style={{ color: Brand.textPrimary }}>
                       {formatMonth(pkg.month)}
                     </Text>
-                    <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                    <Text variant="bodySmall" style={{ color: Brand.textSecondary }}>
                       {pkg.used_sessions}/{pkg.total_sessions} sessions used
                     </Text>
                   </View>
                   <View style={styles.packageRight}>
-                    <Text variant="bodyMedium" style={{ color: theme.colors.onSurface, fontWeight: '600' }}>
-                      {formatCurrency(pkg.amount)}
-                    </Text>
+                    <Text style={styles.packageAmount}>{formatCurrency(pkg.amount)}</Text>
                     <View style={[
-                      styles.statusBadge,
+                      styles.statusPill,
                       {
                         backgroundColor: pkg.status === 'pending'
-                          ? theme.colors.errorContainer
-                          : theme.colors.secondaryContainer,
+                          ? Brand.pink + '22'
+                          : Brand.purple + '33',
                       },
                     ]}>
                       <Text style={{
-                        fontSize: 11,
+                        fontSize: 10,
                         fontWeight: '600',
-                        color: pkg.status === 'pending'
-                          ? theme.colors.onErrorContainer
-                          : theme.colors.onSecondaryContainer,
+                        color: pkg.status === 'pending' ? Brand.pink : Brand.purple,
                       }}>
                         {pkg.status === 'pending' ? 'Pending' : 'Paid'}
                       </Text>
@@ -162,116 +151,151 @@ export default function TraineeDetailScreen() {
               </View>
             ))
           )}
-        </Card.Content>
-      </Card>
+        </View>
 
-      {/* Session History */}
-      {sessions.length > 0 && (
-        <Card style={{ backgroundColor: theme.colors.surface }}>
-          <Card.Content style={styles.cardContent}>
-            <Text variant="titleMedium" style={{ color: theme.colors.onSurface }}>
-              Session History ({sessions.length})
-            </Text>
-            <Divider style={{ marginVertical: 8 }} />
-            {sessions.slice(0, 10).map((s, i) => (
-              <View key={s.id}>
-                {i > 0 && <Divider style={{ marginVertical: 6 }} />}
-                <View style={styles.sessionRow}>
-                  <View style={[styles.colorBar, { backgroundColor: s.class_type_color }]} />
-                  <View style={{ flex: 1, gap: 2 }}>
-                    <Text variant="bodyMedium" style={{ color: theme.colors.onSurface }}>
-                      {s.series_title}
-                    </Text>
-                    <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                      {formatDisplayDate(s.session_date)} · {formatDisplayTime(s.class_time)}
-                    </Text>
+        {/* Session History */}
+        {sessions.length > 0 && (
+          <>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionAccent} />
+              <Text style={styles.sectionLabel}>Session History ({sessions.length})</Text>
+            </View>
+            <View style={styles.card}>
+              {sessions.slice(0, 10).map((s, i) => (
+                <View key={s.id}>
+                  {i > 0 && <Divider style={{ backgroundColor: Brand.borderSubtle, marginVertical: 6 }} />}
+                  <View style={styles.sessionRow}>
+                    <View style={[styles.colorBar, { backgroundColor: s.class_type_color }]} />
+                    <View style={{ flex: 1, gap: 2 }}>
+                      <Text variant="bodyMedium" style={{ color: Brand.textPrimary }}>
+                        {s.series_title}
+                      </Text>
+                      <Text variant="bodySmall" style={{ color: Brand.textSecondary }}>
+                        {formatDisplayDate(s.session_date)} · {formatDisplayTime(s.class_time)}
+                      </Text>
+                    </View>
+                    <StatusBadge status={s.status} />
                   </View>
-                  <StatusBadge status={s.status} />
                 </View>
-              </View>
-            ))}
-            {sessions.length > 10 && (
-              <Text
-                variant="bodySmall"
-                style={{ color: theme.colors.onSurfaceVariant, marginTop: 8, textAlign: 'center' }}
-              >
-                + {sessions.length - 10} more sessions
+              ))}
+              {sessions.length > 10 && (
+                <Text variant="bodySmall" style={{ color: Brand.textMuted, marginTop: 8, textAlign: 'center' }}>
+                  + {sessions.length - 10} more sessions
+                </Text>
+              )}
+            </View>
+          </>
+        )}
+
+        {/* Notes */}
+        {trainee.notes ? (
+          <>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionAccent} />
+              <Text style={styles.sectionLabel}>Notes</Text>
+            </View>
+            <View style={styles.card}>
+              <Text variant="bodyMedium" style={{ color: Brand.textSecondary }}>
+                {trainee.notes}
               </Text>
-            )}
-          </Card.Content>
-        </Card>
-      )}
+            </View>
+          </>
+        ) : null}
 
-      {/* Notes */}
-      {trainee.notes ? (
-        <Card style={{ backgroundColor: theme.colors.surface }}>
-          <Card.Content>
-            <Text variant="titleMedium" style={{ color: theme.colors.onSurface }}>Notes</Text>
-            <Divider style={{ marginVertical: 8 }} />
-            <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-              {trainee.notes}
-            </Text>
-          </Card.Content>
-        </Card>
-      ) : null}
+        <Button
+          mode="outlined"
+          onPress={() => setDeleteVisible(true)}
+          textColor={Brand.pink}
+          style={{ borderColor: Brand.pink, marginTop: 8 }}
+        >
+          Delete Trainee
+        </Button>
 
-      <Button
-        mode="outlined"
-        onPress={() => setDeleteVisible(true)}
-        textColor={theme.colors.error}
-        style={{ borderColor: theme.colors.error, marginTop: 8 }}
-      >
-        Delete Trainee
-      </Button>
+        <ConfirmDialog
+          visible={deleteVisible}
+          title="Delete Trainee"
+          message={`Delete "${trainee.name}"? Their session history will also be removed.`}
+          onConfirm={handleDelete}
+          onDismiss={() => setDeleteVisible(false)}
+        />
 
-      <ConfirmDialog
-        visible={deleteVisible}
-        title="Delete Trainee"
-        message={`Delete "${trainee.name}"? Their session history will also be removed.`}
-        onConfirm={handleDelete}
-        onDismiss={() => setDeleteVisible(false)}
-      />
+        <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP} />
+      </ScrollView>
 
-      <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP} />
-
-    </ScrollView>
-      <FAB
+      <GradientFAB
         icon="pencil"
-        style={[styles.fab, { backgroundColor: theme.colors.primary }]}
-        color={theme.colors.onPrimary}
+        style={[styles.fab, { bottom: 16 + insets.bottom }]}
         onPress={() => navigation.navigate('AddEditTrainee', { traineeId })}
       />
     </View>
   );
 }
 
-function InfoRow({
-  label,
-  value,
-  theme,
-}: {
-  label: string;
-  value: string;
-  theme: ReturnType<typeof useAppTheme>['theme'];
-}) {
+function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.infoRow}>
-      <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{label}</Text>
-      <Text variant="bodyMedium" style={{ color: theme.colors.onSurface }}>{value}</Text>
+      <Text variant="bodySmall" style={{ color: Brand.textSecondary }}>{label}</Text>
+      <Text variant="bodyMedium" style={{ color: Brand.textPrimary }}>{value}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  content: { padding: 16, gap: 12 },
-  cardContent: { gap: 4 },
-  infoRow: { gap: 2, marginBottom: 8 },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  packageRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 4 },
+  container: { flex: 1, backgroundColor: Brand.backgroundDark },
+  content: { padding: 16, gap: 4, paddingBottom: 80 },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+    marginTop: 16,
+  },
+  sectionAccent: { width: 3, height: 14, borderRadius: 2, backgroundColor: Brand.orange },
+  sectionLabel: {
+    color: Brand.textSecondary,
+    fontSize: 11,
+    fontFamily: 'Montserrat_600SemiBold',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  pendingBadge: {
+    backgroundColor: Brand.pink + '22',
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginLeft: 4,
+  },
+  pendingBadgeText: { color: Brand.pink, fontSize: 11, fontWeight: '600' },
+  card: {
+    backgroundColor: Brand.surfaceDark,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Brand.borderSubtle,
+    elevation: 4,
+    shadowColor: Brand.purple,
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    padding: 14,
+  },
+  infoRow: { gap: 2, marginBottom: 6 },
+  packageRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
   packageRight: { alignItems: 'flex-end', gap: 4 },
-  statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 },
+  packageAmount: {
+    color: Brand.orange,
+    fontFamily: 'Poppins_700Bold',
+    fontSize: 14,
+  },
+  statusPill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 },
   sessionRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 4 },
   colorBar: { width: 3, alignSelf: 'stretch', borderRadius: 2 },
-  fab: { position: 'absolute', bottom: 16, right: 16, borderRadius: 4 },
+  fab: {
+    position: 'absolute',
+    right: 16,
+  },
 });
