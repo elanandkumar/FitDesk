@@ -5,7 +5,7 @@ import GradientFAB from '../../components/common/GradientFAB';
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Brand, Radius } from '../../theme/brandColors';
+import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { Manager, EnrichedManagerPayment } from '../../types';
 import { getManagerById, deleteManager } from '../../database/repositories/managerRepository';
@@ -109,9 +109,8 @@ export default function ManagerDetailScreen() {
                 backgroundColor: outstanding > 0 ? Brand.pink + '22' : Brand.surfaceElevated,
               }}
               textStyle={{
+                ...Typography.labelMd,
                 color: outstanding > 0 ? Brand.pink : Brand.orange,
-                fontFamily: 'Poppins_700Bold',
-                fontSize: 13,
               }}
             >
               {formatCurrency(outstanding)}
@@ -136,7 +135,7 @@ export default function ManagerDetailScreen() {
                 </>
               )}
               {pendingPayments.length > 0 && paidPayments.length > 0 && (
-                <Divider style={{ backgroundColor: Brand.borderSubtle, marginVertical: 8 }} />
+                <Divider style={{ backgroundColor: Brand.borderSubtle, marginVertical: Spacing.sm }} />
               )}
               {paidPayments.length > 0 && (
                 <>
@@ -147,7 +146,7 @@ export default function ManagerDetailScreen() {
                     <PaymentRow key={p.id} payment={p} showDivider={i > 0} />
                   ))}
                   {paidPayments.length > 8 && (
-                    <Text variant="bodySmall" style={{ color: Brand.textMuted, marginTop: 8, textAlign: 'center' }}>
+                    <Text variant="bodySmall" style={{ color: Brand.textMuted, marginTop: Spacing.sm, textAlign: 'center' }}>
                       + {paidPayments.length - 8} more paid
                     </Text>
                   )}
@@ -176,7 +175,7 @@ export default function ManagerDetailScreen() {
           mode="outlined"
           onPress={() => setDeleteVisible(true)}
           textColor={Brand.pink}
-          style={{ borderColor: Brand.pink, marginTop: 8 }}
+          style={{ borderColor: Brand.pink, marginTop: Spacing.sm }}
         >
           Delete Manager
         </Button>
@@ -194,7 +193,7 @@ export default function ManagerDetailScreen() {
 
       <GradientFAB
         icon="pencil"
-        style={[styles.fab, { bottom: 16 + insets.bottom }]}
+        style={[styles.fab, { bottom: Spacing.lg + insets.bottom }]}
         onPress={() => navigation.navigate('AddEditManager', { managerId })}
       />
     </View>
@@ -251,13 +250,13 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Brand.backgroundDark },
-  content: { padding: 16, gap: 4, paddingBottom: 80 },
+  content: { padding: Spacing.lg, gap: Spacing.xs, paddingBottom: 80 },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
-    marginTop: 16,
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+    marginTop: Spacing.lg,
   },
   sectionAccent: { width: 3, height: 14, borderRadius: Radius.xs, backgroundColor: Brand.orange },
   sectionLabel: {
@@ -294,10 +293,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 4,
   },
-  paymentRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4 },
+  paymentRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, paddingVertical: Spacing.xs },
   colorDot: { width: 8, height: 8, borderRadius: Radius.full, marginTop: 2 },
   fab: {
     position: 'absolute',
-    right: 16,
+    right: Spacing.lg,
   },
 });

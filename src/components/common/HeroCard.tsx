@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Brand, Gradients, Radius } from '../../theme';
+import { Brand, Gradients, Radius, Typography } from '../../theme';
 import { formatCurrency } from '../../utils/currencyUtils';
 
 interface Props {
@@ -69,19 +69,15 @@ const styles = StyleSheet.create({
   },
   left: { flex: 1, gap: 4 },
   greeting: {
-    fontFamily: 'Outfit_400Regular',
-    fontSize: 14,
+    ...Typography.body,
     color: Brand.textSecondary,
   },
   count: {
-    fontFamily: 'Poppins_700Bold',
-    fontSize: 52,
-    lineHeight: 62,
+    ...Typography.heroNum,
     color: Brand.textPrimary,
   },
   subtitle: {
-    fontFamily: 'Montserrat_600SemiBold',
-    fontSize: 13,
+    ...Typography.labelMd,
     color: Brand.textSecondary,
   },
   right: { gap: 10, alignItems: 'flex-end' },
@@ -95,8 +91,7 @@ const styles = StyleSheet.create({
   },
   earningsPill: { backgroundColor: 'rgba(255, 122, 0, 0.20)' },
   pillLabel: {
-    fontFamily: 'Outfit_400Regular',
-    fontSize: 11,
+    ...Typography.caption,
     color: Brand.textSecondary,
   },
   pillValue: {

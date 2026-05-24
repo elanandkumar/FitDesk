@@ -5,7 +5,7 @@ import GradientFAB from '../../components/common/GradientFAB';
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Brand, Radius } from '../../theme/brandColors';
+import { Brand, Radius, Spacing } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { Trainee, TraineePackage, EnrichedSession } from '../../types';
 import { getTraineeById, deleteTrainee } from '../../database/repositories/traineeRepository';
@@ -179,7 +179,7 @@ export default function TraineeDetailScreen() {
                 </View>
               ))}
               {sessions.length > 10 && (
-                <Text variant="bodySmall" style={{ color: Brand.textMuted, marginTop: 8, textAlign: 'center' }}>
+                <Text variant="bodySmall" style={{ color: Brand.textMuted, marginTop: Spacing.sm, textAlign: 'center' }}>
                   + {sessions.length - 10} more sessions
                 </Text>
               )}
@@ -206,7 +206,7 @@ export default function TraineeDetailScreen() {
           mode="outlined"
           onPress={() => setDeleteVisible(true)}
           textColor={Brand.pink}
-          style={{ borderColor: Brand.pink, marginTop: 8 }}
+          style={{ borderColor: Brand.pink, marginTop: Spacing.sm }}
         >
           Delete Trainee
         </Button>
@@ -224,7 +224,7 @@ export default function TraineeDetailScreen() {
 
       <GradientFAB
         icon="pencil"
-        style={[styles.fab, { bottom: 16 + insets.bottom }]}
+        style={[styles.fab, { bottom: Spacing.lg + insets.bottom }]}
         onPress={() => navigation.navigate('AddEditTrainee', { traineeId })}
       />
     </View>
@@ -242,13 +242,13 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Brand.backgroundDark },
-  content: { padding: 16, gap: 4, paddingBottom: 80 },
+  content: { padding: Spacing.lg, gap: Spacing.xs, paddingBottom: 80 },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
-    marginTop: 16,
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+    marginTop: Spacing.lg,
   },
   sectionAccent: { width: 3, height: 14, borderRadius: Radius.xs, backgroundColor: Brand.orange },
   sectionLabel: {
@@ -261,9 +261,9 @@ const styles = StyleSheet.create({
   pendingBadge: {
     backgroundColor: Brand.pink + '22',
     borderRadius: Radius.full,
-    paddingHorizontal: 8,
+    paddingHorizontal: Spacing.sm,
     paddingVertical: 2,
-    marginLeft: 4,
+    marginLeft: Spacing.xs,
   },
   pendingBadgeText: { color: Brand.pink, fontSize: 11, fontWeight: '600' },
   card: {
@@ -296,6 +296,6 @@ const styles = StyleSheet.create({
   colorBar: { width: 3, alignSelf: 'stretch', borderRadius: Radius.xs },
   fab: {
     position: 'absolute',
-    right: 16,
+    right: Spacing.lg,
   },
 });

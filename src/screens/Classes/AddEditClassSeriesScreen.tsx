@@ -13,7 +13,7 @@ import {
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Brand, Radius } from '../../theme/brandColors';
+import { Brand, Radius, Spacing } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { ClassType, Manager, RecurrenceType, LocationType, SourceType } from '../../types';
 import { getAllClassTypes } from '../../database/repositories/classTypeRepository';
@@ -449,13 +449,13 @@ export default function AddEditClassSeriesScreen() {
               mode="outlined"
               onPress={() => setCancelVisible(true)}
               textColor={Brand.pink}
-              style={{ borderColor: Brand.pink, marginTop: 8 }}
+              style={{ borderColor: Brand.pink, marginTop: Spacing.sm }}
             >
               Cancel This Series
             </Button>
           )}
 
-          <View style={{ height: 16 }} />
+          <View style={{ height: Spacing.lg }} />
         </ScrollView>
 
         <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
@@ -585,13 +585,13 @@ export default function AddEditClassSeriesScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Brand.backgroundDark },
-  content: { padding: 16 },
+  content: { padding: Spacing.lg },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
     marginBottom: 10,
-    marginTop: 20,
+    marginTop: Spacing.xl,
   },
   sectionAccent: { width: 3, height: 14, borderRadius: Radius.xs, backgroundColor: Brand.orange },
   sectionLabel: {
@@ -630,15 +630,15 @@ const styles = StyleSheet.create({
   },
   pickerError: { borderColor: Brand.pink },
   endDateRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  twoColRow: { flexDirection: 'row', gap: 12 },
+  twoColRow: { flexDirection: 'row', gap: Spacing.md },
   twoColCell: { flex: 1 },
   pickerSelected: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   colorDot: { width: 16, height: 16, borderRadius: Radius.full },
   footer: {
     flexDirection: 'row',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingTop: 12,
+    gap: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
     backgroundColor: Brand.backgroundDark,
     borderTopWidth: 1,
     borderTopColor: Brand.borderSubtle,
@@ -654,14 +654,14 @@ const styles = StyleSheet.create({
     backgroundColor: Brand.surfaceElevated,
     borderTopLeftRadius: Radius.item,
     borderTopRightRadius: Radius.item,
-    paddingBottom: 32,
+    paddingBottom: Spacing.section,
     maxHeight: '60%',
     borderTopWidth: 1,
     borderTopColor: Brand.borderSubtle,
   },
   modalTitle: {
-    padding: 16,
-    paddingBottom: 8,
+    padding: Spacing.lg,
+    paddingBottom: Spacing.sm,
     color: Brand.textPrimary,
     fontFamily: 'Montserrat_600SemiBold',
     fontSize: 15,

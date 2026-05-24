@@ -3,12 +3,9 @@ import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Touchabl
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ActivityIndicator,
-  Button,
   Checkbox,
   Divider,
   IconButton,
-  Portal,
-  Modal,
   Text,
   TextInput,
 } from 'react-native-paper';
@@ -19,7 +16,7 @@ import {
   useFocusEffect,
 } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Brand, Radius } from '../../theme/brandColors';
+import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { EnrichedSession, Trainee } from '../../types';
 import {
   getEnrichedSessionById,
@@ -39,7 +36,8 @@ import { RootStackParamList } from '../../navigation/types';
 import StatusBadge from '../../components/common/StatusBadge';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import HelpSheet from '../../components/common/HelpSheet';
-import GradientButton from '../../components/common/GradientButton';
+import AppButton from '../../components/common/AppButton';
+import AppModal from '../../components/common/AppModal';
 import { schedulePendingPaymentNotification } from '../../notifications/scheduler';
 import Constants from 'expo-constants';
 
@@ -241,8 +239,8 @@ export default function ClassSessionDetailScreen() {
       <View style={[styles.heroStrip, { borderLeftColor: session.class_type_color }]}>
         <Text style={styles.heroTitle}>{session.series_title}</Text>
         <View style={styles.badgeRow}>
-          <View style={{ backgroundColor: session.class_type_color + '33', borderRadius: Radius.full, paddingHorizontal: 10, paddingVertical: 4 }}>
-            <Text style={{ color: session.class_type_color, fontSize: 12, fontFamily: 'Montserrat_600SemiBold', letterSpacing: 0.2 }}>{session.class_type_name}</Text>
+          <View style={{ backgroundColor: session.class_type_color + '33', borderRadius: Radius.full, paddingHorizontal: 10, paddingVertical: Spacing.xs }}>
+            <Text style={{ ...Typography.labelSm, color: session.class_type_color }}>{session.class_type_name}</Text>
           </View>
           <StatusBadge status={session.status} />
         </View>
@@ -297,16 +295,15 @@ export default function ClassSessionDetailScreen() {
                 contentStyle={{ textAlignVertical: 'top', paddingTop: 8 }}
               />
               {notesChanged && (
-                <Button
-                  mode="text"
+                <AppButton
+                  label="Save Notes"
                   onPress={handleSaveNotes}
+                  variant="ghost"
                   loading={saving}
                   disabled={saving}
-                  textColor={Brand.purple}
                   style={{ alignSelf: 'flex-end' }}
-                >
-                  Save Notes
-                </Button>
+                  fullWidth={false}
+                />
               )}
             </>
           ) : (
@@ -318,79 +315,59 @@ export default function ClassSessionDetailScreen() {
       )}
 
       {/* Complete dialog */}
-      <Portal>
-        <Modal
-          visible={showCompleteDialog}
-          onDismiss={() => setShowCompleteDialog(false)}
-          contentContainerStyle={styles.modal}
-        >
-          <Text variant="titleMedium" style={{ color: Brand.textPrimary, marginBottom: 12, fontFamily: 'Montserrat_600SemiBold' }}>
-            Mark Session Complete
-          </Text>
-
-          {isManager ? (
-            <>
-              <Text variant="bodySmall" style={{ color: Brand.textSecondary, marginBottom: 8 }}>
-                How many students attended?
-              </Text>
-              <TextInput
-                mode="outlined"
-                label="Student Count"
-                value={studentCount}
-                onChangeText={setStudentCount}
-                keyboardType="number-pad"
-              />
-            </>
-          ) : (
-            <>
-              <Text variant="bodySmall" style={{ color: Brand.textSecondary, marginBottom: 8 }}>
-                Select attending trainees ({attendingIds.size} selected):
-              </Text>
-              <ScrollView style={{ maxHeight: 260 }}>
-                {allTrainees.length === 0 ? (
-                  <Text variant="bodyMedium" style={{ color: Brand.textMuted, paddingVertical: 8 }}>
-                    No trainees added yet.
-                  </Text>
-                ) : (
-                  allTrainees.map((t) => (
-                    <Checkbox.Item
-                      key={t.id}
-                      label={t.name}
-                      status={attendingIds.has(t.id) ? 'checked' : 'unchecked'}
-                      onPress={() => toggleTrainee(t.id)}
-                      labelStyle={{ color: Brand.textPrimary }}
-                    />
-                  ))
-                )}
-              </ScrollView>
-            </>
-          )}
-
-          <TextInput
-            mode="outlined"
-            label="Notes (optional)"
-            value={completeNotes}
-            onChangeText={setCompleteNotes}
-            style={{ marginTop: 12 }}
-          />
-
-          <View style={styles.dialogActions}>
-            <Button textColor={Brand.textSecondary} onPress={() => setShowCompleteDialog(false)} disabled={saving}>
-              Cancel
-            </Button>
-            <Button
-              mode="contained"
-              onPress={handleComplete}
-              loading={saving}
-              disabled={saving}
-              buttonColor={Brand.purple}
-              style={{ borderRadius: Radius.lg }}
-            >
-              Confirm
-            </Button>
-          </View>
-        </Modal>
-      </Portal>
+      <AppModal
+        visible={showCompleteDialog}
+        onDismiss={() => setShowCompleteDialog(false)}
+        title="Mark Session Complete"
+        confirmLabel="Confirm"
+        onConfirm={handleComplete}
+        loading={saving}
+      >
+        {isManager ? (
+          <>
+            <Text variant="bodySmall" style={{ color: Brand.textSecondary, marginBottom: 8 }}>
+              How many students attended?
+            </Text>
+            <TextInput
+              mode="outlined"
+              label="Student Count"
+              value={studentCount}
+              onChangeText={setStudentCount}
+              keyboardType="number-pad"
+            />
+          </>
+        ) : (
+          <>
+            <Text variant="bodySmall" style={{ color: Brand.textSecondary, marginBottom: 8 }}>
+              Select attending trainees ({attendingIds.size} selected):
+            </Text>
+            <ScrollView style={{ maxHeight: 260 }}>
+              {allTrainees.length === 0 ? (
+                <Text variant="bodyMedium" style={{ color: Brand.textMuted, paddingVertical: 8 }}>
+                  No trainees added yet.
+                </Text>
+              ) : (
+                allTrainees.map((t) => (
+                  <Checkbox.Item
+                    key={t.id}
+                    label={t.name}
+                    status={attendingIds.has(t.id) ? 'checked' : 'unchecked'}
+                    onPress={() => toggleTrainee(t.id)}
+                    labelStyle={{ color: Brand.textPrimary }}
+                  />
+                ))
+              )}
+            </ScrollView>
+          </>
+        )}
+        <TextInput
+          mode="outlined"
+          label="Notes (optional)"
+          value={completeNotes}
+          onChangeText={setCompleteNotes}
+          style={{ marginTop: Spacing.md }}
+        />
+      </AppModal>
 
       {/* Skip dialog */}
       <ConfirmDialog
@@ -406,32 +383,25 @@ export default function ClassSessionDetailScreen() {
       <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP} />
 
       {/* Edit date/time modal */}
-
-      <Portal>
-        <Modal
-          visible={showEditModal}
-          onDismiss={() => setShowEditModal(false)}
-          contentContainerStyle={styles.modal}
-        >
-          <Text variant="titleMedium" style={{ color: Brand.textPrimary, marginBottom: 16, fontFamily: 'Montserrat_600SemiBold' }}>
-            Edit Date & Time
-          </Text>
-          <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.editRow}>
-            <Text variant="labelMedium" style={{ color: Brand.textSecondary, width: 64 }}>Date</Text>
-            <Text variant="bodyMedium" style={{ color: Brand.purple, flex: 1 }}>{formatDisplayDate(editDate)}</Text>
-            <IconButton icon="calendar" size={18} iconColor={Brand.purple} style={{ margin: 0 }} onPress={() => setShowDatePicker(true)} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setShowTimePicker(true)} style={styles.editRow}>
-            <Text variant="labelMedium" style={{ color: Brand.textSecondary, width: 64 }}>Time</Text>
-            <Text variant="bodyMedium" style={{ color: Brand.purple, flex: 1 }}>{formatDisplayTime(editTime)}</Text>
-            <IconButton icon="clock-outline" size={18} iconColor={Brand.purple} style={{ margin: 0 }} onPress={() => setShowTimePicker(true)} />
-          </TouchableOpacity>
-          <View style={styles.dialogActions}>
-            <Button textColor={Brand.textSecondary} onPress={() => setShowEditModal(false)} disabled={saving}>Cancel</Button>
-            <Button mode="contained" onPress={handleSaveDateTime} loading={saving} disabled={saving} buttonColor={Brand.purple} style={{ borderRadius: Radius.lg }}>Save</Button>
-          </View>
-        </Modal>
-      </Portal>
+      <AppModal
+        visible={showEditModal}
+        onDismiss={() => setShowEditModal(false)}
+        title="Edit Date & Time"
+        confirmLabel="Save"
+        onConfirm={handleSaveDateTime}
+        loading={saving}
+      >
+        <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.editRow}>
+          <Text variant="labelMedium" style={{ color: Brand.textSecondary, width: 64 }}>Date</Text>
+          <Text variant="bodyMedium" style={{ color: Brand.purple, flex: 1 }}>{formatDisplayDate(editDate)}</Text>
+          <IconButton icon="calendar" size={18} iconColor={Brand.purple} style={{ margin: 0 }} onPress={() => setShowDatePicker(true)} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => setShowTimePicker(true)} style={styles.editRow}>
+          <Text variant="labelMedium" style={{ color: Brand.textSecondary, width: 64 }}>Time</Text>
+          <Text variant="bodyMedium" style={{ color: Brand.purple, flex: 1 }}>{formatDisplayTime(editTime)}</Text>
+          <IconButton icon="clock-outline" size={18} iconColor={Brand.purple} style={{ margin: 0 }} onPress={() => setShowTimePicker(true)} />
+        </TouchableOpacity>
+      </AppModal>
 
       <ThemedDatePickerModal
         visible={showDatePicker}
@@ -449,19 +419,17 @@ export default function ClassSessionDetailScreen() {
 
     {isUpcoming && (
       <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
-        <Button
-          mode="outlined"
+        <AppButton
+          label="Skip"
           onPress={() => setShowSkipDialog(true)}
-          style={styles.skipBtn}
-          contentStyle={styles.skipBtnContent}
-          textColor={Brand.textSecondary}
+          variant="secondary"
           disabled={saving}
-        >
-          Skip
-        </Button>
-        <GradientButton
+          style={styles.skipBtn}
+        />
+        <AppButton
           label="Mark Complete"
           onPress={openCompleteDialog}
+          variant="primary"
           loading={saving}
           disabled={saving}
           style={{ flex: 1, margin: 1 }}
@@ -485,13 +453,12 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Brand.backgroundDark },
   scrollView: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Brand.backgroundDark },
-  content: { padding: 16, gap: 12, paddingBottom: 16 },
-  contentWithFooter: { paddingBottom: 24 },
+  content: { padding: Spacing.lg, gap: Spacing.md, paddingBottom: Spacing.lg },
+  contentWithFooter: { paddingBottom: Spacing.xxl },
   heroStrip: {
     borderLeftWidth: 4,
-    paddingLeft: 16,
-    paddingRight: 16,
-    paddingVertical: 16,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.lg,
     borderRadius: Radius.card,
     gap: 10,
     backgroundColor: Brand.surfaceDark,
@@ -510,7 +477,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
     padding: 14,
-    gap: 8,
+    gap: Spacing.sm,
     elevation: 4,
     shadowColor: Brand.purple,
     shadowOpacity: 0.15,
@@ -519,8 +486,7 @@ const styles = StyleSheet.create({
   },
   cardLabel: {
     color: Brand.textSecondary,
-    fontFamily: 'Montserrat_600SemiBold',
-    marginBottom: 4,
+    marginBottom: Spacing.xs,
   },
   rowDivider: { backgroundColor: Brand.borderSubtle, marginVertical: 2 },
   detailRow: { flexDirection: 'row', alignItems: 'flex-start' },
@@ -528,24 +494,14 @@ const styles = StyleSheet.create({
   detailValue: { color: Brand.textPrimary, flex: 1 },
   footer: {
     flexDirection: 'row',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingTop: 12,
+    gap: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
     backgroundColor: Brand.backgroundDark,
     borderTopWidth: 1,
     borderTopColor: Brand.borderSubtle,
   },
-  skipBtn: { borderColor: Brand.borderSubtle, borderRadius: Radius.lg },
-  skipBtnContent: { height: 52, alignItems: 'center', justifyContent: 'center' } as any,
-  modal: {
-    margin: 20,
-    padding: 20,
-    borderRadius: Radius.card,
-    backgroundColor: Brand.surfaceElevated,
-    borderWidth: 1,
-    borderColor: Brand.borderSubtle,
-  },
-  dialogActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 16 },
+  skipBtn: { borderRadius: Radius.lg },
   editRow: {
     flexDirection: 'row',
     alignItems: 'center',

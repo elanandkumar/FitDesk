@@ -1,5 +1,7 @@
 import React from 'react';
-import { Portal, Dialog, Button, Text } from 'react-native-paper';
+import { Text } from 'react-native-paper';
+import { Brand } from '../../theme/brandColors';
+import AppModal from './AppModal';
 
 interface Props {
   visible: boolean;
@@ -21,19 +23,15 @@ export default function ConfirmDialog({
   onDismiss,
 }: Props) {
   return (
-    <Portal>
-      <Dialog visible={visible} onDismiss={onDismiss}>
-        <Dialog.Title>{title}</Dialog.Title>
-        <Dialog.Content>
-          <Text variant="bodyMedium">{message}</Text>
-        </Dialog.Content>
-        <Dialog.Actions>
-          <Button onPress={onDismiss}>Cancel</Button>
-          <Button onPress={onConfirm} textColor={destructive ? '#B00020' : undefined}>
-            {confirmLabel}
-          </Button>
-        </Dialog.Actions>
-      </Dialog>
-    </Portal>
+    <AppModal
+      visible={visible}
+      onDismiss={onDismiss}
+      title={title}
+      confirmLabel={confirmLabel}
+      onConfirm={onConfirm}
+      destructive={destructive}
+    >
+      <Text variant="bodyMedium" style={{ color: Brand.textSecondary }}>{message}</Text>
+    </AppModal>
   );
 }

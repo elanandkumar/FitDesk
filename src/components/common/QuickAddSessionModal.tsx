@@ -2,7 +2,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Modal as RNModal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import ThemedDatePickerModal from './ThemedDatePickerModal';
 import ThemedTimePickerModal from './ThemedTimePickerModal';
-import { Button, List, Modal, Portal, SegmentedButtons, Surface, Text, TextInput } from 'react-native-paper';
+import { List, Modal, Portal, SegmentedButtons, Surface, Text, TextInput } from 'react-native-paper';
+import AppButton from './AppButton';
 import { useAppTheme } from '../../theme';
 import { Brand, Radius } from '../../theme/brandColors';
 import { ClassType, LocationType, Manager, SourceType } from '../../types';
@@ -243,15 +244,20 @@ export default function QuickAddSessionModal({ visible, initialDate, onDismiss, 
           />
 
           <View style={styles.actions}>
-            <Button onPress={onDismiss}>Cancel</Button>
-            <Button
-              mode="contained"
+            <AppButton
+              label="Cancel"
+              onPress={onDismiss}
+              variant="ghost"
+              fullWidth={false}
+            />
+            <AppButton
+              label="Add Session"
               onPress={handleSave}
+              variant="primary"
               loading={saving}
               disabled={!isValid || saving}
-            >
-              Add Session
-            </Button>
+              style={{ flex: 1 }}
+            />
           </View>
         </ScrollView>
         </View>

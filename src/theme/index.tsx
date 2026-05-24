@@ -2,7 +2,7 @@ import React, { createContext, useContext, ReactNode } from 'react';
 import { MD3DarkTheme } from 'react-native-paper';
 import { Brand } from './brandColors';
 
-export { Brand, Gradients, Radius, Layout } from './brandColors';
+export { Brand, Gradients, Radius, Layout, Spacing, Typography, Elevation } from './brandColors';
 
 const FitDeskTheme = {
   ...MD3DarkTheme,

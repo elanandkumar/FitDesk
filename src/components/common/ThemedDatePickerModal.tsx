@@ -1,8 +1,8 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Button, Dialog, Portal, Text } from 'react-native-paper';
+import { StyleSheet } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { useAppTheme, Radius } from '../../theme';
+import AppModal from './AppModal';
 
 interface Props {
   visible: boolean;
@@ -44,29 +44,26 @@ export default function ThemedDatePickerModal({
   };
 
   return (
-    <Portal>
-      <Dialog visible={visible} onDismiss={onDismiss} style={{ backgroundColor: theme.colors.surface }}>
-        <Dialog.Title>{title}</Dialog.Title>
-        <Dialog.Content style={styles.content}>
-          <Calendar
-            current={selected}
-            markedDates={{ [selected]: { selected: true } }}
-            onDayPress={(day) => setSelected(day.dateString)}
-            minDate={minDate}
-            maxDate={maxDate}
-            theme={calTheme}
-            style={{ borderRadius: Radius.md }}
-          />
-        </Dialog.Content>
-        <Dialog.Actions>
-          <Button onPress={onDismiss}>Cancel</Button>
-          <Button onPress={() => onConfirm(selected)}>OK</Button>
-        </Dialog.Actions>
-      </Dialog>
-    </Portal>
+    <AppModal
+      visible={visible}
+      onDismiss={onDismiss}
+      title={title}
+      confirmLabel="Select"
+      onConfirm={() => onConfirm(selected)}
+    >
+      <Calendar
+        current={selected}
+        markedDates={{ [selected]: { selected: true } }}
+        onDayPress={(day) => setSelected(day.dateString)}
+        minDate={minDate}
+        maxDate={maxDate}
+        theme={calTheme}
+        style={styles.calendar}
+      />
+    </AppModal>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 0 },
+  calendar: { borderRadius: Radius.md },
 });

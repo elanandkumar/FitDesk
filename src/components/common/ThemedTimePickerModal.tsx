@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Dialog, IconButton, Portal, Text, TouchableRipple } from 'react-native-paper';
+import { IconButton, Text, TouchableRipple } from 'react-native-paper';
 import { useAppTheme, Radius } from '../../theme';
+import { Brand } from '../../theme/brandColors';
+import AppModal from './AppModal';
 
 interface Props {
   visible: boolean;
@@ -49,87 +51,89 @@ export default function ThemedTimePickerModal({ visible, value, onConfirm, onDis
   };
 
   const changeMinute = (delta: number) => setMinute((m) => (m + delta + 60) % 60);
-
   const togglePeriod = () => setHour24(h => h < 12 ? h + 12 : h - 12);
 
   const col = theme.colors;
 
   return (
-    <Portal>
-      <Dialog visible={visible} onDismiss={onDismiss} style={{ backgroundColor: col.surface }}>
-        <Dialog.Title style={{ textAlign: 'center' }}>Select Time</Dialog.Title>
-        <Dialog.Content>
-          <View style={styles.row}>
-            {/* Hour */}
-            <View style={styles.col}>
-              <IconButton icon="chevron-up" size={32} onPress={() => changeHour(1)} iconColor={col.primary} />
-              <View style={[styles.timeBox, { backgroundColor: col.surfaceVariant, borderColor: col.primary }]}>
-                <Text variant="displaySmall" style={{ color: col.onSurface, fontVariant: ['tabular-nums'] }}>
-                  {pad(displayHour)}
-                </Text>
-              </View>
-              <IconButton icon="chevron-down" size={32} onPress={() => changeHour(-1)} iconColor={col.primary} />
-            </View>
-
-            <Text variant="displaySmall" style={{ color: col.onSurface, alignSelf: 'center', marginHorizontal: 4 }}>
-              :
+    <AppModal
+      visible={visible}
+      onDismiss={onDismiss}
+      title="Select Time"
+      confirmLabel="Set"
+      onConfirm={() => onConfirm(`${pad(hour24)}:${pad(minute)}`)}
+    >
+      <View style={styles.row}>
+        {/* Hour */}
+        <View style={styles.col}>
+          <IconButton icon="chevron-up" size={32} onPress={() => changeHour(1)} iconColor={col.primary} />
+          <View style={[styles.timeBox, { backgroundColor: col.surfaceVariant, borderColor: col.primary }]}>
+            <Text variant="displaySmall" style={{ color: col.onSurface, fontVariant: ['tabular-nums'] }}>
+              {pad(displayHour)}
             </Text>
-
-            {/* Minute */}
-            <View style={styles.col}>
-              <IconButton icon="chevron-up" size={32} onPress={() => changeMinute(5)} iconColor={col.primary} />
-              <View style={[styles.timeBox, { backgroundColor: col.surfaceVariant, borderColor: col.primary }]}>
-                <Text variant="displaySmall" style={{ color: col.onSurface, fontVariant: ['tabular-nums'] }}>
-                  {pad(minute)}
-                </Text>
-              </View>
-              <IconButton icon="chevron-down" size={32} onPress={() => changeMinute(-5)} iconColor={col.primary} />
-            </View>
-
-            {/* AM/PM toggle */}
-            <View style={[styles.col, { marginLeft: 16 }]}>
-              <TouchableRipple
-                onPress={togglePeriod}
-                borderless
-                style={[
-                  styles.periodBtn,
-                  period === 'AM'
-                    ? { backgroundColor: col.primary }
-                    : { backgroundColor: col.surfaceVariant, borderColor: col.outline, borderWidth: 1 },
-                ]}
-              >
-                <Text variant="labelLarge" style={{ color: period === 'AM' ? col.onPrimary : col.onSurfaceVariant }}>
-                  AM
-                </Text>
-              </TouchableRipple>
-              <View style={{ height: 8 }} />
-              <TouchableRipple
-                onPress={togglePeriod}
-                borderless
-                style={[
-                  styles.periodBtn,
-                  period === 'PM'
-                    ? { backgroundColor: col.primary }
-                    : { backgroundColor: col.surfaceVariant, borderColor: col.outline, borderWidth: 1 },
-                ]}
-              >
-                <Text variant="labelLarge" style={{ color: period === 'PM' ? col.onPrimary : col.onSurfaceVariant }}>
-                  PM
-                </Text>
-              </TouchableRipple>
-            </View>
           </View>
+          <IconButton icon="chevron-down" size={32} onPress={() => changeHour(-1)} iconColor={col.primary} />
+        </View>
 
-          <Text variant="bodySmall" style={{ color: col.onSurfaceVariant, textAlign: 'center', marginTop: 8 }}>
-            Minutes in steps of 5
-          </Text>
-        </Dialog.Content>
-        <Dialog.Actions>
-          <Button onPress={onDismiss}>Cancel</Button>
-          <Button onPress={() => onConfirm(`${pad(hour24)}:${pad(minute)}`)}>OK</Button>
-        </Dialog.Actions>
-      </Dialog>
-    </Portal>
+        <Text variant="displaySmall" style={{ color: col.onSurface, alignSelf: 'center', marginHorizontal: 4 }}>
+          :
+        </Text>
+
+        {/* Minute */}
+        <View style={styles.col}>
+          <IconButton icon="chevron-up" size={32} onPress={() => changeMinute(5)} iconColor={col.primary} />
+          <View style={[styles.timeBox, { backgroundColor: col.surfaceVariant, borderColor: col.primary }]}>
+            <Text variant="displaySmall" style={{ color: col.onSurface, fontVariant: ['tabular-nums'] }}>
+              {pad(minute)}
+            </Text>
+          </View>
+          <IconButton icon="chevron-down" size={32} onPress={() => changeMinute(-5)} iconColor={col.primary} />
+        </View>
+
+        {/* AM/PM toggle — fixed contrast */}
+        <View style={[styles.col, { marginLeft: 16 }]}>
+          <TouchableRipple
+            onPress={togglePeriod}
+            borderless
+            style={[
+              styles.periodBtn,
+              period === 'AM'
+                ? { backgroundColor: Brand.purple }
+                : { backgroundColor: Brand.surfaceElevated, borderColor: Brand.borderSubtle, borderWidth: 1 },
+            ]}
+          >
+            <Text
+              variant="labelLarge"
+              style={{ color: period === 'AM' ? Brand.textPrimary : Brand.textSecondary }}
+            >
+              AM
+            </Text>
+          </TouchableRipple>
+          <View style={{ height: 8 }} />
+          <TouchableRipple
+            onPress={togglePeriod}
+            borderless
+            style={[
+              styles.periodBtn,
+              period === 'PM'
+                ? { backgroundColor: Brand.purple }
+                : { backgroundColor: Brand.surfaceElevated, borderColor: Brand.borderSubtle, borderWidth: 1 },
+            ]}
+          >
+            <Text
+              variant="labelLarge"
+              style={{ color: period === 'PM' ? Brand.textPrimary : Brand.textSecondary }}
+            >
+              PM
+            </Text>
+          </TouchableRipple>
+        </View>
+      </View>
+
+      <Text variant="bodySmall" style={{ color: col.onSurfaceVariant, textAlign: 'center', marginTop: 8 }}>
+        Minutes in steps of 5
+      </Text>
+    </AppModal>
   );
 }
 

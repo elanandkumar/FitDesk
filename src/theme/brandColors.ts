@@ -50,3 +50,33 @@ export const Layout = {
   LIST_PAD_WITH_FAB: 160, // clears FAB (56px) + gap + tab bar
   LIST_PAD_NO_FAB: 96,    // clears tab bar + buffer, no FAB
 } as const;
+
+export const Spacing = {
+  xs:      4,
+  sm:      8,
+  md:      12,
+  lg:      16,
+  xl:      20,
+  xxl:     24,
+  section: 32,
+} as const;
+
+export const Typography = {
+  heroNum:  { fontFamily: 'Poppins_700Bold',        fontSize: 52, lineHeight: 62 },
+  h1:       { fontFamily: 'Poppins_700Bold',        fontSize: 24, lineHeight: 32 },
+  h2:       { fontFamily: 'Montserrat_600SemiBold', fontSize: 18, lineHeight: 26 },
+  h3:       { fontFamily: 'Montserrat_600SemiBold', fontSize: 16, lineHeight: 22 },
+  bodyLg:   { fontFamily: 'Outfit_400Regular',      fontSize: 16, lineHeight: 24 },
+  body:     { fontFamily: 'Outfit_400Regular',      fontSize: 14, lineHeight: 20 },
+  bodySm:   { fontFamily: 'Outfit_400Regular',      fontSize: 12, lineHeight: 18 },
+  labelMd:  { fontFamily: 'Montserrat_600SemiBold', fontSize: 13, lineHeight: 18 },
+  labelSm:  { fontFamily: 'Montserrat_600SemiBold', fontSize: 12, lineHeight: 16, letterSpacing: 0.2 },
+  caption:  { fontFamily: 'Outfit_400Regular',      fontSize: 11, lineHeight: 16 },
+} as const;
+
+export const Elevation = {
+  base:    Brand.backgroundDark,   // '#1B102F' — screen bg
+  surface: Brand.surfaceDark,      // '#241640' — cards, list items
+  raised:  Brand.surfaceElevated,  // '#2E1D50' — modals, pickers, overlays
+  card:    Brand.surfaceCard,      // '#24163D' — info cards inside surface
+} as const;

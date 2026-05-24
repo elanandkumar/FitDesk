@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Calendar, CalendarProvider, WeekCalendar } from 'react-native-calendars';
 import type { DateData } from 'react-native-calendars';
-import { useAppTheme, Brand, Radius } from '../../theme';
+import { useAppTheme, Brand, Radius, Spacing } from '../../theme';
 import { Layout } from '../../theme/brandColors';
 import { EnrichedSession } from '../../types';
 import { getEnrichedSessionsByDateRange } from '../../database/repositories/classSessionRepository';
@@ -201,7 +201,7 @@ export default function CalendarScreen() {
       <FlatList
         data={daySessions}
         keyExtractor={(item) => String(item.id)}
-        contentContainerStyle={{ flexGrow: 1, paddingBottom: Layout.LIST_PAD_NO_FAB, paddingTop: 8 }}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: Layout.LIST_PAD_NO_FAB, paddingTop: Spacing.sm }}
         ListEmptyComponent={
           <View style={styles.emptyDay}>
             <Text variant="bodyMedium" style={{ color: Brand.textMuted }}>
@@ -252,17 +252,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: Spacing.lg,
     paddingVertical: 10,
   },
-  emptyDay: { flex: 1, alignItems: 'center', paddingTop: 32 },
+  emptyDay: { flex: 1, alignItems: 'center', paddingTop: Spacing.section },
   sessionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: 16,
+    marginHorizontal: Spacing.lg,
     paddingVertical: 14,
-    paddingRight: 12,
-    gap: 12,
+    paddingRight: Spacing.md,
+    gap: Spacing.md,
     backgroundColor: Brand.surfaceDark,
     borderRadius: Radius.item,
     borderWidth: 1,
@@ -273,10 +273,10 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
   },
-  colorBar: { width: 4, alignSelf: 'stretch', borderRadius: Radius.xs, marginLeft: 8 },
+  colorBar: { width: 4, alignSelf: 'stretch', borderRadius: Radius.xs, marginLeft: Spacing.sm },
   sessionInfo: { flex: 1, gap: 2 },
   fab: {
     position: 'absolute',
-    right: 16,
+    right: Spacing.lg,
   },
 });

@@ -7,7 +7,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useAppTheme, Brand, Radius } from '../../theme';
+import { useAppTheme, Brand, Radius, Spacing, Typography } from '../../theme';
 import { Layout } from '../../theme/brandColors';
 import { EnrichedSession } from '../../types';
 import {
@@ -216,9 +216,9 @@ const styles = StyleSheet.create({
   quickActions: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingHorizontal: 16,
+    paddingHorizontal: Spacing.lg,
     paddingVertical: 14,
-    marginBottom: 4,
+    marginBottom: Spacing.xs,
   },
   quickActionItem: { alignItems: 'center', flex: 1 },
   quickActionIcon: {
@@ -232,17 +232,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   quickActionLabel: {
+    ...Typography.caption,
     color: Brand.textSecondary,
     marginTop: 6,
-    fontSize: 11,
     textAlign: 'center',
   },
   sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.sm,
     gap: 10,
   },
   sectionAccent: {
@@ -252,21 +252,19 @@ const styles = StyleSheet.create({
     backgroundColor: Brand.orange,
   },
   sectionHeaderText: {
-    fontFamily: 'Montserrat_600SemiBold',
     flex: 1,
   },
   sectionCount: {
-    fontFamily: 'Outfit_400Regular',
-    fontSize: 12,
+    ...Typography.bodySm,
     color: Brand.textMuted,
   },
   sessionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: 16,
+    marginHorizontal: Spacing.lg,
     paddingVertical: 14,
-    paddingRight: 12,
-    gap: 12,
+    paddingRight: Spacing.md,
+    gap: Spacing.md,
     backgroundColor: Brand.surfaceDark,
     borderRadius: Radius.item,
     borderWidth: 1,
@@ -277,10 +275,10 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
   },
-  colorBar: { width: 4, alignSelf: 'stretch', borderRadius: Radius.xs, marginLeft: 8 },
+  colorBar: { width: 4, alignSelf: 'stretch', borderRadius: Radius.xs, marginLeft: Spacing.sm },
   sessionInfo: { flex: 1, gap: 2 },
   fab: {
     position: 'absolute',
-    right: 16,
+    right: Spacing.lg,
   },
 });
