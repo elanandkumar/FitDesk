@@ -1,9 +1,9 @@
 import React, { useCallback, useLayoutEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ActivityIndicator,
   Button,
-  Chip,
   Checkbox,
   Divider,
   IconButton,
@@ -19,15 +19,18 @@ import {
   useFocusEffect,
 } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Brand } from '../../theme/brandColors';
+import { Brand, Radius } from '../../theme/brandColors';
 import { EnrichedSession, Trainee } from '../../types';
 import {
   getEnrichedSessionById,
   updateSessionStatus,
   updateSessionNotes,
+  updateSessionDateTime,
   completeManagerSession,
   completePersonalSession,
 } from '../../database/repositories/classSessionRepository';
+import ThemedDatePickerModal from '../../components/common/ThemedDatePickerModal';
+import ThemedTimePickerModal from '../../components/common/ThemedTimePickerModal';
 import { getAllTrainees } from '../../database/repositories/traineeRepository';
 import { getTraineesForSession } from '../../database/repositories/sessionTraineeRepository';
 import { formatDisplayDate, formatDisplayTime } from '../../utils/dateUtils';
@@ -37,6 +40,10 @@ import StatusBadge from '../../components/common/StatusBadge';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import HelpSheet from '../../components/common/HelpSheet';
 import GradientButton from '../../components/common/GradientButton';
+import { schedulePendingPaymentNotification } from '../../notifications/scheduler';
+import Constants from 'expo-constants';
+
+const isExpoGo = Constants.appOwnership === 'expo';
 
 const HELP =
   'Mark Complete to record attendance and auto-create a payment record. Skip keeps the series active but marks this session as skipped. Notes are saved separately.';
@@ -65,6 +72,13 @@ export default function ClassSessionDetailScreen() {
   const [showSkipDialog, setShowSkipDialog] = useState(false);
   const [helpVisible, setHelpVisible] = useState(false);
 
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editDate, setEditDate] = useState('');
+  const [editTime, setEditTime] = useState('');
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const insets = useSafeAreaInsets();
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -83,7 +97,20 @@ export default function ClassSessionDetailScreen() {
     navigation.setOptions({
       title: session?.series_title ?? 'Session Detail',
       headerRight: () => (
-        <IconButton icon="help-circle-outline" iconColor={Brand.purple} onPress={() => setHelpVisible(true)} />
+        <View style={{ flexDirection: 'row' }}>
+          {session?.status === 'upcoming' && (
+            <IconButton
+              icon="pencil-outline"
+              iconColor={Brand.purple}
+              onPress={() => {
+                setEditDate(session.session_date);
+                setEditTime(session.class_time);
+                setShowEditModal(true);
+              }}
+            />
+          )}
+          <IconButton icon="help-circle-outline" iconColor={Brand.purple} onPress={() => setHelpVisible(true)} />
+        </View>
       ),
     });
   }, [navigation, session]);
@@ -129,6 +156,9 @@ export default function ClassSessionDetailScreen() {
       }
       setShowCompleteDialog(false);
       await load();
+      if (session.source_type === 'manager' && !isExpoGo) {
+        schedulePendingPaymentNotification().catch(() => {});
+      }
     } finally {
       setSaving(false);
     }
@@ -140,6 +170,18 @@ export default function ClassSessionDetailScreen() {
     try {
       await updateSessionStatus(session.id, 'skipped', 0, notes || undefined);
       setShowSkipDialog(false);
+      await load();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleSaveDateTime() {
+    if (!session) return;
+    setSaving(true);
+    try {
+      await updateSessionDateTime(session.id, editDate, editTime);
+      setShowEditModal(false);
       await load();
     } finally {
       setSaving(false);
@@ -186,24 +228,22 @@ export default function ClassSessionDetailScreen() {
   const isManager = session.source_type === 'manager';
 
   return (
-    <ScrollView
+    <KeyboardAvoidingView
       style={styles.container}
-      contentContainerStyle={styles.content}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+    <ScrollView
+      style={styles.scrollView}
+      contentContainerStyle={[styles.content, isUpcoming && styles.contentWithFooter]}
+      keyboardShouldPersistTaps="handled"
     >
       {/* Hero strip */}
-      <View style={[styles.heroStrip, {
-        borderLeftColor: session.class_type_color,
-        backgroundColor: session.class_type_color + '18',
-      }]}>
+      <View style={[styles.heroStrip, { borderLeftColor: session.class_type_color }]}>
         <Text style={styles.heroTitle}>{session.series_title}</Text>
         <View style={styles.badgeRow}>
-          <Chip
-            compact
-            style={{ backgroundColor: session.class_type_color + '33' }}
-            textStyle={{ color: session.class_type_color, fontSize: 11 }}
-          >
-            {session.class_type_name}
-          </Chip>
+          <View style={{ backgroundColor: session.class_type_color + '33', borderRadius: Radius.full, paddingHorizontal: 10, paddingVertical: 4 }}>
+            <Text style={{ color: session.class_type_color, fontSize: 12, fontFamily: 'Montserrat_600SemiBold', letterSpacing: 0.2 }}>{session.class_type_name}</Text>
+          </View>
           <StatusBadge status={session.status} />
         </View>
       </View>
@@ -218,7 +258,7 @@ export default function ClassSessionDetailScreen() {
         <Divider style={styles.rowDivider} />
         <DetailRow
           label="Location"
-          value={`${session.location_type === 'online' ? 'Online' : 'Offline'}${session.location ? ` · ${session.location}` : ''}`}
+          value={session.location ? session.location : 'Offline'}
         />
         <Divider style={styles.rowDivider} />
         {isManager ? (
@@ -226,7 +266,7 @@ export default function ClassSessionDetailScreen() {
             label="Manager"
             value={
               session.manager_name
-                ? `${session.manager_name} · ${formatCurrency(session.per_class_rate)}/class`
+                ? `${session.manager_name} | ${formatCurrency(session.per_class_rate)}/class`
                 : '—'
             }
           />
@@ -241,60 +281,39 @@ export default function ClassSessionDetailScreen() {
         )}
       </View>
 
-      {/* Notes card */}
-      <View style={styles.detailCard}>
-        <Text variant="labelLarge" style={styles.cardLabel}>Notes</Text>
-        {isUpcoming ? (
-          <>
-            <TextInput
-              mode="outlined"
-              value={notes}
-              onChangeText={(t) => { setNotes(t); setNotesChanged(true); }}
-              multiline
-              numberOfLines={3}
-              placeholder="Add notes..."
-              contentStyle={{ textAlignVertical: 'top', paddingTop: 8 }}
-            />
-            {notesChanged && (
-              <Button
-                mode="text"
-                onPress={handleSaveNotes}
-                loading={saving}
-                disabled={saving}
-                textColor={Brand.purple}
-                style={{ alignSelf: 'flex-end' }}
-              >
-                Save Notes
-              </Button>
-            )}
-          </>
-        ) : (
-          <Text variant="bodyMedium" style={{ color: Brand.textSecondary }}>
-            {session.notes || '—'}
-          </Text>
-        )}
-      </View>
-
-      {/* Action buttons */}
-      {isUpcoming && (
-        <View style={styles.actions}>
-          <Button
-            mode="outlined"
-            onPress={() => setShowSkipDialog(true)}
-            style={styles.skipBtn}
-            contentStyle={styles.skipBtnContent}
-            textColor={Brand.textSecondary}
-            disabled={saving}
-          >
-            Skip
-          </Button>
-          <GradientButton
-            label="Mark Complete"
-            onPress={openCompleteDialog}
-            loading={saving}
-            disabled={saving}
-            style={{ flex: 1, margin: 1 }}
-          />
+      {/* Notes card — always show when upcoming, hide when completed/skipped and no notes */}
+      {(isUpcoming || session.notes) && (
+        <View style={styles.detailCard}>
+          <Text variant="labelLarge" style={styles.cardLabel}>Notes</Text>
+          {isUpcoming ? (
+            <>
+              <TextInput
+                mode="outlined"
+                value={notes}
+                onChangeText={(t) => { setNotes(t); setNotesChanged(true); }}
+                multiline
+                numberOfLines={3}
+                placeholder="Add notes..."
+                contentStyle={{ textAlignVertical: 'top', paddingTop: 8 }}
+              />
+              {notesChanged && (
+                <Button
+                  mode="text"
+                  onPress={handleSaveNotes}
+                  loading={saving}
+                  disabled={saving}
+                  textColor={Brand.purple}
+                  style={{ alignSelf: 'flex-end' }}
+                >
+                  Save Notes
+                </Button>
+              )}
+            </>
+          ) : (
+            <Text variant="bodyMedium" style={{ color: Brand.textSecondary }}>
+              {session.notes}
+            </Text>
+          )}
         </View>
       )}
 
@@ -365,6 +384,7 @@ export default function ClassSessionDetailScreen() {
               loading={saving}
               disabled={saving}
               buttonColor={Brand.purple}
+              style={{ borderRadius: Radius.lg }}
             >
               Confirm
             </Button>
@@ -384,7 +404,71 @@ export default function ClassSessionDetailScreen() {
       />
 
       <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP} />
+
+      {/* Edit date/time modal */}
+
+      <Portal>
+        <Modal
+          visible={showEditModal}
+          onDismiss={() => setShowEditModal(false)}
+          contentContainerStyle={styles.modal}
+        >
+          <Text variant="titleMedium" style={{ color: Brand.textPrimary, marginBottom: 16, fontFamily: 'Montserrat_600SemiBold' }}>
+            Edit Date & Time
+          </Text>
+          <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.editRow}>
+            <Text variant="labelMedium" style={{ color: Brand.textSecondary, width: 64 }}>Date</Text>
+            <Text variant="bodyMedium" style={{ color: Brand.purple, flex: 1 }}>{formatDisplayDate(editDate)}</Text>
+            <IconButton icon="calendar" size={18} iconColor={Brand.purple} style={{ margin: 0 }} onPress={() => setShowDatePicker(true)} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setShowTimePicker(true)} style={styles.editRow}>
+            <Text variant="labelMedium" style={{ color: Brand.textSecondary, width: 64 }}>Time</Text>
+            <Text variant="bodyMedium" style={{ color: Brand.purple, flex: 1 }}>{formatDisplayTime(editTime)}</Text>
+            <IconButton icon="clock-outline" size={18} iconColor={Brand.purple} style={{ margin: 0 }} onPress={() => setShowTimePicker(true)} />
+          </TouchableOpacity>
+          <View style={styles.dialogActions}>
+            <Button textColor={Brand.textSecondary} onPress={() => setShowEditModal(false)} disabled={saving}>Cancel</Button>
+            <Button mode="contained" onPress={handleSaveDateTime} loading={saving} disabled={saving} buttonColor={Brand.purple} style={{ borderRadius: Radius.lg }}>Save</Button>
+          </View>
+        </Modal>
+      </Portal>
+
+      <ThemedDatePickerModal
+        visible={showDatePicker}
+        value={editDate}
+        onConfirm={(d) => { setEditDate(d); setShowDatePicker(false); }}
+        onDismiss={() => setShowDatePicker(false)}
+      />
+      <ThemedTimePickerModal
+        visible={showTimePicker}
+        value={editTime}
+        onConfirm={(t) => { setEditTime(t); setShowTimePicker(false); }}
+        onDismiss={() => setShowTimePicker(false)}
+      />
     </ScrollView>
+
+    {isUpcoming && (
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
+        <Button
+          mode="outlined"
+          onPress={() => setShowSkipDialog(true)}
+          style={styles.skipBtn}
+          contentStyle={styles.skipBtnContent}
+          textColor={Brand.textSecondary}
+          disabled={saving}
+        >
+          Skip
+        </Button>
+        <GradientButton
+          label="Mark Complete"
+          onPress={openCompleteDialog}
+          loading={saving}
+          disabled={saving}
+          style={{ flex: 1, margin: 1 }}
+        />
+      </View>
+    )}
+    </KeyboardAvoidingView>
   );
 }
 
@@ -399,15 +483,20 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Brand.backgroundDark },
+  scrollView: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Brand.backgroundDark },
-  content: { padding: 16, gap: 12, paddingBottom: 32 },
+  content: { padding: 16, gap: 12, paddingBottom: 16 },
+  contentWithFooter: { paddingBottom: 24 },
   heroStrip: {
     borderLeftWidth: 4,
     paddingLeft: 16,
     paddingRight: 16,
     paddingVertical: 16,
-    borderRadius: 16,
+    borderRadius: Radius.card,
     gap: 10,
+    backgroundColor: Brand.surfaceDark,
+    borderWidth: 1,
+    borderColor: Brand.borderSubtle,
   },
   heroTitle: {
     color: Brand.textPrimary,
@@ -417,7 +506,7 @@ const styles = StyleSheet.create({
   badgeRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
   detailCard: {
     backgroundColor: Brand.surfaceDark,
-    borderRadius: 16,
+    borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
     padding: 14,
@@ -437,16 +526,31 @@ const styles = StyleSheet.create({
   detailRow: { flexDirection: 'row', alignItems: 'flex-start' },
   detailLabel: { color: Brand.textSecondary, width: 88 },
   detailValue: { color: Brand.textPrimary, flex: 1 },
-  actions: { flexDirection: 'row', gap: 12 },
-  skipBtn: { borderColor: Brand.borderSubtle },
+  footer: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    backgroundColor: Brand.backgroundDark,
+    borderTopWidth: 1,
+    borderTopColor: Brand.borderSubtle,
+  },
+  skipBtn: { borderColor: Brand.borderSubtle, borderRadius: Radius.lg },
   skipBtnContent: { height: 52, alignItems: 'center', justifyContent: 'center' } as any,
   modal: {
     margin: 20,
     padding: 20,
-    borderRadius: 16,
+    borderRadius: Radius.card,
     backgroundColor: Brand.surfaceElevated,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
   },
   dialogActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 16 },
+  editRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: Brand.borderSubtle,
+  },
 });

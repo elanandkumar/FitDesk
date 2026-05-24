@@ -3,7 +3,10 @@ import {
   Dimensions,
   FlatList,
   Image,
+  KeyboardAvoidingView,
+  Platform,
   StyleSheet,
+  TextInput,
   TouchableOpacity,
   View,
   ViewToken,
@@ -14,7 +17,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Brand } from '../../theme/brandColors';
+import { Brand, Radius } from '../../theme/brandColors';
 import { getDatabase } from '../../database/db';
 import { RootStackParamList } from '../../navigation/types';
 import GradientButton from '../../components/common/GradientButton';
@@ -59,6 +62,8 @@ export default function OnboardingScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
   const [activeIndex, setActiveIndex] = useState(0);
+  const [phase, setPhase] = useState<'slides' | 'name'>('slides');
+  const [trainerName, setTrainerName] = useState('');
   const listRef = useRef<FlatList>(null);
 
   const onViewableItemsChanged = useRef(
@@ -69,11 +74,17 @@ export default function OnboardingScreen() {
     }
   ).current;
 
-  async function finish() {
+  async function finish(name: string) {
     const db = await getDatabase();
     await db.runAsync(
       "INSERT OR REPLACE INTO settings (key, value) VALUES ('onboarding_done', 'true')"
     );
+    if (name.trim()) {
+      await db.runAsync(
+        "INSERT OR REPLACE INTO settings (key, value) VALUES ('trainer_name', ?)",
+        [name.trim()]
+      );
+    }
     navigation.replace('MainTabs', undefined as never);
   }
 
@@ -81,11 +92,54 @@ export default function OnboardingScreen() {
     if (activeIndex < SLIDES.length - 1) {
       listRef.current?.scrollToIndex({ index: activeIndex + 1, animated: true });
     } else {
-      finish();
+      setPhase('name');
     }
   }
 
   const isLast = activeIndex === SLIDES.length - 1;
+
+  if (phase === 'name') {
+    return (
+      <LinearGradient
+        colors={['#1B102F', '#241640']}
+        start={{ x: 0.3, y: 0 }}
+        end={{ x: 0.7, y: 1 }}
+        style={styles.container}
+      >
+        <KeyboardAvoidingView
+          style={styles.namePhase}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <View style={styles.nameContent}>
+            <View style={styles.iconCircle}>
+              <MaterialCommunityIcons name="account-circle-outline" size={40} color={Brand.purple} />
+            </View>
+            <Text style={styles.title}>What's your name?</Text>
+            <Text style={styles.body}>
+              We'll use it to personalise your dashboard greeting.
+            </Text>
+            <TextInput
+              style={styles.nameInput}
+              placeholder="Your name"
+              placeholderTextColor={Brand.textMuted}
+              value={trainerName}
+              onChangeText={setTrainerName}
+              autoFocus
+              returnKeyType="done"
+              onSubmitEditing={() => finish(trainerName)}
+            />
+          </View>
+          <View style={[styles.footer, { paddingBottom: insets.bottom + 24 }]}>
+            <GradientButton
+              label="Let's Go!"
+              onPress={() => finish(trainerName)}
+              style={styles.button}
+            />
+          </View>
+        </KeyboardAvoidingView>
+      </LinearGradient>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -106,7 +160,11 @@ export default function OnboardingScreen() {
             style={[styles.slide, { width }]}
           >
             {index === 0 ? (
-              <Image source={require('../../../assets/logo-only.png')} style={styles.heroLogo} resizeMode="contain" />
+              <Image
+                source={require('../../../assets/logo.png')}
+                style={styles.heroLogo}
+                resizeMode="contain"
+              />
             ) : (
               <View style={styles.iconCircle}>
                 <MaterialCommunityIcons name={item.icon as never} size={40} color={Brand.purple} />
@@ -116,7 +174,7 @@ export default function OnboardingScreen() {
             {index === 0 ? (
               <View style={styles.welcomeRow}>
                 <Text style={styles.welcomeText}>Welcome to</Text>
-                <Image source={require('../../../assets/logo-text.png')} style={styles.brandLogo} resizeMode="contain" />
+                <Text style={styles.brandName}>FitDesk</Text>
               </View>
             ) : (
               <Text style={styles.title}>{item.title}</Text>
@@ -145,6 +203,7 @@ export default function OnboardingScreen() {
           onPress={next}
           style={styles.button}
         />
+
       </View>
     </View>
   );
@@ -153,10 +212,12 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Brand.backgroundDark },
   slide: { flex: 1, padding: 32, justifyContent: 'center', alignItems: 'center', gap: 24 },
+  namePhase: { flex: 1 },
+  nameContent: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32, gap: 20 },
   iconCircle: {
     width: 88,
     height: 88,
-    borderRadius: 44,
+    borderRadius: Radius.full,
     backgroundColor: Brand.surfaceElevated,
     alignItems: 'center',
     justifyContent: 'center',
@@ -176,23 +237,49 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     fontFamily: 'Outfit_400Regular',
   },
-  footer: { paddingHorizontal: 32, paddingTop: 24, gap: 16, alignItems: 'center', backgroundColor: Brand.backgroundDark },
+  nameInput: {
+    width: '100%',
+    backgroundColor: Brand.surfaceElevated,
+    borderRadius: Radius.lg,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    color: Brand.textPrimary,
+    fontSize: 18,
+    fontFamily: 'Outfit_400Regular',
+    borderWidth: 1,
+    borderColor: Brand.borderSubtle,
+    textAlign: 'center',
+  },
+  footer: {
+    paddingHorizontal: 32,
+    paddingTop: 24,
+    gap: 16,
+    alignItems: 'center',
+    backgroundColor: Brand.backgroundDark,
+  },
   dots: { flexDirection: 'row', gap: 8 },
-  dot: { height: 8, borderRadius: 4 },
+  dot: { height: 8, borderRadius: Radius.full },
   dotActive: { width: 24, backgroundColor: Brand.purple },
   dotInactive: { width: 8, backgroundColor: Brand.borderSubtle },
   button: { width: 260 },
   skipBtn: { paddingVertical: 8 },
   skipText: { color: Brand.textMuted, fontSize: 14 },
-  heroLogo: { width: 160, height: 160, marginBottom: 0 },
-  welcomeRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  heroLogo: { width: 160, height: 160, marginBottom: 8, borderRadius: Radius.hero },
+  welcomeRow: { flexDirection: 'column', alignItems: 'center', gap: 2 },
   welcomeText: {
     color: Brand.textSecondary,
-    fontSize: 28,
+    fontSize: 18,
     fontWeight: '400',
     textAlign: 'center',
     fontFamily: 'Outfit_400Regular',
     letterSpacing: 1,
   },
-  brandLogo: { width: 100, height: 30 },
+  brandName: {
+    color: Brand.purple,
+    fontSize: 36,
+    fontWeight: '700',
+    textAlign: 'center',
+    fontFamily: 'Poppins_700Bold',
+    letterSpacing: 2,
+  },
 });

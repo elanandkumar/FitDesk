@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Text } from 'react-native-paper';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
@@ -6,7 +6,6 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
-  withTiming,
 } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
 import {
@@ -16,7 +15,7 @@ import {
   CurrencyInr,
   Gear,
 } from 'phosphor-react-native';
-import { Brand } from '../../theme/brandColors';
+import { Brand, Radius } from '../../theme/brandColors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const TABS = [
@@ -39,10 +38,6 @@ function TabItem({
   isActive: boolean;
   onPress: () => void;
 }) {
-  const labelStyle = useAnimatedStyle(() => ({
-    opacity: withTiming(isActive ? 1 : 0.6, { duration: 200 }),
-  }));
-
   const pressScale = useSharedValue(1);
   const pressStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pressScale.value }],
@@ -59,11 +54,11 @@ function TabItem({
       <Animated.View style={[styles.tabItemInner, pressStyle]}>
         <tab.Icon
           size={22}
-          color={isActive ? Brand.purple : Brand.textMuted}
+          color={isActive ? Brand.purple : Brand.textSecondary}
           weight={isActive ? 'fill' : 'regular'}
         />
         <Animated.Text
-          style={[styles.label, { color: isActive ? Brand.purple : Brand.textMuted }, labelStyle]}
+          style={[styles.label, { color: isActive ? Brand.purple : Brand.textSecondary }]}
           numberOfLines={1}
         >
           {tab.label}
@@ -114,7 +109,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     height: TAB_HEIGHT,
-    borderRadius: 24,
+    borderRadius: Radius.hero,
     overflow: 'hidden',
     backgroundColor: Brand.surfaceDark + 'CC',
     elevation: 12,
@@ -129,7 +124,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    borderRadius: 24,
+    borderRadius: Radius.hero,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
     zIndex: 1,

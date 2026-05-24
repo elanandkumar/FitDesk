@@ -8,6 +8,12 @@ const MIGRATIONS: Array<{ version: number; sql: string }> = [
         ON class_sessions(series_id, session_date);
     `,
   },
+  {
+    version: 3,
+    sql: `
+      INSERT OR IGNORE INTO settings (key, value) VALUES ('payment_notification_enabled', 'true');
+    `,
+  },
 ];
 
 export async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {

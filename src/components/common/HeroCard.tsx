@@ -2,24 +2,26 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Brand, Gradients } from '../../theme';
+import { Brand, Gradients, Radius } from '../../theme';
 import { formatCurrency } from '../../utils/currencyUtils';
 
 interface Props {
   todayCount: number;
   weekTotal: number;
   weekEarnings: number;
+  trainerName?: string;
 }
 
-function greeting(): string {
+function greeting(name?: string): string {
   const hour = new Date().getHours();
-  if (hour < 12) return 'Good morning 👋';
-  if (hour < 17) return 'Good afternoon 👋';
-  if (hour < 22) return 'Good evening 👋';
-  return 'Good night 👋';
+  const suffix = name ? `, ${name}!` : '!';
+  if (hour < 12) return `Good morning${suffix} 👋`;
+  if (hour < 17) return `Good afternoon${suffix} 👋`;
+  if (hour < 22) return `Good evening${suffix} 👋`;
+  return `Good night${suffix} 👋`;
 }
 
-export default function HeroCard({ todayCount, weekTotal, weekEarnings }: Props) {
+export default function HeroCard({ todayCount, weekTotal, weekEarnings, trainerName }: Props) {
   return (
     <LinearGradient
       colors={Gradients.hero}
@@ -28,7 +30,7 @@ export default function HeroCard({ todayCount, weekTotal, weekEarnings }: Props)
       style={styles.card}
     >
       <View style={styles.left}>
-        <Text style={styles.greeting}>{greeting()}</Text>
+        <Text style={styles.greeting}>{greeting(trainerName)}</Text>
         <Text style={styles.count}>
           {todayCount === 0 ? '—' : String(todayCount)}
         </Text>
@@ -57,7 +59,7 @@ export default function HeroCard({ todayCount, weekTotal, weekEarnings }: Props)
 const styles = StyleSheet.create({
   card: {
     margin: 16,
-    borderRadius: 24,
+    borderRadius: Radius.hero,
     paddingVertical: 24,
     paddingHorizontal: 20,
     flexDirection: 'row',
@@ -85,7 +87,7 @@ const styles = StyleSheet.create({
   right: { gap: 10, alignItems: 'flex-end' },
   pill: {
     backgroundColor: 'rgba(91, 46, 255, 0.25)',
-    borderRadius: 12,
+    borderRadius: Radius.lg,
     paddingHorizontal: 12,
     paddingVertical: 8,
     alignItems: 'center',

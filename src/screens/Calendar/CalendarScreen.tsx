@@ -7,13 +7,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Calendar, CalendarProvider, WeekCalendar } from 'react-native-calendars';
 import type { DateData } from 'react-native-calendars';
-import { useAppTheme, Brand } from '../../theme';
+import { useAppTheme, Brand, Radius } from '../../theme';
 import { Layout } from '../../theme/brandColors';
 import { EnrichedSession } from '../../types';
 import { getEnrichedSessionsByDateRange } from '../../database/repositories/classSessionRepository';
 import { formatDisplayDate, formatDisplayTime, todayISO } from '../../utils/dateUtils';
 import { RootStackParamList } from '../../navigation/types';
-import StatusBadge from '../../components/common/StatusBadge';
+import StatusBadge, { getDisplayStatus } from '../../components/common/StatusBadge';
 import HelpSheet from '../../components/common/HelpSheet';
 
 type Nav = StackNavigationProp<RootStackParamList>;
@@ -229,7 +229,7 @@ export default function CalendarScreen() {
                 </Text>
               )}
             </View>
-            <StatusBadge status={item.status} />
+            <StatusBadge status={getDisplayStatus(item.status, item.session_date, item.class_time)} />
           </TouchableOpacity>
         )}
         ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
     paddingRight: 12,
     gap: 12,
     backgroundColor: Brand.surfaceDark,
-    borderRadius: 20,
+    borderRadius: Radius.item,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
     elevation: 4,
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
   },
-  colorBar: { width: 4, alignSelf: 'stretch', borderRadius: 2, marginLeft: 8 },
+  colorBar: { width: 4, alignSelf: 'stretch', borderRadius: Radius.xs, marginLeft: 8 },
   sessionInfo: { flex: 1, gap: 2 },
   fab: {
     position: 'absolute',

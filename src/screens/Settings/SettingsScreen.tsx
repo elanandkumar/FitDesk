@@ -8,10 +8,10 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { TouchableOpacity } from 'react-native';
 import Constants from 'expo-constants';
 import { useAppTheme } from '../../theme';
-import { Brand } from '../../theme/brandColors';
+import { Brand, Radius } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { getDatabase } from '../../database/db';
-import { scheduleUpcomingNotifications } from '../../notifications/scheduler';
+import { scheduleUpcomingNotifications, schedulePendingPaymentNotification } from '../../notifications/scheduler';
 import { requestNotificationPermission } from '../../notifications/permissions';
 import HelpSheet from '../../components/common/HelpSheet';
 
@@ -23,10 +23,9 @@ const HELP =
 type Nav = StackNavigationProp<RootStackParamList>;
 
 const MINUTES_OPTIONS = [
-  { value: '15', label: '15 min' },
-  { value: '30', label: '30 min' },
+  { value: '15', label: '15 mins' },
+  { value: '30', label: '30 mins' },
   { value: '60', label: '1 hr' },
-  { value: '120', label: '2 hr' },
 ];
 
 async function getSetting(key: string): Promise<string | null> {
@@ -80,6 +79,7 @@ export default function SettingsScreen() {
   const navigation = useNavigation<Nav>();
   const [notifEnabled, setNotifEnabled] = useState(true);
   const [minutesBefore, setMinutesBefore] = useState('60');
+  const [paymentNotifEnabled, setPaymentNotifEnabled] = useState(true);
   const [helpVisible, setHelpVisible] = useState(false);
 
   useLayoutEffect(() => {
@@ -95,8 +95,10 @@ export default function SettingsScreen() {
       async function loadSettings() {
         const enabled = await getSetting('notification_enabled');
         const mins = await getSetting('notification_minutes_before');
+        const paymentEnabled = await getSetting('payment_notification_enabled');
         setNotifEnabled(enabled !== 'false');
         setMinutesBefore(mins ?? '60');
+        setPaymentNotifEnabled(paymentEnabled !== 'false');
       }
       loadSettings();
     }, [])
@@ -108,9 +110,13 @@ export default function SettingsScreen() {
     if (!isExpoGo) {
       if (val) {
         const granted = await requestNotificationPermission();
-        if (granted) await scheduleUpcomingNotifications();
+        if (granted) {
+          await scheduleUpcomingNotifications();
+          await schedulePendingPaymentNotification();
+        }
       } else {
         await scheduleUpcomingNotifications();
+        await schedulePendingPaymentNotification();
       }
     }
   };
@@ -118,7 +124,23 @@ export default function SettingsScreen() {
   const handleMinutesChange = async (val: string) => {
     setMinutesBefore(val);
     await setSetting('notification_minutes_before', val);
-    if (notifEnabled && !isExpoGo) await scheduleUpcomingNotifications();
+    if (notifEnabled && !isExpoGo) {
+      await scheduleUpcomingNotifications();
+      await schedulePendingPaymentNotification();
+    }
+  };
+
+  const handleTogglePaymentNotifications = async (val: boolean) => {
+    setPaymentNotifEnabled(val);
+    await setSetting('payment_notification_enabled', val ? 'true' : 'false');
+    if (!isExpoGo) {
+      if (val) {
+        const granted = await requestNotificationPermission();
+        if (granted) await schedulePendingPaymentNotification();
+      } else {
+        await schedulePendingPaymentNotification();
+      }
+    }
   };
 
   return (
@@ -153,6 +175,18 @@ export default function SettingsScreen() {
             </View>
           </>
         )}
+        <View style={styles.divider} />
+        <View style={styles.row}>
+          <View style={styles.rowIcon}>
+            <MaterialCommunityIcons name="cash-clock" size={20} color={Brand.purple} />
+          </View>
+          <Text style={[styles.rowLabel, { flex: 1 }]}>Payment Reminders</Text>
+          <Switch
+            value={paymentNotifEnabled}
+            onValueChange={handleTogglePaymentNotifications}
+            color={Brand.purple}
+          />
+        </View>
       </SettingsCard>
 
       <SectionHeader label="Data & Reports" />
@@ -208,7 +242,7 @@ const styles = StyleSheet.create({
   sectionAccent: {
     width: 3,
     height: 16,
-    borderRadius: 2,
+    borderRadius: Radius.xs,
     backgroundColor: Brand.orange,
   },
   sectionLabel: {
@@ -221,7 +255,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: Brand.surfaceDark,
-    borderRadius: 20,
+    borderRadius: Radius.item,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
     overflow: 'hidden',
@@ -236,7 +270,7 @@ const styles = StyleSheet.create({
   rowIcon: {
     width: 32,
     height: 32,
-    borderRadius: 8,
+    borderRadius: Radius.md,
     backgroundColor: `${Brand.purple}1A`,
     alignItems: 'center',
     justifyContent: 'center',

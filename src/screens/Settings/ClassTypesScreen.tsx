@@ -9,7 +9,7 @@ import {
   TextInput,
 } from 'react-native-paper';
 import GradientFAB from '../../components/common/GradientFAB';
-import { Brand } from '../../theme/brandColors';
+import { Brand, Radius } from '../../theme/brandColors';
 import { ClassType } from '../../types';
 import {
   getAllClassTypes,
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     backgroundColor: Brand.surfaceDark,
-    borderRadius: 16,
+    borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
     elevation: 4,
@@ -202,11 +202,11 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   itemName: { flex: 1, color: Brand.textPrimary },
-  colorDot: { width: 24, height: 24, borderRadius: 12 },
+  colorDot: { width: 24, height: 24, borderRadius: Radius.full },
   rowActions: { flexDirection: 'row', alignItems: 'center' },
   fab: { position: 'absolute', bottom: 16, right: 16 },
   dialogContent: { gap: 12 },
   colorRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  colorSwatch: { width: 28, height: 28, borderRadius: 14 },
+  colorSwatch: { width: 28, height: 28, borderRadius: Radius.full },
   colorSelected: { borderWidth: 3, borderColor: Brand.textPrimary },
 });

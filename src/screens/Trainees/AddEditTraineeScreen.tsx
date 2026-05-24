@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, ScrollView, StyleSheet, View } from 'react-native';
 import { Button, Text, TextInput } from 'react-native-paper';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '../../theme';
-import { Brand } from '../../theme/brandColors';
+import { Brand, Radius } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import {
   createTrainee,
@@ -84,7 +84,7 @@ export default function AddEditTraineeScreen() {
   return (
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior="padding"
     >
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <FormSection label="Contact" />
@@ -133,7 +133,7 @@ export default function AddEditTraineeScreen() {
           />
         </View>
 
-        <View style={{ height: 100 }} />
+        <View style={{ height: 16 }} />
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     marginTop: 20,
   },
-  sectionAccent: { width: 3, height: 14, borderRadius: 2, backgroundColor: Brand.orange },
+  sectionAccent: { width: 3, height: 14, borderRadius: Radius.xs, backgroundColor: Brand.orange },
   sectionLabel: {
     color: Brand.textSecondary,
     fontSize: 12,
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: Brand.surfaceDark,
-    borderRadius: 16,
+    borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
     padding: 14,
@@ -197,6 +197,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: 100,
     borderColor: Brand.borderSubtle,
+    borderRadius: Radius.lg,
   },
   saveBtn: { flex: 1 },
 });

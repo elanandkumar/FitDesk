@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Modal as RNModal, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, Modal as RNModal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import ThemedDatePickerModal from '../../components/common/ThemedDatePickerModal';
 import ThemedTimePickerModal from '../../components/common/ThemedTimePickerModal';
 import { Button, List, SegmentedButtons, Surface, Text, TextInput } from 'react-native-paper';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Brand } from '../../theme/brandColors';
+import { Brand, Radius } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { ClassType, LocationType, Manager, SourceType } from '../../types';
 import { getAllClassTypes } from '../../database/repositories/classTypeRepository';
@@ -17,6 +17,7 @@ import {
 } from '../../database/repositories/classSessionRepository';
 import { todayISO } from '../../utils/dateUtils';
 import { DEFAULT_DURATION_MINUTES } from '../../constants';
+import { scheduleUpcomingNotifications } from '../../notifications/scheduler';
 import GradientButton from '../../components/common/GradientButton';
 
 type Nav = StackNavigationProp<RootStackParamList, 'AddSession'>;
@@ -113,6 +114,7 @@ export default function AddSessionScreen() {
         notes: notes.trim() || undefined,
       };
       await createAdHocSession(input);
+      await scheduleUpcomingNotifications();
       navigation.goBack();
     } finally {
       setSaving(false);
@@ -122,7 +124,7 @@ export default function AddSessionScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior="padding"
     >
       <ScrollView
         contentContainerStyle={styles.content}
@@ -226,18 +228,8 @@ export default function AddSessionScreen() {
         {/* Location section */}
         <FormSection label="Location" />
         <View style={styles.card}>
-          <SegmentedButtons
-            value={locationType}
-            onValueChange={(v) => setLocationType(v as LocationType)}
-            buttons={[
-              { value: 'offline', label: 'In-person' },
-              { value: 'online', label: 'Online' },
-            ]}
-            theme={{ colors: { secondaryContainer: Brand.purple, onSecondaryContainer: Brand.textPrimary } }}
-          />
-          <View style={styles.fieldGap} />
           <TextInput
-            label="Location / Link (optional)"
+            label="Address (optional)"
             value={location}
             onChangeText={setLocation}
             mode="outlined"
@@ -257,7 +249,7 @@ export default function AddSessionScreen() {
           />
         </View>
 
-        <View style={{ height: 100 }} />
+        <View style={{ height: 16 }} />
 
         <ThemedDatePickerModal
           visible={showDatePicker}
@@ -371,7 +363,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     marginTop: 20,
   },
-  sectionAccent: { width: 3, height: 14, borderRadius: 2, backgroundColor: Brand.orange },
+  sectionAccent: { width: 3, height: 14, borderRadius: Radius.xs, backgroundColor: Brand.orange },
   sectionLabel: {
     color: Brand.textSecondary,
     fontSize: 11,
@@ -382,7 +374,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: Brand.surfaceDark,
-    borderRadius: 16,
+    borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
     padding: 14,
@@ -391,14 +383,14 @@ const styles = StyleSheet.create({
   fieldGap: { height: 10 },
   pickerButton: {
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: Radius.md,
     borderColor: Brand.borderSubtle,
     padding: 14,
     minHeight: 52,
     justifyContent: 'center',
   },
   pickerSelected: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  colorDot: { width: 16, height: 16, borderRadius: 8 },
+  colorDot: { width: 16, height: 16, borderRadius: Radius.full },
   twoColRow: { flexDirection: 'row', gap: 12 },
   twoColCell: { flex: 1 },
   footer: {
@@ -410,7 +402,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Brand.borderSubtle,
   },
-  cancelBtn: { flex: 0, width: 100, borderColor: Brand.borderSubtle, justifyContent: 'center' },
+  cancelBtn: { flex: 0, width: 100, borderColor: Brand.borderSubtle, justifyContent: 'center', borderRadius: Radius.lg },
   saveBtn: { flex: 1 },
   backdrop: {
     flex: 1,
@@ -419,8 +411,8 @@ const styles = StyleSheet.create({
   },
   sheet: {
     backgroundColor: Brand.surfaceElevated,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: Radius.item,
+    borderTopRightRadius: Radius.item,
     paddingBottom: 32,
     maxHeight: '60%',
     borderTopWidth: 1,

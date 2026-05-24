@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '../../theme';
-import { Brand, Layout } from '../../theme/brandColors';
+import { Brand, Layout, Radius } from '../../theme/brandColors';
 import { EnrichedTraineePackage } from '../../types';
 import {
   getAllEnrichedTraineePackages,
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
   },
   dueBadge: {
     backgroundColor: `${Brand.orange}33`,
-    borderRadius: 20,
+    borderRadius: Radius.full,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: Brand.surfaceDark,
-    borderRadius: 16,
+    borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
     paddingHorizontal: 14,
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
   amount: { color: Brand.orange, fontSize: 15, fontWeight: '700' },
   markPaidBtn: {
     backgroundColor: `${Brand.purple}33`,
-    borderRadius: 20,
+    borderRadius: Radius.full,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 3,
     backgroundColor: `${Brand.pink}1A`,
-    borderRadius: 20,
+    borderRadius: Radius.full,
     paddingHorizontal: 8,
     paddingVertical: 3,
   },

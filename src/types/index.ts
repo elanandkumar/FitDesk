@@ -2,7 +2,7 @@ export type SourceType = 'manager' | 'personal';
 export type RecurrenceType = 'daily' | 'weekly' | 'custom';
 export type SessionStatus = 'upcoming' | 'completed' | 'cancelled' | 'skipped';
 export type PaymentStatus = 'pending' | 'paid';
-export type LocationType = 'offline' | 'online';
+export type LocationType = 'offline';
 
 export interface ClassType {
   id: number;

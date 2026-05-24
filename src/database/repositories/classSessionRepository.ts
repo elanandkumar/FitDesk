@@ -96,6 +96,11 @@ export async function updateSessionNotes(id: number, notes: string): Promise<voi
   await db.runAsync('UPDATE class_sessions SET notes = ? WHERE id = ?', [notes || null, id]);
 }
 
+export async function updateSessionDateTime(id: number, date: string, time: string): Promise<void> {
+  const db = await getDatabase();
+  await db.runAsync('UPDATE class_sessions SET session_date=?, class_time=? WHERE id=?', [date, time, id]);
+}
+
 export async function getEnrichedSessionsByDateRange(
   startDate: string,
   endDate: string
@@ -153,10 +158,22 @@ export async function completePersonalSession(
         'INSERT OR IGNORE INTO session_trainees (session_id, trainee_id) VALUES (?, ?)',
         [sessionId, tid]
       );
-      await db.runAsync(
+      const exact = await db.runAsync(
         'UPDATE trainee_packages SET used_sessions = used_sessions + 1 WHERE trainee_id = ? AND month = ?',
         [tid, month]
       );
+      if (exact.changes === 0) {
+        // No package for this exact month — increment most recent pending package instead
+        await db.runAsync(
+          `UPDATE trainee_packages SET used_sessions = used_sessions + 1
+           WHERE id = (
+             SELECT id FROM trainee_packages
+             WHERE trainee_id = ? AND status = 'pending'
+             ORDER BY month DESC LIMIT 1
+           )`,
+          [tid]
+        );
+      }
     }
   });
 }

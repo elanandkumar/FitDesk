@@ -5,7 +5,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Brand, Gradients } from '../../theme/brandColors';
+import { Brand, Gradients, Radius } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { MonthlyIncomeSummary } from '../../types';
 import { getMonthlyIncomeSummary } from '../../database/repositories/paymentRepository';
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Brand.backgroundDark },
   heroCard: {
     margin: 16,
-    borderRadius: 24,
+    borderRadius: Radius.hero,
     paddingVertical: 24,
     paddingHorizontal: 20,
     flexDirection: 'row',
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
   heroRight: { gap: 10, alignItems: 'flex-end' },
   pill: {
     backgroundColor: 'rgba(255, 122, 0, 0.20)',
-    borderRadius: 12,
+    borderRadius: Radius.lg,
     paddingHorizontal: 12,
     paddingVertical: 8,
     alignItems: 'center',
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 14,
     backgroundColor: Brand.surfaceDark,
-    borderRadius: 20,
+    borderRadius: Radius.item,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
     elevation: 4,

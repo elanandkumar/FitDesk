@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import ThemedDatePickerModal from '../../components/common/ThemedDatePickerModal';
 import ThemedTimePickerModal from '../../components/common/ThemedTimePickerModal';
 import {
@@ -13,11 +13,12 @@ import {
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Brand } from '../../theme/brandColors';
+import { Brand, Radius } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { ClassType, Manager, RecurrenceType, LocationType, SourceType } from '../../types';
 import { getAllClassTypes } from '../../database/repositories/classTypeRepository';
 import { getAllManagers } from '../../database/repositories/managerRepository';
+import { scheduleUpcomingNotifications } from '../../notifications/scheduler';
 import {
   createClassSeries,
   updateClassSeries,
@@ -198,6 +199,7 @@ export default function AddEditClassSeriesScreen() {
         await createSessionsBatch(created.id, dates, classTime);
       }
 
+      await scheduleUpcomingNotifications();
       navigation.goBack();
     } finally {
       setSaving(false);
@@ -242,7 +244,7 @@ export default function AddEditClassSeriesScreen() {
     <>
       <KeyboardAvoidingView
         style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior="padding"
       >
         <ScrollView
           contentContainerStyle={styles.content}
@@ -421,18 +423,8 @@ export default function AddEditClassSeriesScreen() {
           {/* Location section */}
           <FormSection label="Location" />
           <View style={styles.card}>
-            <SegmentedButtons
-              value={locationType}
-              onValueChange={(v) => setLocationType(v as LocationType)}
-              buttons={[
-                { value: 'offline', label: 'Offline' },
-                { value: 'online', label: 'Online' },
-              ]}
-              theme={{ colors: { secondaryContainer: Brand.purple, onSecondaryContainer: Brand.textPrimary } }}
-            />
-            <View style={styles.fieldGap} />
             <TextInput
-              label={locationType === 'offline' ? 'Address (optional)' : 'Meeting link (optional)'}
+              label="Address (optional)"
               value={location}
               onChangeText={setLocation}
               mode="outlined"
@@ -463,7 +455,7 @@ export default function AddEditClassSeriesScreen() {
             </Button>
           )}
 
-          <View style={{ height: 100 }} />
+          <View style={{ height: 16 }} />
         </ScrollView>
 
         <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
@@ -601,7 +593,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     marginTop: 20,
   },
-  sectionAccent: { width: 3, height: 14, borderRadius: 2, backgroundColor: Brand.orange },
+  sectionAccent: { width: 3, height: 14, borderRadius: Radius.xs, backgroundColor: Brand.orange },
   sectionLabel: {
     color: Brand.textSecondary,
     fontSize: 11,
@@ -612,7 +604,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: Brand.surfaceDark,
-    borderRadius: 16,
+    borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
     padding: 14,
@@ -623,14 +615,14 @@ const styles = StyleSheet.create({
   dayButton: {
     flex: 1,
     borderWidth: 1,
-    borderRadius: 4,
+    borderRadius: Radius.sm,
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },
   pickerButton: {
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: Radius.md,
     borderColor: Brand.borderSubtle,
     padding: 14,
     minHeight: 52,
@@ -641,7 +633,7 @@ const styles = StyleSheet.create({
   twoColRow: { flexDirection: 'row', gap: 12 },
   twoColCell: { flex: 1 },
   pickerSelected: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  colorDot: { width: 16, height: 16, borderRadius: 8 },
+  colorDot: { width: 16, height: 16, borderRadius: Radius.full },
   footer: {
     flexDirection: 'row',
     gap: 12,
@@ -651,7 +643,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Brand.borderSubtle,
   },
-  cancelBtn: { flex: 0, width: 100, borderColor: Brand.borderSubtle, justifyContent: 'center' },
+  cancelBtn: { flex: 0, width: 100, borderColor: Brand.borderSubtle, justifyContent: 'center', borderRadius: Radius.lg },
   saveBtn: { flex: 1 },
   modalBackdrop: {
     flex: 1,
@@ -660,8 +652,8 @@ const styles = StyleSheet.create({
   },
   modalSheet: {
     backgroundColor: Brand.surfaceElevated,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: Radius.item,
+    borderTopRightRadius: Radius.item,
     paddingBottom: 32,
     maxHeight: '60%',
     borderTopWidth: 1,

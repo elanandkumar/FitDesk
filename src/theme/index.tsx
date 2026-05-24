@@ -2,11 +2,11 @@ import React, { createContext, useContext, ReactNode } from 'react';
 import { MD3DarkTheme } from 'react-native-paper';
 import { Brand } from './brandColors';
 
-export { Brand, Gradients } from './brandColors';
+export { Brand, Gradients, Radius, Layout } from './brandColors';
 
 const FitDeskTheme = {
   ...MD3DarkTheme,
-  roundness: 3,
+  roundness: 6,
   colors: {
     ...MD3DarkTheme.colors,
     primary:              Brand.purple,
@@ -18,10 +18,10 @@ const FitDeskTheme = {
     background:           Brand.backgroundDark,
     surface:              Brand.surfaceDark,
     onSurface:            Brand.textPrimary,
-    onSurfaceVariant:     Brand.textSecondary,
+    onSurfaceVariant:     Brand.textMuted,
     surfaceVariant:       Brand.surfaceElevated,
     outline:              Brand.borderSubtle,
-    error:                Brand.pink,
+    error:                '#FF5252',
   },
   fonts: {
     ...MD3DarkTheme.fonts,

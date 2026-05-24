@@ -7,16 +7,18 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useAppTheme, Brand } from '../../theme';
+import { useAppTheme, Brand, Radius } from '../../theme';
 import { Layout } from '../../theme/brandColors';
 import { EnrichedSession } from '../../types';
 import {
   getEnrichedSessionsByDateRange,
 } from '../../database/repositories/classSessionRepository';
 import { extendActiveSeriesSessions } from '../../database/repositories/classSeriesRepository';
+import { getPersonalTrainingEarnings } from '../../database/repositories/paymentRepository';
+import { getDatabase } from '../../database/db';
 import { formatDisplayTime, todayISO, addDays } from '../../utils/dateUtils';
 import { RootStackParamList } from '../../navigation/types';
-import StatusBadge from '../../components/common/StatusBadge';
+import StatusBadge, { getDisplayStatus } from '../../components/common/StatusBadge';
 import EmptyState from '../../components/common/EmptyState';
 import HelpSheet from '../../components/common/HelpSheet';
 import HeroCard from '../../components/common/HeroCard';
@@ -49,6 +51,7 @@ export default function DashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [helpVisible, setHelpVisible] = useState(false);
   const [weekEarnings, setWeekEarnings] = useState(0);
+  const [trainerName, setTrainerName] = useState<string | undefined>(undefined);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -61,14 +64,21 @@ export default function DashboardScreen() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
+      const db = await getDatabase();
+      const nameRow = await db.getFirstAsync<{ value: string }>(
+        "SELECT value FROM settings WHERE key = 'trainer_name'"
+      );
+      setTrainerName(nameRow?.value || undefined);
+
       await extendActiveSeriesSessions();
       const today = todayISO();
       const end = addDays(today, 6);
       const weekStart = addDays(today, -6);
 
-      const [upcomingSessions, pastSessions] = await Promise.all([
+      const [upcomingSessions, pastSessions, personalEarnings] = await Promise.all([
         getEnrichedSessionsByDateRange(today, end),
         getEnrichedSessionsByDateRange(weekStart, today),
+        getPersonalTrainingEarnings(weekStart, today),
       ]);
 
       const map = new Map<string, EnrichedSession[]>();
@@ -84,10 +94,10 @@ export default function DashboardScreen() {
       }
       setSections(result);
 
-      const earned = pastSessions
+      const managerEarned = pastSessions
         .filter(s => s.status === 'completed')
         .reduce((sum, s) => sum + s.per_class_rate, 0);
-      setWeekEarnings(earned);
+      setWeekEarnings(managerEarned + personalEarnings);
     } finally {
       setLoading(false);
     }
@@ -95,7 +105,9 @@ export default function DashboardScreen() {
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
-  const todayCount = sections[0]?.title === 'Today' ? sections[0].data.length : 0;
+  const todayCount = sections[0]?.title === 'Today'
+    ? sections[0].data.filter(s => s.status !== 'skipped').length
+    : 0;
   const weekTotal = sections.reduce((acc, s) => acc + s.data.length, 0);
 
   function handleQuickAction(label: string) {
@@ -117,7 +129,7 @@ export default function DashboardScreen() {
         stickySectionHeadersEnabled={false}
         ListHeaderComponent={
           <>
-            <HeroCard todayCount={todayCount} weekTotal={weekTotal} weekEarnings={weekEarnings} />
+            <HeroCard todayCount={todayCount} weekTotal={weekTotal} weekEarnings={weekEarnings} trainerName={trainerName} />
             <View style={styles.quickActions}>
               {QUICK_ACTIONS.map(({ icon, label }) => (
                 <TouchableOpacity
@@ -148,9 +160,13 @@ export default function DashboardScreen() {
             <View style={styles.sectionAccent} />
             <Text
               variant="titleSmall"
+              numberOfLines={1}
               style={[styles.sectionHeaderText, { color: theme.colors.onSurface }]}
             >
               {section.title}
+            </Text>
+            <Text style={styles.sectionCount}>
+              {section.data.length} {section.data.length === 1 ? 'session' : 'sessions'}
             </Text>
           </View>
         )}
@@ -175,7 +191,7 @@ export default function DashboardScreen() {
                 </Text>
               )}
             </View>
-            <StatusBadge status={item.status} />
+            <StatusBadge status={getDisplayStatus(item.status, item.session_date, item.class_time)} />
           </TouchableOpacity>
           </Animated.View>
         )}
@@ -208,7 +224,7 @@ const styles = StyleSheet.create({
   quickActionIcon: {
     width: 52,
     height: 52,
-    borderRadius: 16,
+    borderRadius: Radius.card,
     backgroundColor: Brand.surfaceElevated,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
@@ -232,11 +248,17 @@ const styles = StyleSheet.create({
   sectionAccent: {
     width: 4,
     height: 16,
-    borderRadius: 2,
+    borderRadius: Radius.xs,
     backgroundColor: Brand.orange,
   },
   sectionHeaderText: {
     fontFamily: 'Montserrat_600SemiBold',
+    flex: 1,
+  },
+  sectionCount: {
+    fontFamily: 'Outfit_400Regular',
+    fontSize: 12,
+    color: Brand.textMuted,
   },
   sessionCard: {
     flexDirection: 'row',
@@ -246,7 +268,7 @@ const styles = StyleSheet.create({
     paddingRight: 12,
     gap: 12,
     backgroundColor: Brand.surfaceDark,
-    borderRadius: 20,
+    borderRadius: Radius.item,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
     elevation: 4,
@@ -255,7 +277,7 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
   },
-  colorBar: { width: 4, alignSelf: 'stretch', borderRadius: 2, marginLeft: 8 },
+  colorBar: { width: 4, alignSelf: 'stretch', borderRadius: Radius.xs, marginLeft: 8 },
   sessionInfo: { flex: 1, gap: 2 },
   fab: {
     position: 'absolute',

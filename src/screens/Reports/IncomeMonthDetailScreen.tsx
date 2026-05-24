@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useFocusEffect, useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Brand } from '../../theme/brandColors';
+import { Brand, Radius } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { ManagerMonthIncome, TraineeMonthPackage } from '../../types';
 import { getManagerIncomeForMonth, getTraineePackagesForMonth } from '../../database/repositories/paymentRepository';
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 14,
     backgroundColor: Brand.surfaceDark,
-    borderRadius: 16,
+    borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
     elevation: 4,
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
   paidAmount: { color: Brand.orange, fontFamily: 'Poppins_700Bold', fontSize: 14 },
   pendingAmount: { color: Brand.pink },
   amounts: { alignItems: 'flex-end', gap: 4 },
-  statusPill: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 },
+  statusPill: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: Radius.full },
   totalCard: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 14,
     backgroundColor: Brand.surfaceElevated,
-    borderRadius: 16,
+    borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
     marginTop: 8,

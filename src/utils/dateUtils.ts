@@ -18,8 +18,10 @@ export function formatDisplayDate(isoDate: string): string {
   return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-export function formatDisplayTime(time24: string): string {
+export function formatDisplayTime(time24: string | null | undefined): string {
+  if (!time24 || !time24.includes(':')) return '—';
   const [h, m] = time24.split(':').map(Number);
+  if (isNaN(h) || isNaN(m)) return '—';
   const period = h >= 12 ? 'PM' : 'AM';
   const hour = h % 12 || 12;
   return `${hour}:${m.toString().padStart(2, '0')} ${period}`;

@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Modal as RNModal,
-  Platform,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
@@ -14,7 +13,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '../../theme';
-import { Brand } from '../../theme/brandColors';
+import { Brand, Radius } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { Trainee } from '../../types';
 import { getAllTrainees } from '../../database/repositories/traineeRepository';
@@ -105,7 +104,7 @@ export default function AddPackageScreen() {
   return (
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior="padding"
     >
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <FormSection label="Trainee" />
@@ -161,7 +160,7 @@ export default function AddPackageScreen() {
           />
         </View>
 
-        <View style={{ height: 100 }} />
+        <View style={{ height: 16 }} />
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
@@ -223,7 +222,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     marginTop: 20,
   },
-  sectionAccent: { width: 3, height: 14, borderRadius: 2, backgroundColor: Brand.orange },
+  sectionAccent: { width: 3, height: 14, borderRadius: Radius.xs, backgroundColor: Brand.orange },
   sectionLabel: {
     color: Brand.textSecondary,
     fontSize: 12,
@@ -234,7 +233,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: Brand.surfaceDark,
-    borderRadius: 16,
+    borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
     padding: 14,
@@ -269,6 +268,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: 100,
     borderColor: Brand.borderSubtle,
+    borderRadius: Radius.lg,
   },
   saveBtn: { flex: 1 },
   backdrop: {
@@ -277,8 +277,8 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheet: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: Radius.item,
+    borderTopRightRadius: Radius.item,
     paddingBottom: 32,
     maxHeight: '60%',
   },

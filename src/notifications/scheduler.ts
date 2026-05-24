@@ -3,11 +3,71 @@ import { getDatabase } from '../database/db';
 
 const isExpoGo = Constants.appOwnership === 'expo';
 
+const PAYMENT_REMINDER_ID = 'fitdesk-payment-reminder';
+
 interface UpcomingSession {
   id: number;
   session_date: string;
   class_time: string;
   series_title: string;
+}
+
+export async function schedulePendingPaymentNotification(): Promise<void> {
+  if (isExpoGo) return;
+
+  const Notifications = await import('expo-notifications');
+
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+    }),
+  });
+
+  const db = await getDatabase();
+
+  const enabledRow = await db.getFirstAsync<{ value: string }>(
+    "SELECT value FROM settings WHERE key = 'payment_notification_enabled'"
+  );
+
+  try {
+    await Notifications.cancelScheduledNotificationAsync(PAYMENT_REMINDER_ID);
+  } catch {
+    // Notification didn't exist — no-op
+  }
+
+  if (enabledRow?.value !== 'true') return;
+
+  const row = await db.getFirstAsync<{ total: number }>(
+    `SELECT (
+      SELECT COUNT(*) FROM manager_payments WHERE status = 'pending'
+    ) + (
+      SELECT COUNT(*) FROM trainee_packages WHERE status = 'pending'
+    ) AS total`
+  );
+  const total = row?.total ?? 0;
+  if (total === 0) return;
+
+  const now = new Date();
+  const notifyAt = new Date(now);
+  notifyAt.setHours(9, 0, 0, 0);
+  if (notifyAt <= now) notifyAt.setDate(notifyAt.getDate() + 1);
+
+  await Notifications.scheduleNotificationAsync({
+    identifier: PAYMENT_REMINDER_ID,
+    content: {
+      title: 'Pending Payments',
+      body: `${total} outstanding payment${total === 1 ? '' : 's'} to collect.`,
+      data: { type: 'payment-reminder' },
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.DATE,
+      date: notifyAt,
+    },
+  });
 }
 
 export async function scheduleUpcomingNotifications(): Promise<void> {

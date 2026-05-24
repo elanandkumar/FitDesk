@@ -4,7 +4,7 @@ import { Chip, IconButton, Text } from 'react-native-paper';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '../../theme';
-import { Brand, Layout } from '../../theme/brandColors';
+import { Brand, Layout, Radius } from '../../theme/brandColors';
 import { EnrichedManagerPayment } from '../../types';
 import {
   getAllEnrichedManagerPayments,
@@ -15,6 +15,10 @@ import { formatDisplayDate, formatDisplayTime, todayISO } from '../../utils/date
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import EmptyState from '../../components/common/EmptyState';
 import HelpSheet from '../../components/common/HelpSheet';
+import { schedulePendingPaymentNotification } from '../../notifications/scheduler';
+import Constants from 'expo-constants';
+
+const isExpoGo = Constants.appOwnership === 'expo';
 
 const HELP =
   'Payments are auto-created when sessions are marked complete. Tap "Mark Paid" after you receive payment from the manager. Mark each payment individually to verify.';
@@ -45,6 +49,7 @@ export default function ManagerPaymentsScreen() {
   const { theme } = useAppTheme();
   const navigation = useNavigation();
   const [sections, setSections] = useState<Section[]>([]);
+  const [allPayments, setAllPayments] = useState<EnrichedManagerPayment[]>([]);
   const [pendingOnly, setPendingOnly] = useState(true);
   const [confirmPayment, setConfirmPayment] = useState<EnrichedManagerPayment | null>(null);
   const [helpVisible, setHelpVisible] = useState(false);
@@ -52,11 +57,15 @@ export default function ManagerPaymentsScreen() {
   const load = useCallback(async () => {
     try {
       const payments = await getAllEnrichedManagerPayments(pendingOnly);
+      setAllPayments(payments);
       setSections(groupByManager(payments));
     } catch {
       // list stays empty on DB error
     }
   }, [pendingOnly]);
+
+  const totalPending = allPayments.filter(p => p.status === 'pending').reduce((s, p) => s + p.amount, 0);
+  const totalPaid = allPayments.filter(p => p.status === 'paid').reduce((s, p) => s + p.amount, 0);
 
   useFocusEffect(
     useCallback(() => {
@@ -76,6 +85,7 @@ export default function ManagerPaymentsScreen() {
       await markManagerPaymentPaid(confirmPayment.id, todayISO());
       setConfirmPayment(null);
       load();
+      if (!isExpoGo) schedulePendingPaymentNotification().catch(() => {});
     } catch {
       setConfirmPayment(null);
       Alert.alert('Error', 'Could not mark payment as paid. Please try again.');
@@ -139,6 +149,20 @@ export default function ManagerPaymentsScreen() {
         </Chip>
       </View>
 
+      {allPayments.length > 0 && (
+        <View style={styles.summaryCard}>
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryLabel}>Pending</Text>
+            <Text style={[styles.summaryAmount, { color: Brand.orange }]}>{formatCurrency(totalPending)}</Text>
+          </View>
+          <View style={styles.summarySep} />
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryLabel}>Paid</Text>
+            <Text style={[styles.summaryAmount, { color: Brand.pink }]}>{formatCurrency(totalPaid)}</Text>
+          </View>
+        </View>
+      )}
+
       <SectionList
         sections={sections}
         keyExtractor={(item) => String(item.id)}
@@ -183,6 +207,26 @@ const styles = StyleSheet.create({
   filterRow: { flexDirection: 'row', gap: 8, padding: 12, paddingBottom: 4 },
   filterChip: { backgroundColor: Brand.surfaceDark, borderColor: Brand.borderSubtle },
   filterChipActive: { backgroundColor: Brand.purple },
+  summaryCard: {
+    flexDirection: 'row',
+    backgroundColor: Brand.surfaceDark,
+    borderRadius: Radius.card,
+    borderWidth: 1,
+    borderColor: Brand.borderSubtle,
+    marginHorizontal: 12,
+    marginBottom: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    elevation: 4,
+    shadowColor: Brand.purple,
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  summaryItem: { flex: 1, alignItems: 'center' },
+  summaryLabel: { color: Brand.textSecondary, fontSize: 12, fontWeight: '500', marginBottom: 4 },
+  summaryAmount: { fontSize: 18, fontWeight: '700', fontFamily: 'Montserrat_600SemiBold' },
+  summarySep: { width: 1, backgroundColor: Brand.borderSubtle, marginVertical: 4 },
   listContent: { paddingHorizontal: 12, paddingBottom: Layout.LIST_PAD_NO_FAB },
   emptyContainer: { flex: 1 },
   sectionHeader: {
@@ -201,7 +245,7 @@ const styles = StyleSheet.create({
   },
   dueBadge: {
     backgroundColor: `${Brand.orange}33`,
-    borderRadius: 20,
+    borderRadius: Radius.full,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
@@ -210,7 +254,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Brand.surfaceDark,
-    borderRadius: 16,
+    borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
     paddingHorizontal: 14,
@@ -218,7 +262,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     gap: 10,
   },
-  dot: { width: 10, height: 10, borderRadius: 5, flexShrink: 0 },
+  dot: { width: 10, height: 10, borderRadius: Radius.full, flexShrink: 0 },
   itemText: { flex: 1 },
   itemTitle: { color: Brand.textPrimary, fontSize: 14, fontWeight: '500' },
   itemSub: { color: Brand.textSecondary, fontSize: 12, marginTop: 2 },
@@ -226,7 +270,7 @@ const styles = StyleSheet.create({
   amount: { color: Brand.orange, fontSize: 15, fontWeight: '700' },
   markPaidBtn: {
     backgroundColor: `${Brand.purple}33`,
-    borderRadius: 20,
+    borderRadius: Radius.full,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
@@ -236,7 +280,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 3,
     backgroundColor: `${Brand.pink}1A`,
-    borderRadius: 20,
+    borderRadius: Radius.full,
     paddingHorizontal: 8,
     paddingVertical: 3,
   },

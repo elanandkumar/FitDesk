@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { PaperProvider, ActivityIndicator } from 'react-native-paper';
@@ -11,9 +11,10 @@ import { Outfit_400Regular } from '@expo-google-fonts/outfit';
 import { ThemeProvider, useAppTheme } from './src/theme';
 import AppNavigator from './src/navigation/AppNavigator';
 import ErrorBoundary from './src/components/common/ErrorBoundary';
+import AppSplashScreen from './src/screens/Splash/AppSplashScreen';
 import { getDatabase } from './src/database/db';
 import { extendActiveSeriesSessions } from './src/database/repositories/classSeriesRepository';
-import { scheduleUpcomingNotifications } from './src/notifications/scheduler';
+import { scheduleUpcomingNotifications, schedulePendingPaymentNotification } from './src/notifications/scheduler';
 import { requestNotificationPermission } from './src/notifications/permissions';
 
 SplashScreen.preventAutoHideAsync();
@@ -31,8 +32,11 @@ function Root() {
   );
 }
 
+type AppPhase = 'loading' | 'splash' | 'ready';
+
 export default function App() {
   const [dbReady, setDbReady] = useState(false);
+  const [phase, setPhase] = useState<AppPhase>('loading');
 
   const [fontsLoaded] = useFonts({
     Poppins_700Bold,
@@ -60,6 +64,7 @@ export default function App() {
         try {
           await requestNotificationPermission();
           await scheduleUpcomingNotifications();
+          await schedulePendingPaymentNotification();
         } catch {
           // notifications unavailable — skip silently
         }
@@ -72,10 +77,13 @@ export default function App() {
   useEffect(() => {
     if (fontsLoaded && dbReady) {
       SplashScreen.hideAsync();
+      setPhase('splash');
     }
   }, [fontsLoaded, dbReady]);
 
-  if (!fontsLoaded || !dbReady) {
+  const onSplashDone = useCallback(() => setPhase('ready'), []);
+
+  if (phase === 'loading') {
     return (
       <View style={styles.loading}>
         <ActivityIndicator size="large" />
@@ -90,6 +98,7 @@ export default function App() {
           <Root />
         </ThemeProvider>
       </ErrorBoundary>
+      {phase === 'splash' && <AppSplashScreen onDone={onSplashDone} />}
     </GestureHandlerRootView>
   );
 }

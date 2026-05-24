@@ -4,7 +4,7 @@ import ThemedDatePickerModal from './ThemedDatePickerModal';
 import ThemedTimePickerModal from './ThemedTimePickerModal';
 import { Button, List, Modal, Portal, SegmentedButtons, Surface, Text, TextInput } from 'react-native-paper';
 import { useAppTheme } from '../../theme';
-import { Brand } from '../../theme/brandColors';
+import { Brand, Radius } from '../../theme/brandColors';
 import { ClassType, LocationType, Manager, SourceType } from '../../types';
 import { getAllClassTypes } from '../../database/repositories/classTypeRepository';
 import { getAllManagers } from '../../database/repositories/managerRepository';
@@ -14,6 +14,7 @@ import {
 } from '../../database/repositories/classSessionRepository';
 import { todayISO } from '../../utils/dateUtils';
 import { DEFAULT_DURATION_MINUTES } from '../../constants';
+import { scheduleUpcomingNotifications } from '../../notifications/scheduler';
 
 interface Props {
   visible: boolean;
@@ -107,6 +108,7 @@ export default function QuickAddSessionModal({ visible, initialDate, onDismiss, 
         notes: form.notes.trim() || undefined,
       };
       const sessionId = await createAdHocSession(input);
+      await scheduleUpcomingNotifications();
       onCreated(sessionId);
     } finally {
       setSaving(false);
@@ -163,10 +165,10 @@ export default function QuickAddSessionModal({ visible, initialDate, onDismiss, 
               setForm((f) => ({ ...f, sourceType: v as SourceType, managerId: null }))
             }
             buttons={[
-              { value: 'manager', label: 'Manager', style: { borderRadius: 4 } },
-              { value: 'personal', label: 'Personal', style: { borderRadius: 4 } },
+              { value: 'manager', label: 'Manager', style: { borderRadius: Radius.sm } },
+              { value: 'personal', label: 'Personal', style: { borderRadius: Radius.sm } },
             ]}
-            style={{ marginBottom: 8, borderRadius: 4 }}
+            style={{ marginBottom: 8, borderRadius: Radius.sm }}
             theme={{ colors: { secondaryContainer: Brand.purple, onSecondaryContainer: Brand.textPrimary } }}
           />
 
@@ -220,22 +222,9 @@ export default function QuickAddSessionModal({ visible, initialDate, onDismiss, 
             style={styles.input}
           />
 
-          {/* Location type */}
-          <Text variant="labelMedium" style={[styles.label, { color: theme.colors.onSurfaceVariant }]}>
-            Location
-          </Text>
-          <SegmentedButtons
-            value={form.locationType}
-            onValueChange={(v) => setForm((f) => ({ ...f, locationType: v as LocationType }))}
-            buttons={[
-              { value: 'offline', label: 'In-person', style: { borderRadius: 4 } },
-              { value: 'online', label: 'Online', style: { borderRadius: 4 } },
-            ]}
-            style={{ marginBottom: 8, borderRadius: 4 }}
-            theme={{ colors: { secondaryContainer: Brand.purple, onSecondaryContainer: Brand.textPrimary } }}
-          />
+          {/* Location */}
           <TextInput
-            label="Location / Link (optional)"
+            label="Address (optional)"
             value={form.location}
             onChangeText={(v) => setForm((f) => ({ ...f, location: v }))}
             mode="outlined"
@@ -358,20 +347,20 @@ export default function QuickAddSessionModal({ visible, initialDate, onDismiss, 
 }
 
 const styles = StyleSheet.create({
-  modal: { margin: 16, borderRadius: 12, padding: 20, maxHeight: '90%' },
+  modal: { margin: 16, borderRadius: Radius.lg, padding: 20, maxHeight: '90%' },
   label: { marginBottom: 6, marginTop: 4 },
   input: { marginBottom: 8 },
   actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 8 },
   pickerButton: {
     borderWidth: 1,
-    borderRadius: 4,
+    borderRadius: Radius.sm,
     padding: 14,
     minHeight: 52,
     justifyContent: 'center',
     marginBottom: 8,
   },
   pickerSelected: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  colorDot: { width: 16, height: 16, borderRadius: 8 },
+  colorDot: { width: 16, height: 16, borderRadius: Radius.full },
   dateTimeRow: { flexDirection: 'row', gap: 8 },
   dateTimeCell: { flex: 1 },
   modalBackdrop: {
@@ -380,8 +369,8 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalSheet: {
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    borderTopLeftRadius: Radius.card,
+    borderTopRightRadius: Radius.card,
     paddingBottom: 32,
     maxHeight: '60%',
   },

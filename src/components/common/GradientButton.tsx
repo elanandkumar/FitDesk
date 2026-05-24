@@ -2,7 +2,7 @@ import React from 'react';
 import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
-import { Brand, Gradients } from '../../theme/brandColors';
+import { Brand, Gradients, Radius } from '../../theme/brandColors';
 
 interface Props {
   label: string;
@@ -44,7 +44,7 @@ export default function GradientButton({ label, onPress, loading, disabled, styl
 }
 
 const styles = StyleSheet.create({
-  wrapper: { borderRadius: 12, overflow: 'hidden' },
+  wrapper: { borderRadius: Radius.lg, overflow: 'hidden' },
   pressable: { width: '100%' },
   gradient: {
     paddingVertical: 14,

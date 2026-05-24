@@ -225,6 +225,26 @@ export async function getManagerIncomeForMonth(month: string): Promise<ManagerMo
   `, [month]);
 }
 
+export async function getPersonalTrainingEarnings(startDate: string, endDate: string): Promise<number> {
+  const db = await getDatabase();
+  const row = await db.getFirstAsync<{ earned: number }>(`
+    SELECT COALESCE(SUM(
+      CAST(tp.amount AS REAL) / NULLIF(tp.total_sessions, 0)
+    ), 0) AS earned
+    FROM session_trainees st
+    JOIN class_sessions cs ON st.session_id = cs.id
+    JOIN class_series ser ON cs.series_id = ser.id
+    JOIN trainee_packages tp
+      ON tp.trainee_id = st.trainee_id
+      AND tp.month = SUBSTR(cs.session_date, 1, 7)
+    WHERE cs.status = 'completed'
+      AND ser.source_type = 'personal'
+      AND cs.session_date >= ?
+      AND cs.session_date <= ?
+  `, [startDate, endDate]);
+  return row?.earned ?? 0;
+}
+
 export async function getTraineePackagesForMonth(month: string): Promise<TraineeMonthPackage[]> {
   const db = await getDatabase();
   return db.getAllAsync<TraineeMonthPackage>(`

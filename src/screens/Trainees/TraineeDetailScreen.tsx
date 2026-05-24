@@ -5,7 +5,7 @@ import GradientFAB from '../../components/common/GradientFAB';
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Brand } from '../../theme/brandColors';
+import { Brand, Radius } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { Trainee, TraineePackage, EnrichedSession } from '../../types';
 import { getTraineeById, deleteTrainee } from '../../database/repositories/traineeRepository';
@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     marginTop: 16,
   },
-  sectionAccent: { width: 3, height: 14, borderRadius: 2, backgroundColor: Brand.orange },
+  sectionAccent: { width: 3, height: 14, borderRadius: Radius.xs, backgroundColor: Brand.orange },
   sectionLabel: {
     color: Brand.textSecondary,
     fontSize: 11,
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
   },
   pendingBadge: {
     backgroundColor: Brand.pink + '22',
-    borderRadius: 10,
+    borderRadius: Radius.full,
     paddingHorizontal: 8,
     paddingVertical: 2,
     marginLeft: 4,
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
   pendingBadgeText: { color: Brand.pink, fontSize: 11, fontWeight: '600' },
   card: {
     backgroundColor: Brand.surfaceDark,
-    borderRadius: 16,
+    borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
     elevation: 4,
@@ -291,9 +291,9 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_700Bold',
     fontSize: 14,
   },
-  statusPill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 },
+  statusPill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: Radius.full },
   sessionRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 4 },
-  colorBar: { width: 3, alignSelf: 'stretch', borderRadius: 2 },
+  colorBar: { width: 3, alignSelf: 'stretch', borderRadius: Radius.xs },
   fab: {
     position: 'absolute',
     right: 16,

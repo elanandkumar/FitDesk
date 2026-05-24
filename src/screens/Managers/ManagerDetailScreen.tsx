@@ -5,7 +5,7 @@ import GradientFAB from '../../components/common/GradientFAB';
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Brand } from '../../theme/brandColors';
+import { Brand, Radius } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { Manager, EnrichedManagerPayment } from '../../types';
 import { getManagerById, deleteManager } from '../../database/repositories/managerRepository';
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     marginTop: 16,
   },
-  sectionAccent: { width: 3, height: 14, borderRadius: 2, backgroundColor: Brand.orange },
+  sectionAccent: { width: 3, height: 14, borderRadius: Radius.xs, backgroundColor: Brand.orange },
   sectionLabel: {
     color: Brand.textSecondary,
     fontSize: 11,
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: Brand.surfaceDark,
-    borderRadius: 16,
+    borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
     elevation: 4,
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   paymentRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4 },
-  colorDot: { width: 8, height: 8, borderRadius: 4, marginTop: 2 },
+  colorDot: { width: 8, height: 8, borderRadius: Radius.full, marginTop: 2 },
   fab: {
     position: 'absolute',
     right: 16,

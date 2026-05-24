@@ -1,0 +1,24 @@
+Trainee management needs improvements:
+    ☐ there is no way to manage how many classes were given. i can see it says 0/12 even when payment is done and month is ended. very limited management is there for trainee data
+    ☐ on dashboard, we don't see the upcoming personal classes for the trainee (possibly trainee management itself needs improvements)
+
+notifications:
+    ☐ want the notification for class (be it manager level or trainee level)
+    ☐ Needs notification for payment reminder, may be if any pending payment is there, we can send a daily notification so that it is not missed
+
+☐ if a class being creaed adhoc and date is before the current date, we should have an option to mark that class as completed. also, if a class is added, i am not able to edit it because i may make mistake in picking date and time. I only see skip option which i think is not feasible for my use case
+☐ how about editing an individual instance of the class which is part of the series
+
+☐ skipped class is also being considered on the dashboard top card where it says there is a class today
+
+☐ there are issues where fields goes behind the keyboard in the form
+
+☐ The time picker, should be supporting 12 hrs. thus should show AM/PM (should be very much clear to not miss with AM/PM)
+
+☐ The class series list should have filters like not showing the completed, or not showing the skipped etc. also, the one that is marked complete, the item is showing a label of cancelled. why?
+
+☐ The class detail, top card has badge but is of different size. Also, remove the background color that is picked from the class type. Hide the notes section, if there is no notes. the manager lable is `manager name.amount`. better to do it `manager name | amount`. thoughts?
+
+☐ Remove the online option from the location across - which means the segment tab is not required.
+
+☐ On the Payments screen, under managers - we should have a card to show the total pending and paid (based on filter but need top card like income summary so that I know the total pending amount or total paid easily at a glance)

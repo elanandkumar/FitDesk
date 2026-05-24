@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button, Dialog, Portal, Text } from 'react-native-paper';
 import { Calendar } from 'react-native-calendars';
-import { useAppTheme } from '../../theme';
+import { useAppTheme, Radius } from '../../theme';
 
 interface Props {
   visible: boolean;
@@ -55,7 +55,7 @@ export default function ThemedDatePickerModal({
             minDate={minDate}
             maxDate={maxDate}
             theme={calTheme}
-            style={{ borderRadius: 8 }}
+            style={{ borderRadius: Radius.md }}
           />
         </Dialog.Content>
         <Dialog.Actions>

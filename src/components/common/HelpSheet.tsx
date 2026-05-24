@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button, Modal, Portal, Text } from 'react-native-paper';
-import { useAppTheme } from '../../theme';
+import { useAppTheme, Radius } from '../../theme';
 
 interface Props {
   visible: boolean;
@@ -33,6 +33,6 @@ export default function HelpSheet({ visible, onDismiss, content }: Props) {
 }
 
 const styles = StyleSheet.create({
-  sheet: { margin: 24, padding: 24, borderRadius: 16 },
+  sheet: { margin: 24, padding: 24, borderRadius: Radius.card },
   close: { alignSelf: 'flex-end', marginTop: 12 },
 });

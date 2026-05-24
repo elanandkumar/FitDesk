@@ -2,7 +2,7 @@ import React from 'react';
 import { Pressable, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Gradients, Brand } from '../../theme/brandColors';
+import { Gradients, Brand, Radius } from '../../theme/brandColors';
 
 interface Props {
   icon: string;
@@ -34,7 +34,7 @@ export default function GradientFAB({ icon, onPress, style, color = Brand.textPr
 
 const styles = StyleSheet.create({
   shadow: {
-    borderRadius: 16,
+    borderRadius: Radius.card,
     elevation: 8,
     shadowColor: Brand.purple,
     shadowOpacity: 0.5,
@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
   },
   pressable: {
-    borderRadius: 16,
+    borderRadius: Radius.card,
     overflow: 'hidden',
   },
   gradient: {

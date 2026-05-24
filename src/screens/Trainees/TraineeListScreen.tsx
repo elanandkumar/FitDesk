@@ -9,7 +9,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { MaterialTopTabNavigationProp } from '@react-navigation/material-top-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '../../theme';
-import { Brand, Layout } from '../../theme/brandColors';
+import { Brand, Layout, Radius } from '../../theme/brandColors';
 import { Trainee } from '../../types';
 import { getAllTrainees } from '../../database/repositories/traineeRepository';
 import EmptyState from '../../components/common/EmptyState';
@@ -128,13 +128,13 @@ export default function TraineeListScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  searchbar: { margin: 12, borderRadius: 12, elevation: 0 },
+  searchbar: { margin: 12, borderRadius: Radius.lg, elevation: 0 },
   listContent: { paddingHorizontal: 12, paddingBottom: Layout.LIST_PAD_WITH_FAB },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Brand.surfaceDark,
-    borderRadius: 20,
+    borderRadius: Radius.item,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
     paddingVertical: 14,
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
   avatar: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: Radius.full,
     backgroundColor: Brand.surfaceElevated,
     alignItems: 'center',
     justifyContent: 'center',

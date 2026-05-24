@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Button, Text } from 'react-native-paper';
-import { Brand } from '../../theme/brandColors';
+import { Brand, Radius } from '../../theme/brandColors';
 import GradientButton from '../../components/common/GradientButton';
 import { exportData, pickAndImportData } from '../../utils/exportUtils';
 
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
   content: { padding: 16, gap: 16 },
   card: {
     backgroundColor: Brand.surfaceDark,
-    borderRadius: 20,
+    borderRadius: Radius.item,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
     elevation: 4,
@@ -116,8 +116,8 @@ const styles = StyleSheet.create({
   },
   warningBox: {
     backgroundColor: Brand.pink + '18',
-    borderRadius: 8,
+    borderRadius: Radius.md,
     padding: 10,
   },
-  importBtn: { borderColor: Brand.pink, marginTop: 4 },
+  importBtn: { borderColor: Brand.pink, marginTop: 4, borderRadius: Radius.lg },
 });
