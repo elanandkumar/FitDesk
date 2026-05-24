@@ -1,0 +1,202 @@
+import React, { useCallback, useLayoutEffect, useState } from 'react';
+import { SectionList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { FAB, IconButton, Text } from 'react-native-paper';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { useAppTheme, Brand } from '../../theme';
+import { EnrichedSession } from '../../types';
+import {
+  getEnrichedSessionsByDateRange,
+} from '../../database/repositories/classSessionRepository';
+import { extendActiveSeriesSessions } from '../../database/repositories/classSeriesRepository';
+import { formatDisplayTime, todayISO, addDays } from '../../utils/dateUtils';
+import { RootStackParamList } from '../../navigation/types';
+import StatusBadge from '../../components/common/StatusBadge';
+import EmptyState from '../../components/common/EmptyState';
+import HelpSheet from '../../components/common/HelpSheet';
+import HeroCard from '../../components/common/HeroCard';
+
+const HELP =
+  'Sessions for the next 7 days. Tap a session to mark complete or skip. Use the list icon (bottom right) to manage class series.';
+
+type Nav = StackNavigationProp<RootStackParamList>;
+
+type Section = { title: string; data: EnrichedSession[] };
+
+function sectionTitle(isoDate: string, todayStr: string): string {
+  if (isoDate === todayStr) return 'Today';
+  if (isoDate === addDays(todayStr, 1)) return 'Tomorrow';
+  const d = new Date(isoDate + 'T00:00:00');
+  return d.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short' });
+}
+
+export default function DashboardScreen() {
+  const { theme } = useAppTheme();
+  const navigation = useNavigation<Nav>();
+  const [sections, setSections] = useState<Section[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [helpVisible, setHelpVisible] = useState(false);
+  const [weekEarnings, setWeekEarnings] = useState(0);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <IconButton icon="help-circle-outline" iconColor={theme.colors.primary} onPress={() => setHelpVisible(true)} />
+      ),
+    });
+  }, [navigation, theme.colors.primary]);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      await extendActiveSeriesSessions();
+      const today = todayISO();
+      const end = addDays(today, 6);
+      const weekStart = addDays(today, -6);
+
+      const [upcomingSessions, pastSessions] = await Promise.all([
+        getEnrichedSessionsByDateRange(today, end),
+        getEnrichedSessionsByDateRange(weekStart, today),
+      ]);
+
+      const map = new Map<string, EnrichedSession[]>();
+      for (const s of upcomingSessions) {
+        const existing = map.get(s.session_date) ?? [];
+        existing.push(s);
+        map.set(s.session_date, existing);
+      }
+
+      const result: Section[] = [];
+      for (const [date, data] of map.entries()) {
+        result.push({ title: sectionTitle(date, today), data });
+      }
+      setSections(result);
+
+      const earned = pastSessions
+        .filter(s => s.status === 'completed')
+        .reduce((sum, s) => sum + s.per_class_rate, 0);
+      setWeekEarnings(earned);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useFocusEffect(useCallback(() => { load(); }, [load]));
+
+  const todayCount = sections[0]?.title === 'Today' ? sections[0].data.length : 0;
+  const weekTotal = sections.reduce((acc, s) => acc + s.data.length, 0);
+
+  return (
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <SectionList
+        sections={sections}
+        keyExtractor={(item) => String(item.id)}
+        contentContainerStyle={styles.listContent}
+        stickySectionHeadersEnabled={false}
+        ListHeaderComponent={
+          <HeroCard todayCount={todayCount} weekTotal={weekTotal} weekEarnings={weekEarnings} />
+        }
+        ListEmptyComponent={
+          !loading ? (
+            <EmptyState
+              title="No upcoming sessions"
+              subtitle="Tap + to manage class series"
+            />
+          ) : null
+        }
+        renderSectionHeader={({ section }) => (
+          <View style={styles.sectionHeaderRow}>
+            <View style={styles.sectionAccent} />
+            <Text
+              variant="titleSmall"
+              style={[styles.sectionHeaderText, { color: theme.colors.onSurface }]}
+            >
+              {section.title}
+            </Text>
+          </View>
+        )}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            onPress={() => navigation.navigate('ClassSessionDetail', { sessionId: item.id })}
+            style={styles.sessionCard}
+          >
+            <View style={[styles.colorBar, { backgroundColor: item.class_type_color }]} />
+            <View style={styles.sessionInfo}>
+              <Text variant="titleSmall" style={{ color: Brand.textPrimary }}>
+                {item.series_title}
+              </Text>
+              <Text variant="bodySmall" style={{ color: Brand.textSecondary }}>
+                {formatDisplayTime(item.class_time)} · {item.class_type_name} · {item.duration_minutes} min
+              </Text>
+              {item.location && (
+                <Text variant="bodySmall" style={{ color: Brand.textMuted }}>
+                  {item.location}
+                </Text>
+              )}
+            </View>
+            <StatusBadge status={item.status} />
+          </TouchableOpacity>
+        )}
+        ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+        SectionSeparatorComponent={() => <View style={{ height: 4 }} />}
+      />
+
+      <FAB
+        icon="view-list"
+        style={styles.fab}
+        color={Brand.textPrimary}
+        onPress={() => navigation.navigate('ClassSeriesList')}
+      />
+
+      <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP} />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  listContent: { flexGrow: 1, paddingBottom: 88 },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+    gap: 10,
+  },
+  sectionAccent: {
+    width: 4,
+    height: 16,
+    borderRadius: 2,
+    backgroundColor: Brand.orange,
+  },
+  sectionHeaderText: {
+    fontFamily: 'Montserrat_600SemiBold',
+  },
+  sessionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 16,
+    paddingVertical: 14,
+    paddingRight: 12,
+    gap: 12,
+    backgroundColor: Brand.surfaceDark,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Brand.borderSubtle,
+    elevation: 4,
+    shadowColor: Brand.purple,
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  colorBar: { width: 4, alignSelf: 'stretch', borderRadius: 2, marginLeft: 8 },
+  sessionInfo: { flex: 1, gap: 2 },
+  fab: {
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
+    borderRadius: 16,
+    backgroundColor: Brand.orange,
+  },
+});
