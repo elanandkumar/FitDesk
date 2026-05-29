@@ -2,6 +2,7 @@ import React from 'react';
 import { View, TouchableOpacity, StyleSheet, Text } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import {
   House,
   CalendarBlank,
@@ -9,7 +10,7 @@ import {
   CurrencyInr,
   Gear,
 } from 'phosphor-react-native';
-import { Brand, Radius } from '../../theme/brandColors';
+import { Brand, Gradients, Radius } from '../../theme/brandColors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const TABS = [
@@ -39,7 +40,14 @@ function TabItem({
     >
       <View style={styles.tabItemInner}>
         <View style={styles.iconWrap}>
-          {isActive && <View style={styles.iconPill} />}
+          {isActive && (
+            <LinearGradient
+              colors={[Brand.purple + '4D', Brand.orange + '33']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.iconPill}
+            />
+          )}
           <tab.Icon
             size={22}
             color={isActive ? Brand.textAccent : Brand.textMuted}
@@ -138,9 +146,8 @@ const styles = StyleSheet.create({
     width: 46,
     height: 30,
     borderRadius: Radius.full,
-    backgroundColor: Brand.purple + '2A',
     borderWidth: 1,
-    borderColor: Brand.purple + '50',
+    borderColor: Brand.orange + '40',
   },
   label: {
     fontSize: 10,

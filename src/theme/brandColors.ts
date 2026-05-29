@@ -28,6 +28,7 @@ export const Brand = {
 export const Gradients = {
   hero:         ['#3D1DB5', '#1B102F'] as const,
   purpleOrange: ['#5B2EFF', '#FF7A00'] as const,
+  button:       ['#5B2EFF', '#8B40FF', '#FF7A00'] as const,
   cardBorder:   ['#5B2EFF', '#FF3D81'] as const,
   orangePink:   ['#FF7A00', '#FF3D81'] as const,
 } as const;

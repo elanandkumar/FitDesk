@@ -2,10 +2,11 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Modal as RNModal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import ThemedDatePickerModal from './ThemedDatePickerModal';
 import ThemedTimePickerModal from './ThemedTimePickerModal';
-import { List, Modal, Portal, SegmentedButtons, Surface, Text, TextInput } from 'react-native-paper';
+import { List, Modal, Portal, Surface, Text, TextInput } from 'react-native-paper';
+import ThemedSegmentedButtons from './ThemedSegmentedButtons';
 import AppButton from './AppButton';
 import { useAppTheme } from '../../theme';
-import { Brand, Radius } from '../../theme/brandColors';
+import { Radius } from '../../theme/brandColors';
 import { ClassType, LocationType, Manager, SourceType } from '../../types';
 import { getAllClassTypes } from '../../database/repositories/classTypeRepository';
 import { getAllManagers } from '../../database/repositories/managerRepository';
@@ -160,7 +161,7 @@ export default function QuickAddSessionModal({ visible, initialDate, onDismiss, 
           <Text variant="labelMedium" style={[styles.label, { color: theme.colors.onSurfaceVariant }]}>
             Source *
           </Text>
-          <SegmentedButtons
+          <ThemedSegmentedButtons
             value={form.sourceType}
             onValueChange={(v) =>
               setForm((f) => ({ ...f, sourceType: v as SourceType, managerId: null }))
@@ -170,7 +171,6 @@ export default function QuickAddSessionModal({ visible, initialDate, onDismiss, 
               { value: 'personal', label: 'Personal', style: { borderRadius: Radius.sm } },
             ]}
             style={{ marginBottom: 8, borderRadius: Radius.sm }}
-            theme={{ colors: { secondaryContainer: Brand.purple, onSecondaryContainer: Brand.textPrimary } }}
           />
 
           {/* Manager picker */}

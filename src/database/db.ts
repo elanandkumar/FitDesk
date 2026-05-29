@@ -1,4 +1,5 @@
 import * as SQLite from 'expo-sqlite';
+import { runMigrations } from './migrations';
 import { ALL_TABLES, DEFAULT_SETTINGS, DEFAULT_CLASS_TYPES } from './schema';
 
 let db: SQLite.SQLiteDatabase | null = null;
@@ -17,6 +18,8 @@ async function initializeDatabase(database: SQLite.SQLiteDatabase): Promise<void
   for (const sql of ALL_TABLES) {
     await database.execAsync(sql);
   }
+
+  await runMigrations(database);
 
   for (const setting of DEFAULT_SETTINGS) {
     await database.runAsync(

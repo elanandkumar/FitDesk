@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, ScrollView, StyleSheet, View } from 'react-native';
 import { Text, TextInput } from 'react-native-paper';
+import SectionHeader from '../../components/common/SectionHeader';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '../../theme';
-import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { Brand, Radius, Spacing } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import {
   createManager,
@@ -17,15 +18,6 @@ import AppButton from '../../components/common/AppButton';
 
 type Nav = StackNavigationProp<RootStackParamList, 'AddEditManager'>;
 type Route = RouteProp<RootStackParamList, 'AddEditManager'>;
-
-function FormSection({ label }: { label: string }) {
-  return (
-    <View style={styles.sectionHeader}>
-      <View style={styles.sectionAccent} />
-      <Text style={styles.sectionLabel}>{label}</Text>
-    </View>
-  );
-}
 
 export default function AddEditManagerScreen() {
   const { theme } = useAppTheme();
@@ -97,7 +89,7 @@ export default function AddEditManagerScreen() {
       behavior="padding"
     >
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <FormSection label="Basic Info" />
+        <SectionHeader label="Basic Info" />
         <View style={styles.card}>
           <TextInput
             label="Name *"
@@ -134,7 +126,7 @@ export default function AddEditManagerScreen() {
           />
         </View>
 
-        <FormSection label="Payment" />
+        <SectionHeader label="Payment" />
         <View style={styles.card}>
           <TextInput
             label="Per Class Rate (₹) *"
@@ -152,7 +144,7 @@ export default function AddEditManagerScreen() {
           )}
         </View>
 
-        <FormSection label="Notes" />
+        <SectionHeader label="Notes" />
         <View style={styles.card}>
           <TextInput
             label="Notes (optional)"
@@ -188,20 +180,6 @@ export default function AddEditManagerScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: Spacing.lg },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.sm,
-    marginTop: Spacing.xl,
-  },
-  sectionAccent: { width: 3, height: 14, borderRadius: Radius.xs, backgroundColor: Brand.orange },
-  sectionLabel: {
-    ...Typography.labelSm,
-    color: Brand.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
   card: {
     backgroundColor: Brand.surfaceDark,
     borderRadius: Radius.card,

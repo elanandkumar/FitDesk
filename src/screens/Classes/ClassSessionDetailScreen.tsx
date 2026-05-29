@@ -33,6 +33,7 @@ import { getTraineesForSeries, getClassSeriesById } from '../../database/reposit
 import { getTraineesForSession } from '../../database/repositories/sessionTraineeRepository';
 import { formatDisplayDate, formatDisplayTime } from '../../utils/dateUtils';
 import { formatCurrency } from '../../utils/currencyUtils';
+import { withAlpha } from '../../utils/colorUtils';
 import { RootStackParamList } from '../../navigation/types';
 import StatusBadge from '../../components/common/StatusBadge';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
@@ -249,7 +250,7 @@ export default function ClassSessionDetailScreen() {
       keyboardShouldPersistTaps="handled"
     >
       {/* Hero strip */}
-      <View style={[styles.heroStrip, { borderLeftColor: session.class_type_color }]}>
+      <View style={[styles.heroStrip, { borderLeftColor: withAlpha(session.class_type_color, 0.7) }]}>
         <Text style={styles.heroTitle}>{session.series_title}</Text>
         <View style={styles.badgeRow}>
           <View style={{ backgroundColor: session.class_type_color + '33', borderRadius: Radius.full, paddingHorizontal: 10, paddingVertical: Spacing.xs }}>

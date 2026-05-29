@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, ViewStyle } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { Brand, Gradients, Radius } from '../../theme/brandColors';
@@ -27,11 +27,20 @@ export default function GradientButton({ label, onPress, loading, disabled, styl
         style={styles.pressable}
       >
         <LinearGradient
-          colors={isDisabled ? ['#3a3a4a', '#2a2a3a'] : Gradients.purpleOrange}
+          colors={isDisabled ? ['#3a3a4a', '#2a2a3a'] : Gradients.button}
           start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
+          end={{ x: 1, y: 1 }}
           style={styles.gradient}
         >
+          {!isDisabled && (
+            <LinearGradient
+              colors={['rgba(255,255,255,0.25)', 'transparent']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
+              style={StyleSheet.absoluteFill}
+              pointerEvents="none"
+            />
+          )}
           {loading ? (
             <ActivityIndicator color={Brand.textPrimary} size={20} />
           ) : (

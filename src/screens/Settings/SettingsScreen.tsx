@@ -1,6 +1,6 @@
 import React, { useCallback, useLayoutEffect, useState } from 'react';
 import { Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { IconButton, SegmentedButtons, Switch, Text } from 'react-native-paper';
+import { IconButton, Text } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -13,6 +13,9 @@ import { getDatabase } from '../../database/db';
 import { scheduleUpcomingNotifications, schedulePendingPaymentNotification } from '../../notifications/scheduler';
 import { requestNotificationPermission } from '../../notifications/permissions';
 import HelpSheet from '../../components/common/HelpSheet';
+import SectionHeader from '../../components/common/SectionHeader';
+import GradientSwitch from '../../components/common/GradientSwitch';
+import ThemedSegmentedButtons from '../../components/common/ThemedSegmentedButtons';
 import ThemedTimePickerModal from '../../components/common/ThemedTimePickerModal';
 import { formatDisplayTime } from '../../utils/dateUtils';
 import { HELP } from '../../constants/helpContent';
@@ -38,15 +41,6 @@ async function setSetting(key: string, value: string): Promise<void> {
   await db.runAsync('UPDATE settings SET value = ? WHERE key = ?', [value, key]);
 }
 
-function SectionHeader({ label }: { label: string }) {
-  return (
-    <View style={styles.sectionHeader}>
-      <View style={styles.sectionAccent} />
-      <Text style={styles.sectionLabel}>{label}</Text>
-    </View>
-  );
-}
-
 function SettingsCard({ children }: { children: React.ReactNode }) {
   return <View style={styles.card}>{children}</View>;
 }
@@ -55,15 +49,16 @@ interface NavRowProps {
   icon: string;
   label: string;
   onPress: () => void;
+  iconColor?: string;
   isLast?: boolean;
 }
 
-function NavRow({ icon, label, onPress, isLast }: NavRowProps) {
+function NavRow({ icon, label, onPress, iconColor = Brand.purple, isLast }: NavRowProps) {
   return (
     <>
       <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.7}>
         <View style={styles.rowIcon}>
-          <MaterialCommunityIcons name={icon as never} size={20} color={Brand.purple} />
+          <MaterialCommunityIcons name={icon as never} size={18} color={iconColor} />
         </View>
         <Text style={styles.rowLabel}>{label}</Text>
         <MaterialCommunityIcons name="chevron-right" size={20} color={Brand.textMuted} />
@@ -164,13 +159,12 @@ export default function SettingsScreen() {
       <SettingsCard>
         <View style={styles.row}>
           <View style={styles.rowIcon}>
-            <MaterialCommunityIcons name="bell-outline" size={20} color={Brand.purple} />
+            <MaterialCommunityIcons name="bell-outline" size={18} color={Brand.purple} />
           </View>
           <Text style={[styles.rowLabel, { flex: 1 }]}>Enable Reminders</Text>
-          <Switch
+          <GradientSwitch
             value={notifEnabled}
             onValueChange={handleToggleNotifications}
-            color={Brand.purple}
           />
         </View>
         {notifEnabled && (
@@ -178,11 +172,10 @@ export default function SettingsScreen() {
             <View style={styles.divider} />
             <View style={styles.minutesRow}>
               <Text style={styles.minutesLabel}>Remind me before class</Text>
-              <SegmentedButtons
+              <ThemedSegmentedButtons
                 value={minutesBefore}
                 onValueChange={handleMinutesChange}
                 buttons={MINUTES_OPTIONS}
-                theme={{ colors: { secondaryContainer: Brand.purple, onSecondaryContainer: Brand.textPrimary } }}
               />
             </View>
           </>
@@ -190,13 +183,12 @@ export default function SettingsScreen() {
         <View style={styles.divider} />
         <View style={styles.row}>
           <View style={styles.rowIcon}>
-            <MaterialCommunityIcons name="cash-clock" size={20} color={Brand.purple} />
+            <MaterialCommunityIcons name="cash-clock" size={18} color={Brand.pink} />
           </View>
           <Text style={[styles.rowLabel, { flex: 1 }]}>Payment Reminders</Text>
-          <Switch
+          <GradientSwitch
             value={paymentNotifEnabled}
             onValueChange={handleTogglePaymentNotifications}
-            color={Brand.purple}
           />
         </View>
         {paymentNotifEnabled && (
@@ -204,7 +196,7 @@ export default function SettingsScreen() {
             <View style={styles.divider} />
             <TouchableOpacity style={styles.row} onPress={() => setTimePickerVisible(true)} activeOpacity={0.7}>
               <View style={styles.rowIcon}>
-                <MaterialCommunityIcons name="clock-outline" size={20} color={Brand.purple} />
+                <MaterialCommunityIcons name="clock-outline" size={18} color={Brand.orange} />
               </View>
               <Text style={[styles.rowLabel, { flex: 1 }]}>Reminder Time</Text>
               <Text style={styles.timeValue}>{formatDisplayTime(paymentNotifTime)}</Text>
@@ -226,16 +218,19 @@ export default function SettingsScreen() {
         <NavRow
           icon="tag-multiple"
           label="Class Types"
+          iconColor={Brand.purple}
           onPress={() => navigation.navigate('ClassTypes')}
         />
         <NavRow
           icon="map-marker-multiple"
           label="Centers"
+          iconColor={Brand.pink}
           onPress={() => navigation.navigate('Centers')}
         />
         <NavRow
           icon="database-export"
           label="Export / Import"
+          iconColor={Brand.orange}
           onPress={() => navigation.navigate('DataScreen')}
           isLast
         />
@@ -259,25 +254,6 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: Spacing.lg, paddingBottom: 96 },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.sm,
-    marginTop: Spacing.xl,
-  },
-  sectionAccent: {
-    width: 3,
-    height: 16,
-    borderRadius: Radius.xs,
-    backgroundColor: Brand.orange,
-  },
-  sectionLabel: {
-    ...Typography.labelMd,
-    color: Brand.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
   card: {
     backgroundColor: Brand.surfaceDark,
     borderRadius: Radius.item,
@@ -290,20 +266,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.lg,
-    gap: Spacing.md,
+    gap: Spacing.xs,
   },
   rowIcon: {
     width: 32,
     height: 32,
-    borderRadius: Radius.md,
-    backgroundColor: `${Brand.purple}1A`,
+    borderRadius: Radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
   rowLabel: { ...Typography.h4, color: Brand.textPrimary, flex: 1 },
   divider: { height: 1, backgroundColor: Brand.borderSubtle, marginHorizontal: Spacing.lg },
   minutesRow: { padding: Spacing.lg, gap: Spacing.sm },
-  timeValue: { ...Typography.body, color: Brand.purple, marginRight: Spacing.xs },
+  timeValue: { ...Typography.body, color: Brand.textAccent, marginRight: Spacing.xs },
   minutesLabel: { ...Typography.labelMd, fontFamily: 'Outfit_400Regular', color: Brand.textSecondary },
   about: { alignItems: 'center', paddingTop: Spacing.section, paddingBottom: Spacing.lg, gap: Spacing.xs },
   logoImage: {

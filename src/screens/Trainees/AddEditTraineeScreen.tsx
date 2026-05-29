@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, ScrollView, StyleSheet, View } from 'react-native';
 import { Text, TextInput } from 'react-native-paper';
+import SectionHeader from '../../components/common/SectionHeader';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '../../theme';
-import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { Brand, Radius, Spacing } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import {
   createTrainee,
@@ -17,15 +18,6 @@ import AppButton from '../../components/common/AppButton';
 
 type Nav = StackNavigationProp<RootStackParamList, 'AddEditTrainee'>;
 type Route = RouteProp<RootStackParamList, 'AddEditTrainee'>;
-
-function FormSection({ label }: { label: string }) {
-  return (
-    <View style={styles.sectionHeader}>
-      <View style={styles.sectionAccent} />
-      <Text style={styles.sectionLabel}>{label}</Text>
-    </View>
-  );
-}
 
 export default function AddEditTraineeScreen() {
   const { theme } = useAppTheme();
@@ -88,7 +80,7 @@ export default function AddEditTraineeScreen() {
       behavior="padding"
     >
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <FormSection label="Contact" />
+        <SectionHeader label="Contact" />
         <View style={styles.card}>
           <TextInput
             label="Name *"
@@ -125,7 +117,7 @@ export default function AddEditTraineeScreen() {
           />
         </View>
 
-        <FormSection label="Notes" />
+        <SectionHeader label="Notes" />
         <View style={styles.card}>
           <TextInput
             label="Notes (optional)"
@@ -161,20 +153,6 @@ export default function AddEditTraineeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: Spacing.lg },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.sm,
-    marginTop: Spacing.xl,
-  },
-  sectionAccent: { width: 3, height: 14, borderRadius: Radius.xs, backgroundColor: Brand.orange },
-  sectionLabel: {
-    ...Typography.labelSm,
-    color: Brand.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
   card: {
     backgroundColor: Brand.surfaceDark,
     borderRadius: Radius.card,

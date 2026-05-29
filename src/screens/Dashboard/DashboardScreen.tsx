@@ -16,6 +16,7 @@ import { extendActiveSeriesSessions } from '../../database/repositories/classSer
 import { getWeekEarningsSplit } from '../../database/repositories/paymentRepository';
 import { getDatabase } from '../../database/db';
 import { formatDisplayTime, todayISO, addDays } from '../../utils/dateUtils';
+import { withAlpha } from '../../utils/colorUtils';
 import { RootStackParamList } from '../../navigation/types';
 import StatusBadge, { getDisplayStatus } from '../../components/common/StatusBadge';
 import EmptyState from '../../components/common/EmptyState';
@@ -147,10 +148,9 @@ export default function DashboardScreen() {
           <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 55).duration(350)}>
           <TouchableOpacity
             onPress={() => navigation.navigate('ClassSessionDetail', { sessionId: item.id })}
-            style={styles.sessionCard}
+            style={[styles.sessionCard, { borderLeftColor: withAlpha(item.class_type_color, 0.7) }]}
             activeOpacity={0.75}
           >
-            <View style={[styles.colorBar, { backgroundColor: item.class_type_color }]} />
             <View style={styles.sessionInfo}>
               <Text variant="titleSmall" style={{ color: Brand.textPrimary }}>
                 {item.series_title}
@@ -217,19 +217,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginHorizontal: Spacing.lg,
     paddingVertical: Spacing.lg,
+    paddingLeft: Spacing.md,
     paddingRight: Spacing.md,
     gap: Spacing.md,
     backgroundColor: Brand.surfaceDark,
     borderRadius: Radius.item,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
+    borderLeftWidth: 4,
     elevation: 4,
     shadowColor: Brand.purple,
     shadowOpacity: 0.3,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
   },
-  colorBar: { width: 4, alignSelf: 'stretch', borderRadius: Radius.xs, marginLeft: Spacing.sm },
   sessionInfo: { flex: 1, gap: 0 },
   fab: {
     position: 'absolute',

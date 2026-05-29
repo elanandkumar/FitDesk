@@ -2,12 +2,15 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { KeyboardAvoidingView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import ThemedDatePickerModal from '../../components/common/ThemedDatePickerModal';
 import ThemedTimePickerModal from '../../components/common/ThemedTimePickerModal';
-import SearchablePickerModal from '../../components/common/SearchablePickerModal';
-import { SegmentedButtons, Text, TextInput } from 'react-native-paper';
+import PickerModal from '../../components/common/PickerModal';
+import PickerField from '../../components/common/PickerField';
+import SectionHeader from '../../components/common/SectionHeader';
+import ThemedSegmentedButtons from '../../components/common/ThemedSegmentedButtons';
+import { Text, TextInput } from 'react-native-paper';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Brand, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { Brand, Layout, Radius, Spacing } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { ClassType, Center, LocationType, Manager, SourceType, Trainee } from '../../types';
 import { getAllClassTypes } from '../../database/repositories/classTypeRepository';
@@ -42,15 +45,6 @@ function timeToDisplay(hhmm: string): string {
 function displayDate(iso: string): string {
   if (!iso) return 'Select date';
   return new Date(iso + 'T00:00:00').toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-}
-
-function FormSection({ label }: { label: string }) {
-  return (
-    <View style={styles.sectionHeader}>
-      <View style={styles.sectionAccent} />
-      <Text style={styles.sectionLabel}>{label}</Text>
-    </View>
-  );
 }
 
 export default function AddSessionScreen() {
@@ -161,22 +155,15 @@ export default function AddSessionScreen() {
   return (
     <KeyboardAvoidingView style={styles.container} behavior="padding">
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <FormSection label="Session Info" />
+        <SectionHeader label="Session Info" />
         <View style={styles.card}>
           <Text variant="labelMedium" style={styles.fieldLabel}>Class Type *</Text>
-          <TouchableOpacity
+          <PickerField
+            placeholder="Select class type..."
+            value={selectedClassType?.name}
+            leftColor={selectedClassType?.color}
             onPress={() => setClassTypePickerVisible(true)}
-            style={styles.pickerButton}
-          >
-            {selectedClassType ? (
-              <View style={styles.pickerSelected}>
-                <View style={[styles.colorDot, { backgroundColor: selectedClassType.color }]} />
-                <Text style={{ color: Brand.textPrimary }}>{selectedClassType.name}</Text>
-              </View>
-            ) : (
-              <Text style={{ color: Brand.textMuted }}>Select class type...</Text>
-            )}
-          </TouchableOpacity>
+          />
 
           <View style={styles.fieldGap} />
           <TextInput
@@ -190,7 +177,7 @@ export default function AddSessionScreen() {
 
           <View style={styles.fieldGap} />
           <Text variant="labelMedium" style={styles.fieldLabel}>Source *</Text>
-          <SegmentedButtons
+          <ThemedSegmentedButtons
             value={sourceType}
             onValueChange={(v) => {
               setSourceType(v as SourceType);
@@ -204,44 +191,26 @@ export default function AddSessionScreen() {
               { value: 'manager', label: 'Manager' },
               { value: 'personal', label: 'Personal' },
             ]}
-            theme={{ colors: { secondaryContainer: Brand.purple, onSecondaryContainer: Brand.textPrimary } }}
           />
 
           {sourceType === 'manager' && (
             <>
               <View style={styles.fieldGap} />
               <Text variant="labelMedium" style={styles.fieldLabel}>Manager *</Text>
-              <TouchableOpacity
+              <PickerField
+                placeholder={managers.length === 0 ? 'No managers added yet' : 'Select manager...'}
+                value={selectedManager?.name}
                 onPress={() => setManagerPickerVisible(true)}
-                style={styles.pickerButton}
-              >
-                {selectedManager ? (
-                  <Text style={{ color: Brand.textPrimary }}>{selectedManager.name}</Text>
-                ) : managers.length === 0 ? (
-                  <Text style={{ color: Brand.textMuted }}>No managers added yet</Text>
-                ) : (
-                  <Text style={{ color: Brand.textMuted }}>Select manager...</Text>
-                )}
-              </TouchableOpacity>
+              />
 
               <View style={styles.fieldGap} />
               <Text variant="labelMedium" style={styles.fieldLabel}>Center (optional)</Text>
-              <TouchableOpacity
+              <PickerField
+                placeholder="Select center..."
+                value={selectedCenter?.name}
                 onPress={() => setCenterPickerVisible(true)}
-                style={[styles.pickerButton, styles.pickerRow]}
-              >
-                <Text style={{ color: selectedCenter ? Brand.textPrimary : Brand.textMuted, flex: 1 }}>
-                  {selectedCenter ? selectedCenter.name : 'Select center...'}
-                </Text>
-                {selectedCenterId !== null && (
-                  <TouchableOpacity
-                    onPress={() => setSelectedCenterId(null)}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  >
-                    <Text style={{ ...Typography.bodyLg, color: Brand.textMuted }}>✕</Text>
-                  </TouchableOpacity>
-                )}
-              </TouchableOpacity>
+                onClear={selectedCenterId !== null ? () => setSelectedCenterId(null) : undefined}
+              />
             </>
           )}
 
@@ -249,7 +218,7 @@ export default function AddSessionScreen() {
             <>
               <View style={styles.fieldGap} />
               <Text variant="labelMedium" style={styles.fieldLabel}>Client</Text>
-              <SegmentedButtons
+              <ThemedSegmentedButtons
                 value={guestMode ? 'guest' : 'trainee'}
                 onValueChange={(v) => {
                   setGuestMode(v === 'guest');
@@ -260,23 +229,19 @@ export default function AddSessionScreen() {
                   { value: 'trainee', label: 'Trainee' },
                   { value: 'guest', label: 'Guest' },
                 ]}
-                theme={{ colors: { secondaryContainer: Brand.purple, onSecondaryContainer: Brand.textPrimary } }}
               />
 
-              <View style={styles.fieldGap} />
               {!guestMode ? (
-                <TouchableOpacity
-                  onPress={() => setTraineePickerVisible(true)}
-                  style={styles.pickerButton}
-                >
-                  <Text style={{ color: selectedTraineeIds.length > 0 ? Brand.textPrimary : Brand.textMuted }}>
-                    {selectedTraineeIds.length === 0
-                      ? 'Select trainees...'
+                <View style={{ marginTop: Spacing.sm }}>
+                  <PickerField
+                    placeholder="Select trainees..."
+                    value={selectedTraineeIds.length === 0 ? undefined
                       : selectedTraineeIds.length === 1
                       ? trainees.find((t) => t.id === selectedTraineeIds[0])?.name ?? '1 trainee'
                       : `${selectedTraineeIds.length} trainees`}
-                  </Text>
-                </TouchableOpacity>
+                    onPress={() => setTraineePickerVisible(true)}
+                  />
+                </View>
               ) : (
                 <TextInput
                   label="Guest name (optional)"
@@ -284,27 +249,31 @@ export default function AddSessionScreen() {
                   onChangeText={setGuestName}
                   mode="outlined"
                   dense
-                  style={styles.textInput}
+                  style={[styles.textInput, { marginTop: Spacing.xs }]}
                 />
               )}
             </>
           )}
         </View>
 
-        <FormSection label="Date & Time" />
+        <SectionHeader label="Date & Time" />
         <View style={styles.card}>
           <View style={styles.twoColRow}>
             <View style={styles.twoColCell}>
               <Text variant="labelMedium" style={styles.fieldLabel}>Date *</Text>
-              <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.pickerButton}>
-                <Text style={{ color: Brand.textPrimary }}>{displayDate(sessionDate)}</Text>
-              </TouchableOpacity>
+              <PickerField
+                placeholder="Select date"
+                value={displayDate(sessionDate)}
+                onPress={() => setShowDatePicker(true)}
+              />
             </View>
             <View style={styles.twoColCell}>
               <Text variant="labelMedium" style={styles.fieldLabel}>Time *</Text>
-              <TouchableOpacity onPress={() => setShowTimePicker(true)} style={styles.pickerButton}>
-                <Text style={{ color: Brand.textPrimary }}>{timeToDisplay(classTime)}</Text>
-              </TouchableOpacity>
+              <PickerField
+                placeholder="Select time"
+                value={timeToDisplay(classTime)}
+                onPress={() => setShowTimePicker(true)}
+              />
             </View>
           </View>
 
@@ -320,7 +289,7 @@ export default function AddSessionScreen() {
           />
         </View>
 
-        <FormSection label="Location" />
+        <SectionHeader label="Location" />
         <View style={styles.card}>
           <TextInput
             label="Address (optional)"
@@ -332,7 +301,7 @@ export default function AddSessionScreen() {
           />
         </View>
 
-        <FormSection label="Notes" />
+        <SectionHeader label="Notes" />
         <View style={styles.card}>
           <TextInput
             label="Notes (optional)"
@@ -376,25 +345,30 @@ export default function AddSessionScreen() {
         />
       </View>
 
-      <SearchablePickerModal
+      <PickerModal
         visible={classTypePickerVisible}
         onDismiss={() => setClassTypePickerVisible(false)}
         title="Select Class Type"
         items={classTypePickerItems}
         selectedIds={classTypeId !== null ? [classTypeId] : []}
         onSelect={(ids) => { if (ids[0] !== undefined) setClassTypeId(ids[0]); }}
+        onAddNew={() => { setClassTypePickerVisible(false); navigation.navigate('ClassTypes'); }}
+        addNewLabel="Manage Class Types"
       />
 
-      <SearchablePickerModal
+      <PickerModal
         visible={managerPickerVisible}
         onDismiss={() => setManagerPickerVisible(false)}
         title="Select Manager"
         items={managerPickerItems}
         selectedIds={managerId !== null ? [managerId] : []}
         onSelect={(ids) => { if (ids[0] !== undefined) setManagerId(ids[0]); }}
+        onAddNew={() => { setManagerPickerVisible(false); navigation.navigate('AddEditManager', {}); }}
+        addNewLabel="Add New Manager"
+        showAvatar
       />
 
-      <SearchablePickerModal
+      <PickerModal
         visible={traineePickerVisible}
         onDismiss={() => setTraineePickerVisible(false)}
         title="Select Trainees"
@@ -402,15 +376,20 @@ export default function AddSessionScreen() {
         selectedIds={selectedTraineeIds}
         multiSelect
         onSelect={(ids) => setSelectedTraineeIds(ids)}
+        onAddNew={() => { setTraineePickerVisible(false); navigation.navigate('AddEditTrainee', {}); }}
+        addNewLabel="Add New Trainee"
+        showAvatar
       />
 
-      <SearchablePickerModal
+      <PickerModal
         visible={centerPickerVisible}
         onDismiss={() => setCenterPickerVisible(false)}
         title="Select Center"
         items={centerPickerItems}
         selectedIds={selectedCenterId !== null ? [selectedCenterId] : []}
         onSelect={(ids) => setSelectedCenterId(ids[0] ?? null)}
+        onAddNew={() => { setCenterPickerVisible(false); navigation.navigate('Centers'); }}
+        addNewLabel="Manage Centers"
       />
     </KeyboardAvoidingView>
   );
@@ -419,20 +398,6 @@ export default function AddSessionScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Brand.backgroundDark },
   content: { padding: Spacing.lg },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.sm,
-    marginTop: Spacing.xl,
-  },
-  sectionAccent: { width: 3, height: 14, borderRadius: Radius.xs, backgroundColor: Brand.orange },
-  sectionLabel: {
-    ...Typography.microLabel,
-    color: Brand.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
   card: {
     backgroundColor: Brand.surfaceDark,
     borderRadius: Radius.card,

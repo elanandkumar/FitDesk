@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Divider, IconButton, Text } from 'react-native-paper';
+import SectionHeader from '../../components/common/SectionHeader';
 import GradientFAB from '../../components/common/GradientFAB';
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -109,10 +110,7 @@ export default function TraineeDetailScreen() {
       <ScrollView contentContainerStyle={styles.content}>
 
         {/* Contact */}
-        <View style={styles.sectionHeader}>
-          <View style={styles.sectionAccent} />
-          <Text style={styles.sectionLabel}>Contact</Text>
-        </View>
+        <SectionHeader label="Contact" />
         <View style={styles.card}>
           {trainee.phone ? <InfoRow label="Phone" value={trainee.phone} /> : null}
           {trainee.email ? <InfoRow label="Email" value={trainee.email} /> : null}
@@ -232,10 +230,7 @@ export default function TraineeDetailScreen() {
         {/* Notes */}
         {trainee.notes ? (
           <>
-            <View style={styles.sectionHeader}>
-              <View style={styles.sectionAccent} />
-              <Text style={styles.sectionLabel}>Notes</Text>
-            </View>
+            <SectionHeader label="Notes" />
             <View style={styles.card}>
               <Text variant="bodyMedium" style={{ color: Brand.textSecondary }}>
                 {trainee.notes}
@@ -289,20 +284,6 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Brand.backgroundDark },
   content: { padding: Spacing.lg, gap: Spacing.xs, paddingBottom: 80 },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.sm,
-    marginTop: Spacing.lg,
-  },
-  sectionAccent: { width: 3, height: 14, borderRadius: Radius.xs, backgroundColor: Brand.orange },
-  sectionLabel: {
-    ...Typography.microLabel,
-    color: Brand.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
   tabBar: {
     flexDirection: 'row',
     backgroundColor: Brand.surfaceDark,

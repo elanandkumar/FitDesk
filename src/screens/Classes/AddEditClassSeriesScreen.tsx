@@ -2,9 +2,11 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, KeyboardAvoidingView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import ThemedDatePickerModal from '../../components/common/ThemedDatePickerModal';
 import ThemedTimePickerModal from '../../components/common/ThemedTimePickerModal';
-import SearchablePickerModal from '../../components/common/SearchablePickerModal';
+import PickerModal from '../../components/common/PickerModal';
+import PickerField from '../../components/common/PickerField';
+import SectionHeader from '../../components/common/SectionHeader';
+import ThemedSegmentedButtons from '../../components/common/ThemedSegmentedButtons';
 import {
-  SegmentedButtons,
   Text,
   TextInput,
 } from 'react-native-paper';
@@ -53,15 +55,6 @@ const DAYS = [
   { label: 'S', value: 6 },
   { label: 'S', value: 0 },
 ];
-
-function FormSection({ label }: { label: string }) {
-  return (
-    <View style={styles.sectionHeader}>
-      <View style={styles.sectionAccent} />
-      <Text style={styles.sectionLabel}>{label}</Text>
-    </View>
-  );
-}
 
 function ErrorText({ msg }: { msg: string }) {
   return <Text variant="bodySmall" style={{ color: Brand.pink, marginTop: Spacing.xs }}>{msg}</Text>;
@@ -370,7 +363,7 @@ export default function AddEditClassSeriesScreen() {
           keyboardShouldPersistTaps="handled"
         >
           {/* Class Info section */}
-          <FormSection label="Class Info" />
+          <SectionHeader label="Class Info" />
           <View style={styles.card}>
             <TextInput
               label="Title *"
@@ -384,67 +377,46 @@ export default function AddEditClassSeriesScreen() {
 
             <View style={styles.fieldGap} />
             <Text variant="labelMedium" style={styles.fieldLabel}>Class Type *</Text>
-            <TouchableOpacity
+            <PickerField
+              placeholder="Select class type..."
+              value={selectedClassType?.name}
+              leftColor={selectedClassType?.color}
               onPress={() => setClassTypePickerVisible(true)}
-              style={[styles.pickerButton, errors.classType ? styles.pickerError : {}]}
-            >
-              {selectedClassType ? (
-                <View style={styles.pickerSelected}>
-                  <View style={[styles.colorDot, { backgroundColor: selectedClassType.color }]} />
-                  <Text style={{ color: Brand.textPrimary }}>{selectedClassType.name}</Text>
-                </View>
-              ) : (
-                <Text style={{ color: Brand.textMuted }}>Select class type...</Text>
-              )}
-            </TouchableOpacity>
+              error={!!errors.classType}
+            />
             {errors.classType ? <ErrorText msg={errors.classType} /> : null}
 
             <View style={styles.fieldGap} />
             <Text variant="labelMedium" style={styles.fieldLabel}>Source</Text>
-            <SegmentedButtons
+            <ThemedSegmentedButtons
               value={sourceType}
               onValueChange={(v) => setSourceType(v as SourceType)}
               buttons={[
                 { value: 'manager', label: 'Manager' },
                 { value: 'personal', label: 'Personal' },
               ]}
-              theme={{ colors: { secondaryContainer: Brand.purple, onSecondaryContainer: Brand.textPrimary } }}
             />
 
             {sourceType === 'manager' && (
               <>
                 <View style={styles.fieldGap} />
                 <Text variant="labelMedium" style={styles.fieldLabel}>Manager *</Text>
-                <TouchableOpacity
+                <PickerField
+                  placeholder="Select manager..."
+                  value={selectedManager?.name}
                   onPress={() => setManagerPickerVisible(true)}
-                  style={[styles.pickerButton, errors.manager ? styles.pickerError : {}]}
-                >
-                  {selectedManager ? (
-                    <Text style={{ color: Brand.textPrimary }}>{selectedManager.name}</Text>
-                  ) : (
-                    <Text style={{ color: Brand.textMuted }}>Select manager...</Text>
-                  )}
-                </TouchableOpacity>
+                  error={!!errors.manager}
+                />
                 {errors.manager ? <ErrorText msg={errors.manager} /> : null}
 
                 <View style={styles.fieldGap} />
                 <Text variant="labelMedium" style={styles.fieldLabel}>Center (optional)</Text>
-                <TouchableOpacity
+                <PickerField
+                  placeholder="Select center..."
+                  value={selectedCenter?.name}
                   onPress={() => setCenterPickerVisible(true)}
-                  style={[styles.pickerButton, styles.endDateRow]}
-                >
-                  <Text style={{ color: selectedCenter ? Brand.textPrimary : Brand.textMuted, flex: 1 }}>
-                    {selectedCenter ? selectedCenter.name : 'Select center...'}
-                  </Text>
-                  {selectedCenterId !== null && (
-                    <TouchableOpacity
-                      onPress={() => setSelectedCenterId(null)}
-                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                    >
-                      <Text style={{ ...Typography.bodyLg, color: Brand.textMuted }}>✕</Text>
-                    </TouchableOpacity>
-                  )}
-                </TouchableOpacity>
+                  onClear={selectedCenterId !== null ? () => setSelectedCenterId(null) : undefined}
+                />
               </>
             )}
 
@@ -452,27 +424,23 @@ export default function AddEditClassSeriesScreen() {
               <>
                 <View style={styles.fieldGap} />
                 <Text variant="labelMedium" style={styles.fieldLabel}>Trainees (optional)</Text>
-                <TouchableOpacity
+                <PickerField
+                  placeholder="Select trainees..."
+                  value={selectedTraineeIds.length === 0 ? undefined
+                    : selectedTraineeIds.length === 1
+                    ? trainees.find((t) => t.id === selectedTraineeIds[0])?.name ?? '1 trainee'
+                    : `${selectedTraineeIds.length} trainees selected`}
                   onPress={() => setTraineePickerVisible(true)}
-                  style={styles.pickerButton}
-                >
-                  <Text style={{ color: selectedTraineeIds.length > 0 ? Brand.textPrimary : Brand.textMuted }}>
-                    {selectedTraineeIds.length === 0
-                      ? 'Select trainees...'
-                      : selectedTraineeIds.length === 1
-                      ? trainees.find((t) => t.id === selectedTraineeIds[0])?.name ?? '1 trainee'
-                      : `${selectedTraineeIds.length} trainees selected`}
-                  </Text>
-                </TouchableOpacity>
+                />
               </>
             )}
           </View>
 
           {/* Schedule section */}
-          <FormSection label="Schedule" />
+          <SectionHeader label="Schedule" />
           <View style={styles.card}>
             <Text variant="labelMedium" style={styles.fieldLabel}>Recurrence</Text>
-            <SegmentedButtons
+            <ThemedSegmentedButtons
               value={recurrenceType}
               onValueChange={(v) => setRecurrenceType(v as RecurrenceType)}
               buttons={[
@@ -480,7 +448,6 @@ export default function AddEditClassSeriesScreen() {
                 { value: 'weekly', label: 'Weekly' },
                 { value: 'custom', label: 'Custom' },
               ]}
-              theme={{ colors: { secondaryContainer: Brand.purple, onSecondaryContainer: Brand.textPrimary } }}
             />
 
             {recurrenceType !== 'daily' && (
@@ -517,34 +484,22 @@ export default function AddEditClassSeriesScreen() {
             <View style={styles.twoColRow}>
               <View style={styles.twoColCell}>
                 <Text variant="labelMedium" style={styles.fieldLabel}>Start Date *</Text>
-                <TouchableOpacity
+                <PickerField
+                  placeholder="Select date"
+                  value={displayDate(startDate)}
                   onPress={() => setShowStartDatePicker(true)}
-                  style={[styles.pickerButton, errors.startDate ? styles.pickerError : {}]}
-                >
-                  <Text style={{ color: startDate ? Brand.textPrimary : Brand.textMuted }}>
-                    {displayDate(startDate)}
-                  </Text>
-                </TouchableOpacity>
+                  error={!!errors.startDate}
+                />
                 {errors.startDate ? <ErrorText msg={errors.startDate} /> : null}
               </View>
               <View style={styles.twoColCell}>
                 <Text variant="labelMedium" style={styles.fieldLabel}>End Date (optional)</Text>
-                <TouchableOpacity
+                <PickerField
+                  placeholder="Ongoing"
+                  value={endDate ? displayDate(endDate) : undefined}
                   onPress={() => setShowEndDatePicker(true)}
-                  style={[styles.pickerButton, styles.endDateRow]}
-                >
-                  <Text style={{ color: endDate ? Brand.textPrimary : Brand.textMuted, flex: 1 }}>
-                    {endDate ? displayDate(endDate) : 'Ongoing'}
-                  </Text>
-                  {endDate ? (
-                    <TouchableOpacity
-                      onPress={() => setEndDate('')}
-                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                    >
-                      <Text style={{ ...Typography.bodyLg, color: Brand.textMuted }}>✕</Text>
-                    </TouchableOpacity>
-                  ) : null}
-                </TouchableOpacity>
+                  onClear={endDate ? () => setEndDate('') : undefined}
+                />
                 {errors.endDate ? <ErrorText msg={errors.endDate} /> : null}
               </View>
             </View>
@@ -553,14 +508,12 @@ export default function AddEditClassSeriesScreen() {
             <View style={styles.twoColRow}>
               <View style={styles.twoColCell}>
                 <Text variant="labelMedium" style={styles.fieldLabel}>Class Time *</Text>
-                <TouchableOpacity
+                <PickerField
+                  placeholder="Select time"
+                  value={displayTime(classTime)}
                   onPress={() => setShowTimePicker(true)}
-                  style={[styles.pickerButton, errors.classTime ? styles.pickerError : {}]}
-                >
-                  <Text style={{ color: classTime ? Brand.textPrimary : Brand.textMuted }}>
-                    {displayTime(classTime)}
-                  </Text>
-                </TouchableOpacity>
+                  error={!!errors.classTime}
+                />
                 {errors.classTime ? <ErrorText msg={errors.classTime} /> : null}
               </View>
               <View style={styles.twoColCell}>
@@ -579,7 +532,7 @@ export default function AddEditClassSeriesScreen() {
           </View>
 
           {/* Location section */}
-          <FormSection label="Location" />
+          <SectionHeader label="Location" />
           <View style={styles.card}>
             <TextInput
               label="Address (optional)"
@@ -591,7 +544,7 @@ export default function AddEditClassSeriesScreen() {
           </View>
 
           {/* Notes section */}
-          <FormSection label="Notes" />
+          <SectionHeader label="Notes" />
           <View style={styles.card}>
             <TextInput
               label="Notes (optional)"
@@ -672,25 +625,30 @@ export default function AddEditClassSeriesScreen() {
         onDismiss={() => setShowTimePicker(false)}
       />
 
-      <SearchablePickerModal
+      <PickerModal
         visible={classTypePickerVisible}
         onDismiss={() => setClassTypePickerVisible(false)}
         title="Select Class Type"
         items={classTypePickerItems}
         selectedIds={selectedClassTypeId ? [selectedClassTypeId] : []}
         onSelect={(ids) => { if (ids[0] !== undefined) setSelectedClassTypeId(ids[0]); }}
+        onAddNew={() => { setClassTypePickerVisible(false); navigation.navigate('ClassTypes'); }}
+        addNewLabel="Manage Class Types"
       />
 
-      <SearchablePickerModal
+      <PickerModal
         visible={managerPickerVisible}
         onDismiss={() => setManagerPickerVisible(false)}
         title="Select Manager"
         items={managerPickerItems}
         selectedIds={selectedManagerId ? [selectedManagerId] : []}
         onSelect={(ids) => { if (ids[0] !== undefined) setSelectedManagerId(ids[0]); }}
+        onAddNew={() => { setManagerPickerVisible(false); navigation.navigate('AddEditManager', {}); }}
+        addNewLabel="Add New Manager"
+        showAvatar
       />
 
-      <SearchablePickerModal
+      <PickerModal
         visible={traineePickerVisible}
         onDismiss={() => setTraineePickerVisible(false)}
         title="Select Trainees"
@@ -698,15 +656,20 @@ export default function AddEditClassSeriesScreen() {
         selectedIds={selectedTraineeIds}
         multiSelect
         onSelect={(ids) => setSelectedTraineeIds(ids)}
+        onAddNew={() => { setTraineePickerVisible(false); navigation.navigate('AddEditTrainee', {}); }}
+        addNewLabel="Add New Trainee"
+        showAvatar
       />
 
-      <SearchablePickerModal
+      <PickerModal
         visible={centerPickerVisible}
         onDismiss={() => setCenterPickerVisible(false)}
         title="Select Center"
         items={centerPickerItems}
         selectedIds={selectedCenterId !== null ? [selectedCenterId] : []}
         onSelect={(ids) => setSelectedCenterId(ids[0] ?? null)}
+        onAddNew={() => { setCenterPickerVisible(false); navigation.navigate('Centers'); }}
+        addNewLabel="Manage Centers"
       />
 
       <LoadingOverlay visible={saving} />
@@ -739,20 +702,6 @@ export default function AddEditClassSeriesScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Brand.backgroundDark },
   content: { padding: Spacing.lg },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.sm,
-    marginTop: Spacing.xl,
-  },
-  sectionAccent: { width: 3, height: 14, borderRadius: Radius.xs, backgroundColor: Brand.orange },
-  sectionLabel: {
-    ...Typography.microLabel,
-    color: Brand.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
   card: {
     backgroundColor: Brand.surfaceDark,
     borderRadius: Radius.card,

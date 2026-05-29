@@ -1,6 +1,7 @@
 import React, { useLayoutEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { IconButton, SegmentedButtons } from 'react-native-paper';
+import { IconButton } from 'react-native-paper';
+import ThemedSegmentedButtons from '../../components/common/ThemedSegmentedButtons';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAppTheme } from '../../theme';
@@ -41,7 +42,7 @@ export default function PaymentsTabScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <SegmentedButtons
+      <ThemedSegmentedButtons
         value={segment}
         onValueChange={(v) => setSegment(v as 'managers' | 'trainees')}
         buttons={[
@@ -49,12 +50,6 @@ export default function PaymentsTabScreen() {
           { value: 'trainees', label: 'Trainees' },
         ]}
         style={styles.segment}
-        theme={{
-          colors: {
-            secondaryContainer: Brand.purple,
-            onSecondaryContainer: Brand.textPrimary,
-          },
-        }}
       />
       {segment === 'managers' ? <ManagerPaymentsScreen /> : <TraineePackagesScreen />}
       <HelpSheet

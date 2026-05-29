@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { Chip, Divider, IconButton, Text } from 'react-native-paper';
+import SectionHeader from '../../components/common/SectionHeader';
 import GradientFAB from '../../components/common/GradientFAB';
 import AppButton from '../../components/common/AppButton';
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
@@ -89,10 +90,7 @@ export default function ManagerDetailScreen() {
       <ScrollView contentContainerStyle={styles.content}>
 
         {/* Contact */}
-        <View style={styles.sectionHeader}>
-          <View style={styles.sectionAccent} />
-          <Text style={styles.sectionLabel}>Contact</Text>
-        </View>
+        <SectionHeader label="Contact" />
         <View style={styles.card}>
           {manager.phone ? <InfoRow label="Phone" value={manager.phone} /> : null}
           {manager.email ? <InfoRow label="Email" value={manager.email} /> : null}
@@ -102,10 +100,7 @@ export default function ManagerDetailScreen() {
         </View>
 
         {/* Payment Summary */}
-        <View style={styles.sectionHeader}>
-          <View style={styles.sectionAccent} />
-          <Text style={styles.sectionLabel}>Payment</Text>
-        </View>
+        <SectionHeader label="Payment" />
         <View style={styles.card}>
           <InfoRow label="Per class rate" value={formatCurrency(manager.per_class_rate)} />
           <View style={styles.balanceRow}>
@@ -127,10 +122,7 @@ export default function ManagerDetailScreen() {
         {/* Payment History */}
         {payments.length > 0 && (
           <>
-            <View style={styles.sectionHeader}>
-              <View style={styles.sectionAccent} />
-              <Text style={styles.sectionLabel}>Payment History ({payments.length})</Text>
-            </View>
+            <SectionHeader label={`Payment History (${payments.length})`} />
             <View style={styles.card}>
               {pendingPayments.length > 0 && (
                 <>
@@ -165,10 +157,7 @@ export default function ManagerDetailScreen() {
         {/* Notes */}
         {manager.notes ? (
           <>
-            <View style={styles.sectionHeader}>
-              <View style={styles.sectionAccent} />
-              <Text style={styles.sectionLabel}>Notes</Text>
-            </View>
+            <SectionHeader label="Notes" />
             <View style={styles.card}>
               <Text variant="bodyMedium" style={{ color: Brand.textSecondary }}>
                 {manager.notes}
@@ -261,20 +250,6 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Brand.backgroundDark },
   content: { padding: Spacing.lg, gap: Spacing.xs, paddingBottom: 80 },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.sm,
-    marginTop: Spacing.lg,
-  },
-  sectionAccent: { width: 3, height: 14, borderRadius: Radius.xs, backgroundColor: Brand.orange },
-  sectionLabel: {
-    ...Typography.microLabel,
-    color: Brand.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
   subLabel: {
     ...Typography.microLabel,
     color: Brand.pink,
