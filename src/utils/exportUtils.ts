@@ -6,17 +6,21 @@ import { getAllManagers } from '../database/repositories/managerRepository';
 import { getAllTrainees } from '../database/repositories/traineeRepository';
 import { getAllClassSeries } from '../database/repositories/classSeriesRepository';
 import {
-  ClassType, Manager, Trainee, ClassSeries,
+  Center, ClassType, Manager, Trainee, ClassSeries, SeriesTrainee,
   ClassSession, SessionTrainee, ManagerPayment, TraineePackage, Setting,
 } from '../types';
+
+const BACKUP_VERSION = 2;
 
 export interface FitDeskBackup {
   version: number;
   exported_at: string;
+  centers: Center[];
   class_types: ClassType[];
   managers: Manager[];
   trainees: Trainee[];
   class_series: ClassSeries[];
+  series_trainees: SeriesTrainee[];
   class_sessions: ClassSession[];
   session_trainees: SessionTrainee[];
   manager_payments: ManagerPayment[];
@@ -28,20 +32,24 @@ export async function exportData(): Promise<void> {
   const db = await getDatabase();
 
   const [
+    centers,
     class_types,
     managers,
     trainees,
     class_series,
+    series_trainees,
     class_sessions,
     session_trainees,
     manager_payments,
     trainee_packages,
     settings,
   ] = await Promise.all([
+    db.getAllAsync<Center>('SELECT * FROM centers'),
     getAllClassTypes(),
     getAllManagers(),
     getAllTrainees(),
     getAllClassSeries(),
+    db.getAllAsync<SeriesTrainee>('SELECT * FROM series_trainees'),
     db.getAllAsync<ClassSession>('SELECT * FROM class_sessions'),
     db.getAllAsync<SessionTrainee>('SELECT * FROM session_trainees'),
     db.getAllAsync<ManagerPayment>('SELECT * FROM manager_payments'),
@@ -50,12 +58,14 @@ export async function exportData(): Promise<void> {
   ]);
 
   const backup: FitDeskBackup = {
-    version: 1,
+    version: BACKUP_VERSION,
     exported_at: new Date().toISOString(),
+    centers,
     class_types,
     managers,
     trainees,
     class_series,
+    series_trainees,
     class_sessions,
     session_trainees,
     manager_payments,
@@ -88,17 +98,20 @@ export async function pickAndImportData(): Promise<void> {
     throw new Error('Invalid file: could not parse JSON');
   }
 
-  if (backup.version !== 1) {
+  if (backup.version === 1) {
+    await importDataV1(backup);
+  } else if (backup.version === 2) {
+    await importData(backup);
+  } else {
     throw new Error(`Unsupported backup version: ${backup.version}`);
   }
-
-  await importData(backup);
 }
 
 async function importData(backup: FitDeskBackup): Promise<void> {
   const db = await getDatabase();
 
   await db.withExclusiveTransactionAsync(async (txn) => {
+    await txn.execAsync('DELETE FROM series_trainees');
     await txn.execAsync('DELETE FROM session_trainees');
     await txn.execAsync('DELETE FROM manager_payments');
     await txn.execAsync('DELETE FROM trainee_packages');
@@ -107,35 +120,122 @@ async function importData(backup: FitDeskBackup): Promise<void> {
     await txn.execAsync('DELETE FROM trainees');
     await txn.execAsync('DELETE FROM managers');
     await txn.execAsync('DELETE FROM class_types');
+    await txn.execAsync('DELETE FROM centers');
+    await txn.execAsync('DELETE FROM settings');
+
+    for (const r of backup.centers ?? []) {
+      await txn.runAsync(
+        'INSERT INTO centers (id, name, address, is_active, created_at) VALUES (?, ?, ?, ?, ?)',
+        [r.id, r.name, r.address ?? null, r.is_active, r.created_at]
+      );
+    }
+    for (const r of backup.class_types) {
+      await txn.runAsync(
+        'INSERT INTO class_types (id, name, color, is_active, created_at) VALUES (?, ?, ?, ?, ?)',
+        [r.id, r.name, r.color, r.is_active ?? 1, r.created_at]
+      );
+    }
+    for (const r of backup.managers) {
+      await txn.runAsync(
+        'INSERT INTO managers (id, name, phone, email, per_class_rate, currency, notes, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [r.id, r.name, r.phone ?? null, r.email ?? null, r.per_class_rate, r.currency, r.notes ?? null, r.is_active ?? 1, r.created_at]
+      );
+    }
+    for (const r of backup.trainees) {
+      await txn.runAsync(
+        'INSERT INTO trainees (id, name, phone, email, notes, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [r.id, r.name, r.phone ?? null, r.email ?? null, r.notes ?? null, r.is_active ?? 1, r.created_at]
+      );
+    }
+    for (const r of backup.class_series) {
+      await txn.runAsync(
+        'INSERT INTO class_series (id, title, class_type_id, source_type, manager_id, recurrence_type, recurrence_days, start_date, end_date, class_time, duration_minutes, location_type, location, notes, is_active, center_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [r.id, r.title, r.class_type_id, r.source_type, r.manager_id ?? null, r.recurrence_type, r.recurrence_days ?? null, r.start_date, r.end_date ?? null, r.class_time, r.duration_minutes, r.location_type, r.location ?? null, r.notes ?? null, r.is_active, r.center_id ?? null, r.created_at]
+      );
+    }
+    for (const r of backup.series_trainees ?? []) {
+      await txn.runAsync(
+        'INSERT INTO series_trainees (id, series_id, trainee_id) VALUES (?, ?, ?)',
+        [r.id, r.series_id, r.trainee_id]
+      );
+    }
+    for (const r of backup.class_sessions) {
+      await txn.runAsync(
+        'INSERT INTO class_sessions (id, series_id, session_date, class_time, status, student_count, notes, guest_name, center_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [r.id, r.series_id, r.session_date, r.class_time, r.status, r.student_count, r.notes ?? null, r.guest_name ?? null, r.center_id ?? null, r.created_at]
+      );
+    }
+    for (const r of backup.session_trainees) {
+      await txn.runAsync(
+        'INSERT INTO session_trainees (id, session_id, trainee_id) VALUES (?, ?, ?)',
+        [r.id, r.session_id, r.trainee_id]
+      );
+    }
+    for (const r of backup.manager_payments) {
+      await txn.runAsync(
+        'INSERT INTO manager_payments (id, session_id, manager_id, amount, status, paid_date, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [r.id, r.session_id, r.manager_id, r.amount, r.status, r.paid_date ?? null, r.notes ?? null, r.created_at]
+      );
+    }
+    for (const r of backup.trainee_packages) {
+      await txn.runAsync(
+        'INSERT INTO trainee_packages (id, trainee_id, month, total_sessions, used_sessions, amount, status, paid_date, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [r.id, r.trainee_id, r.month, r.total_sessions, r.used_sessions, r.amount, r.status, r.paid_date ?? null, r.notes ?? null, r.created_at]
+      );
+    }
+    for (const r of backup.settings) {
+      await txn.runAsync(
+        'INSERT INTO settings (key, value) VALUES (?, ?)',
+        [r.key, r.value]
+      );
+    }
+  });
+}
+
+// Handles v1 backups (pre-refactor: no centers, series_trainees, guest_name, center_id, is_active columns)
+async function importDataV1(backup: FitDeskBackup): Promise<void> {
+  const db = await getDatabase();
+
+  await db.withExclusiveTransactionAsync(async (txn) => {
+    await txn.execAsync('DELETE FROM series_trainees');
+    await txn.execAsync('DELETE FROM session_trainees');
+    await txn.execAsync('DELETE FROM manager_payments');
+    await txn.execAsync('DELETE FROM trainee_packages');
+    await txn.execAsync('DELETE FROM class_sessions');
+    await txn.execAsync('DELETE FROM class_series');
+    await txn.execAsync('DELETE FROM trainees');
+    await txn.execAsync('DELETE FROM managers');
+    await txn.execAsync('DELETE FROM class_types');
+    await txn.execAsync('DELETE FROM centers');
     await txn.execAsync('DELETE FROM settings');
 
     for (const r of backup.class_types) {
       await txn.runAsync(
-        'INSERT INTO class_types (id, name, color, created_at) VALUES (?, ?, ?, ?)',
+        'INSERT INTO class_types (id, name, color, is_active, created_at) VALUES (?, ?, ?, 1, ?)',
         [r.id, r.name, r.color, r.created_at]
       );
     }
     for (const r of backup.managers) {
       await txn.runAsync(
-        'INSERT INTO managers (id, name, phone, email, per_class_rate, currency, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        'INSERT INTO managers (id, name, phone, email, per_class_rate, currency, notes, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)',
         [r.id, r.name, r.phone ?? null, r.email ?? null, r.per_class_rate, r.currency, r.notes ?? null, r.created_at]
       );
     }
     for (const r of backup.trainees) {
       await txn.runAsync(
-        'INSERT INTO trainees (id, name, phone, email, notes, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+        'INSERT INTO trainees (id, name, phone, email, notes, is_active, created_at) VALUES (?, ?, ?, ?, ?, 1, ?)',
         [r.id, r.name, r.phone ?? null, r.email ?? null, r.notes ?? null, r.created_at]
       );
     }
     for (const r of backup.class_series) {
       await txn.runAsync(
-        'INSERT INTO class_series (id, title, class_type_id, source_type, manager_id, recurrence_type, recurrence_days, start_date, end_date, class_time, duration_minutes, location_type, location, notes, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        'INSERT INTO class_series (id, title, class_type_id, source_type, manager_id, recurrence_type, recurrence_days, start_date, end_date, class_time, duration_minutes, location_type, location, notes, is_active, center_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)',
         [r.id, r.title, r.class_type_id, r.source_type, r.manager_id ?? null, r.recurrence_type, r.recurrence_days ?? null, r.start_date, r.end_date ?? null, r.class_time, r.duration_minutes, r.location_type, r.location ?? null, r.notes ?? null, r.is_active, r.created_at]
       );
     }
     for (const r of backup.class_sessions) {
       await txn.runAsync(
-        'INSERT INTO class_sessions (id, series_id, session_date, class_time, status, student_count, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        'INSERT INTO class_sessions (id, series_id, session_date, class_time, status, student_count, notes, guest_name, center_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?)',
         [r.id, r.series_id, r.session_date, r.class_time, r.status, r.student_count, r.notes ?? null, r.created_at]
       );
     }
