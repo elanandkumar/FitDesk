@@ -28,8 +28,9 @@ export default function GradientButton({ label, onPress, loading, disabled, styl
       >
         <LinearGradient
           colors={isDisabled ? ['#3a3a4a', '#2a2a3a'] : Gradients.button}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+          start={{ x: 0.2, y: 0 }}
+          end={{ x: 0.8, y: 1 }}
+          locations={[0, 0.55, 1]}
           style={styles.gradient}
         >
           {!isDisabled && (

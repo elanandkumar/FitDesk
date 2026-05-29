@@ -42,8 +42,8 @@ function TabItem({
         <View style={styles.iconWrap}>
           {isActive && (
             <LinearGradient
-              colors={[Brand.purple + '4D', Brand.orange + '33']}
-              start={{ x: 0, y: 0 }}
+              colors={[Brand.purple + '4D', Brand.pink + '26', Brand.orange + '33']}
+              start={{ x: 0, y: 1 }}
               end={{ x: 1, y: 0 }}
               style={styles.iconPill}
             />

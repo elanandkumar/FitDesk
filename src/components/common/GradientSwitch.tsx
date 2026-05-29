@@ -40,8 +40,8 @@ export default function GradientSwitch({ value, onValueChange, disabled }: Props
       <View style={styles.track}>
         {value ? (
           <LinearGradient
-            colors={[Brand.purple + '4D', Brand.orange + '33']}
-            start={{ x: 0, y: 0 }}
+            colors={[Brand.purple + '4D', Brand.pink + '26', Brand.orange + '33']}
+            start={{ x: 0, y: 1 }}
             end={{ x: 1, y: 0 }}
             style={StyleSheet.absoluteFill}
           />

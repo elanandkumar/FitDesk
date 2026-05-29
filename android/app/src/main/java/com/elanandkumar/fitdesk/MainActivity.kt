@@ -1,4 +1,4 @@
-package com.fitdesk.app
+package com.elanandkumar.fitdesk
 
 import android.os.Build
 import android.os.Bundle

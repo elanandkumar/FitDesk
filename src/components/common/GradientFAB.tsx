@@ -20,9 +20,9 @@ export default function GradientFAB({ icon, onPress, style, color = Brand.textPr
         style={styles.pressable}
       >
         <LinearGradient
-          colors={Gradients.purpleOrange}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+          colors={Gradients.button}
+          start={{ x: 0, y: 1 }}
+          end={{ x: 1, y: 0 }}
           style={styles.gradient}
         >
           <MaterialCommunityIcons name={icon as any} size={20} color={color} />
