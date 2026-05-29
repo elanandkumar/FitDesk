@@ -3,11 +3,11 @@
 **Your personal fitness class companion — built with love, for a freelance fitness instructor.**
 
 <p align="center">
-  <img src="screenshots/Screenshot_1779990293.png" width="220" alt="Welcome Screen" />
+  <img src="assets/screenshots/welcome.png" width="220" alt="Welcome Screen" />
   &nbsp;&nbsp;
-  <img src="screenshots/Screenshot_1779990474.png" width="220" alt="Dashboard" />
+  <img src="assets/screenshots/dashboard.png" width="220" alt="Dashboard" />
   &nbsp;&nbsp;
-  <img src="screenshots/Screenshot_1779990510.png" width="220" alt="Payments" />
+  <img src="assets/screenshots/payments.png" width="220" alt="Payments" />
 </p>
 
 ---
@@ -35,11 +35,11 @@ So I built FitDesk — a simple, local-first Android app that puts everything in
 - **Export / Import** — JSON backup so data is never lost
 
 <p align="center">
-  <img src="screenshots/Screenshot_1779990485.png" width="220" alt="Calendar" />
+  <img src="assets/screenshots/calendar.png" width="220" alt="Calendar" />
   &nbsp;&nbsp;
-  <img src="screenshots/Screenshot_1779990505.png" width="220" alt="Session Detail" />
+  <img src="assets/screenshots/class-details.png" width="220" alt="Session Detail" />
   &nbsp;&nbsp;
-  <img src="screenshots/Screenshot_1779990521.png" width="220" alt="Settings" />
+  <img src="assets/screenshots/settings.png" width="220" alt="Settings" />
 </p>
 
 ---
@@ -51,7 +51,7 @@ So I built FitDesk — a simple, local-first Android app that puts everything in
 No login. No analytics. No backend server. Everything is stored locally using SQLite on your phone. Export your data anytime from Settings → Export / Import.
 
 <p align="center">
-  <img src="screenshots/Screenshot_1779990300.png" width="220" alt="Your Data, Your Device" />
+  <img src="assets/screenshots/data-privacy.png" width="220" alt="Your Data, Your Device" />
 </p>
 
 ---
@@ -83,7 +83,7 @@ Freelance fitness instructors who:
 ## Getting Started
 
 ```bash
-git clone https://github.com/[YOUR_USERNAME]/FitDesk.git
+git clone https://github.com/elanandkumar/FitDesk.git
 cd FitDesk
 npm install
 npx expo run:android
