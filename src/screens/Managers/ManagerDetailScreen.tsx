@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
-import { Button, Chip, Divider, IconButton, Text } from 'react-native-paper';
+import { Chip, Divider, IconButton, Text } from 'react-native-paper';
 import GradientFAB from '../../components/common/GradientFAB';
+import AppButton from '../../components/common/AppButton';
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -171,14 +172,13 @@ export default function ManagerDetailScreen() {
           </>
         ) : null}
 
-        <Button
-          mode="outlined"
+        <AppButton
+          variant="danger"
+          label="Delete Manager"
           onPress={() => setDeleteVisible(true)}
-          textColor={Brand.pink}
-          style={{ borderColor: Brand.pink, marginTop: Spacing.sm }}
-        >
-          Delete Manager
-        </Button>
+          style={{ marginTop: Spacing.sm }}
+          fullWidth={false}
+        />
 
         <ConfirmDialog
           visible={deleteVisible}
@@ -209,10 +209,10 @@ function PaymentRow({
 }) {
   return (
     <>
-      {showDivider && <Divider style={{ backgroundColor: Brand.borderSubtle, marginVertical: 4 }} />}
+      {showDivider && <Divider style={{ backgroundColor: Brand.borderSubtle, marginVertical: Spacing.xs }} />}
       <View style={styles.paymentRow}>
         <View style={[styles.colorDot, { backgroundColor: payment.class_type_color }]} />
-        <View style={{ flex: 1, gap: 1 }}>
+        <View style={{ flex: 1, gap: 0 }}>
           <Text variant="bodySmall" style={{ color: Brand.textPrimary }}>
             {payment.series_title}
           </Text>
@@ -260,18 +260,16 @@ const styles = StyleSheet.create({
   },
   sectionAccent: { width: 3, height: 14, borderRadius: Radius.xs, backgroundColor: Brand.orange },
   sectionLabel: {
+    ...Typography.microLabel,
     color: Brand.textSecondary,
-    fontSize: 11,
-    fontFamily: 'Montserrat_600SemiBold',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
   subLabel: {
+    ...Typography.microLabel,
     color: Brand.pink,
-    fontSize: 10,
-    fontFamily: 'Montserrat_600SemiBold',
     letterSpacing: 0.5,
-    marginBottom: 6,
+    marginBottom: Spacing.xs,
   },
   card: {
     backgroundColor: Brand.surfaceDark,
@@ -283,15 +281,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
-    padding: 14,
-    gap: 4,
+    padding: Spacing.lg,
+    gap: Spacing.xs,
   },
-  infoRow: { gap: 2, marginBottom: 6 },
+  infoRow: { gap: 0, marginBottom: Spacing.xs },
   balanceRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 4,
+    marginTop: Spacing.xs,
   },
   paymentRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, paddingVertical: Spacing.xs },
   colorDot: { width: 8, height: 8, borderRadius: Radius.full, marginTop: 2 },

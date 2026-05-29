@@ -1,14 +1,15 @@
 import React, { useCallback, useLayoutEffect, useMemo, useState } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { IconButton, Searchbar, Text } from 'react-native-paper';
+import { IconButton, Text } from 'react-native-paper';
+import AppSearchbar from '../../components/common/AppSearchbar';
 import GradientFAB from '../../components/common/GradientFAB';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '../../theme';
-import { Brand, Radius } from '../../theme/brandColors';
+import { Brand, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { ClassSeries, ClassType } from '../../types';
 import { getAllClassSeries } from '../../database/repositories/classSeriesRepository';
 import { getAllClassTypes } from '../../database/repositories/classTypeRepository';
@@ -68,14 +69,11 @@ export default function ClassSeriesListScreen() {
 
   return (
     <Animated.View entering={FadeIn.duration(350)} style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <Searchbar
+      <AppSearchbar
         placeholder="Search class series"
         value={query}
         onChangeText={setQuery}
         style={[styles.searchbar, { backgroundColor: Brand.surfaceDark }]}
-        inputStyle={{ color: Brand.textPrimary }}
-        iconColor={Brand.textMuted}
-        placeholderTextColor={Brand.textMuted}
       />
       <View style={styles.filterRow}>
         <Chip
@@ -153,11 +151,11 @@ export default function ClassSeriesListScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  searchbar: { margin: 12, marginBottom: 0, borderRadius: Radius.lg, elevation: 0 },
-  filterRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 12, paddingVertical: 8 },
+  searchbar: { margin: Spacing.md, marginBottom: 0, borderRadius: Radius.lg, elevation: 0, borderWidth: 1, borderColor: Brand.borderSubtle },
+  filterRow: { flexDirection: 'row', gap: Spacing.sm, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm },
   filterChip: { backgroundColor: Brand.surfaceDark, borderColor: Brand.borderSubtle },
   filterChipActive: { backgroundColor: Brand.purple },
-  listContent: { paddingHorizontal: 12, paddingBottom: 96 },
+  listContent: { paddingHorizontal: Spacing.md, paddingBottom: Layout.LIST_PAD_NO_FAB },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -165,32 +163,32 @@ const styles = StyleSheet.create({
     borderRadius: Radius.item,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
-    paddingVertical: 14,
-    paddingHorizontal: 14,
-    marginBottom: 8,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.lg,
+    marginBottom: Spacing.sm,
     elevation: 4,
     shadowColor: Brand.purple,
     shadowOpacity: 0.15,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 6,
-    gap: 12,
+    gap: Spacing.md,
     overflow: 'hidden',
   },
   cardInactive: { opacity: 0.6 },
   colorBar: { width: 4, height: 40, borderRadius: Radius.xs },
   cardContent: { flex: 1 },
-  cardTitle: { color: Brand.textPrimary, fontSize: 15, fontWeight: '600' },
+  cardTitle: { ...Typography.h4, color: Brand.textPrimary },
   textInactive: { color: Brand.textSecondary },
-  cardSub: { color: Brand.textSecondary, fontSize: 13, marginTop: 2 },
+  cardSub: { ...Typography.labelMd, fontFamily: 'Outfit_400Regular', color: Brand.textSecondary, marginTop: 0 },
   cancelledBadge: {
     backgroundColor: `${Brand.textMuted}26`,
     borderRadius: Radius.full,
-    paddingHorizontal: 8,
+    paddingHorizontal: Spacing.sm,
     paddingVertical: 3,
   },
-  cancelledText: { color: Brand.textMuted, fontSize: 11, fontWeight: '600' },
+  cancelledText: { ...Typography.microLabel, color: Brand.textMuted },
   fab: {
     position: 'absolute',
-    right: 16,
+    right: Spacing.lg,
   },
 });

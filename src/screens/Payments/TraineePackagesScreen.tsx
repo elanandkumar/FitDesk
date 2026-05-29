@@ -1,13 +1,13 @@
 import React, { useCallback, useState } from 'react';
 import { Alert, SectionList, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { IconButton, Text } from 'react-native-paper';
+import { Chip, Text } from 'react-native-paper';
 import GradientFAB from '../../components/common/GradientFAB';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '../../theme';
-import { Brand, Layout, Radius } from '../../theme/brandColors';
+import { Brand, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { EnrichedTraineePackage } from '../../types';
 import {
   getAllEnrichedTraineePackages,
@@ -18,12 +18,7 @@ import { todayISO } from '../../utils/dateUtils';
 import { RootStackParamList } from '../../navigation/types';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import EmptyState from '../../components/common/EmptyState';
-import HelpSheet from '../../components/common/HelpSheet';
-
 type Nav = StackNavigationProp<RootStackParamList>;
-
-const HELP =
-  'Create a monthly package per trainee. Session count increments automatically when a personal session is marked complete. Mark the package paid after receiving payment.';
 
 type Section = {
   trainee: string;
@@ -58,29 +53,24 @@ export default function TraineePackagesScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const [sections, setSections] = useState<Section[]>([]);
+  const [allPackages, setAllPackages] = useState<EnrichedTraineePackage[]>([]);
+  const [pendingOnly, setPendingOnly] = useState(true);
   const [confirmPkg, setConfirmPkg] = useState<EnrichedTraineePackage | null>(null);
-  const [helpVisible, setHelpVisible] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      const pkgs = await getAllEnrichedTraineePackages();
+      const pkgs = await getAllEnrichedTraineePackages(pendingOnly);
+      setAllPackages(pkgs);
       setSections(groupByTrainee(pkgs));
     } catch {
       // list stays empty on DB error
     }
-  }, []);
+  }, [pendingOnly]);
 
-  useFocusEffect(
-    useCallback(() => {
-      load();
-      navigation.getParent()?.setOptions({
-        headerRight: () => (
-          <IconButton icon="help-circle-outline" iconColor={theme.colors.primary} onPress={() => setHelpVisible(true)} />
-        ),
-      });
-      return () => { navigation.getParent()?.setOptions({ headerRight: undefined }); };
-    }, [load, navigation, theme.colors.primary])
-  );
+  const totalPending = allPackages.filter(p => p.status === 'pending').reduce((s, p) => s + p.amount, 0);
+  const totalPaid = allPackages.filter(p => p.status === 'paid').reduce((s, p) => s + p.amount, 0);
+
+  useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const handleMarkPaid = async () => {
     if (!confirmPkg) return;
@@ -132,6 +122,39 @@ export default function TraineePackagesScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View style={styles.filterRow}>
+        <Chip
+          selected={pendingOnly}
+          onPress={() => setPendingOnly(true)}
+          style={[styles.filterChip, pendingOnly && styles.filterChipActive]}
+          textStyle={{ color: pendingOnly ? Brand.textPrimary : Brand.textSecondary }}
+        >
+          Pending
+        </Chip>
+        <Chip
+          selected={!pendingOnly}
+          onPress={() => setPendingOnly(false)}
+          style={[styles.filterChip, !pendingOnly && styles.filterChipActive]}
+          textStyle={{ color: !pendingOnly ? Brand.textPrimary : Brand.textSecondary }}
+        >
+          All
+        </Chip>
+      </View>
+
+      {allPackages.length > 0 && (
+        <View style={styles.summaryCard}>
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryLabel}>Pending</Text>
+            <Text style={[styles.summaryAmount, { color: Brand.orange }]}>{formatCurrency(totalPending)}</Text>
+          </View>
+          <View style={styles.summarySep} />
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryLabel}>Paid</Text>
+            <Text style={[styles.summaryAmount, { color: Brand.pink }]}>{formatCurrency(totalPaid)}</Text>
+          </View>
+        </View>
+      )}
+
       <SectionList
         sections={sections}
         keyExtractor={(item) => String(item.id)}
@@ -141,8 +164,12 @@ export default function TraineePackagesScreen() {
         ListEmptyComponent={
           <EmptyState
             icon="package-variant"
-            title="No packages yet"
-            subtitle="Add a monthly session package for a trainee."
+            title={pendingOnly ? 'No pending packages' : 'No packages yet'}
+            subtitle={
+              pendingOnly
+                ? 'All trainee packages are settled.'
+                : 'Add a monthly session package for a trainee.'
+            }
           />
         }
         contentContainerStyle={sections.length === 0 ? styles.emptyContainer : styles.listContent}
@@ -168,36 +195,56 @@ export default function TraineePackagesScreen() {
         onDismiss={() => setConfirmPkg(null)}
       />
 
-      <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  listContent: { paddingHorizontal: 12, paddingTop: 8, paddingBottom: Layout.LIST_PAD_WITH_FAB },
+  filterRow: { flexDirection: 'row', gap: Spacing.sm, padding: Spacing.md },
+  filterChip: { backgroundColor: Brand.surfaceDark, borderColor: Brand.borderSubtle },
+  filterChipActive: { backgroundColor: Brand.purple },
+  summaryCard: {
+    flexDirection: 'row',
+    backgroundColor: Brand.surfaceDark,
+    borderRadius: Radius.card,
+    borderWidth: 1,
+    borderColor: Brand.borderSubtle,
+    marginHorizontal: Spacing.md,
+    marginBottom: Spacing.sm,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    elevation: 4,
+    shadowColor: Brand.purple,
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  summaryItem: { flex: 1, alignItems: 'center' },
+  summaryLabel: { ...Typography.bodySm, fontWeight: '500', color: Brand.textSecondary, marginBottom: Spacing.xs },
+  summaryAmount: { ...Typography.h2 },
+  summarySep: { width: 1, backgroundColor: Brand.borderSubtle, marginVertical: 4 },
+  listContent: { paddingHorizontal: Spacing.md, paddingTop: Spacing.sm, paddingBottom: Layout.LIST_PAD_WITH_FAB },
   emptyContainer: { flex: 1 },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 4,
-    paddingVertical: 10,
-    marginTop: 8,
+    paddingHorizontal: Spacing.xs,
+    paddingVertical: Spacing.sm,
+    marginTop: Spacing.sm,
   },
   sectionTitle: {
+    ...Typography.h4,
     color: Brand.textPrimary,
-    fontSize: 15,
-    fontWeight: '700',
-    fontFamily: 'Montserrat_600SemiBold',
   },
   dueBadge: {
     backgroundColor: `${Brand.orange}33`,
     borderRadius: Radius.full,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
   },
-  dueText: { color: Brand.orange, fontSize: 12, fontWeight: '700' },
+  dueText: { ...Typography.labelSm, color: Brand.orange },
   item: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -206,35 +253,35 @@ const styles = StyleSheet.create({
     borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginBottom: 6,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    marginBottom: Spacing.xs,
   },
   itemLeft: { flex: 1 },
-  itemTitle: { color: Brand.textPrimary, fontSize: 14, fontWeight: '500' },
-  itemSub: { color: Brand.textSecondary, fontSize: 12, marginTop: 2 },
-  itemNote: { color: Brand.textMuted, fontSize: 12, marginTop: 2 },
-  itemRight: { alignItems: 'flex-end', gap: 6, marginLeft: 8 },
-  amount: { color: Brand.orange, fontSize: 15, fontWeight: '700' },
+  itemTitle: { ...Typography.body, fontWeight: '500', color: Brand.textPrimary },
+  itemSub: { ...Typography.bodySm, color: Brand.textSecondary, marginTop: 0 },
+  itemNote: { ...Typography.bodySm, color: Brand.textMuted, marginTop: 0 },
+  itemRight: { alignItems: 'flex-end', gap: Spacing.xs, marginLeft: Spacing.sm },
+  amount: { ...Typography.h4, fontWeight: '700', color: Brand.orange },
   markPaidBtn: {
     backgroundColor: `${Brand.purple}33`,
     borderRadius: Radius.full,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
   },
-  markPaidText: { color: Brand.purple, fontSize: 12, fontWeight: '700' },
+  markPaidText: { ...Typography.labelSm, color: Brand.purple },
   paidBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
+    gap: Spacing.xs,
     backgroundColor: `${Brand.pink}1A`,
     borderRadius: Radius.full,
-    paddingHorizontal: 8,
+    paddingHorizontal: Spacing.sm,
     paddingVertical: 3,
   },
-  paidText: { color: Brand.pink, fontSize: 11, fontWeight: '600' },
+  paidText: { ...Typography.microLabel, color: Brand.pink },
   fab: {
     position: 'absolute',
-    right: 16,
+    right: Spacing.lg,
   },
 });

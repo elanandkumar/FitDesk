@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { IconButton, Text, TouchableRipple } from 'react-native-paper';
+import { Pressable, StyleSheet, Text as RNText, View } from 'react-native';
+import { IconButton, Text } from 'react-native-paper';
 import { useAppTheme, Radius } from '../../theme';
 import { Brand } from '../../theme/brandColors';
 import AppModal from './AppModal';
@@ -90,43 +90,26 @@ export default function ThemedTimePickerModal({ visible, value, onConfirm, onDis
           <IconButton icon="chevron-down" size={32} onPress={() => changeMinute(-5)} iconColor={col.primary} />
         </View>
 
-        {/* AM/PM toggle — fixed contrast */}
-        <View style={[styles.col, { marginLeft: 16 }]}>
-          <TouchableRipple
-            onPress={togglePeriod}
-            borderless
-            style={[
-              styles.periodBtn,
-              period === 'AM'
-                ? { backgroundColor: Brand.purple }
-                : { backgroundColor: Brand.surfaceElevated, borderColor: Brand.borderSubtle, borderWidth: 1 },
-            ]}
-          >
-            <Text
-              variant="labelLarge"
-              style={{ color: period === 'AM' ? Brand.textPrimary : Brand.textSecondary }}
+        {/* AM/PM pill — vertical, right of time */}
+        <View style={[styles.periodCol, { marginLeft: 12 }]}>
+          <View style={styles.periodPill}>
+            <Pressable
+              onPress={period === 'PM' ? togglePeriod : undefined}
+              style={[styles.periodSegment, period === 'AM' && styles.periodActive]}
             >
-              AM
-            </Text>
-          </TouchableRipple>
-          <View style={{ height: 8 }} />
-          <TouchableRipple
-            onPress={togglePeriod}
-            borderless
-            style={[
-              styles.periodBtn,
-              period === 'PM'
-                ? { backgroundColor: Brand.purple }
-                : { backgroundColor: Brand.surfaceElevated, borderColor: Brand.borderSubtle, borderWidth: 1 },
-            ]}
-          >
-            <Text
-              variant="labelLarge"
-              style={{ color: period === 'PM' ? Brand.textPrimary : Brand.textSecondary }}
+              <RNText style={[styles.periodLabel, { color: period === 'AM' ? '#FFFFFF' : Brand.textSecondary }]}>
+                AM
+              </RNText>
+            </Pressable>
+            <Pressable
+              onPress={period === 'AM' ? togglePeriod : undefined}
+              style={[styles.periodSegment, period === 'PM' && styles.periodActive]}
             >
-              PM
-            </Text>
-          </TouchableRipple>
+              <RNText style={[styles.periodLabel, { color: period === 'PM' ? '#FFFFFF' : Brand.textSecondary }]}>
+                PM
+              </RNText>
+            </Pressable>
+          </View>
         </View>
       </View>
 
@@ -148,11 +131,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  periodBtn: {
-    width: 56,
-    height: 48,
+  periodCol: {
+    alignSelf: 'center',
+  },
+  periodPill: {
+    flexDirection: 'column',
     borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Brand.borderSubtle,
+    overflow: 'hidden',
+  },
+  periodSegment: {
+    width: 52,
+    height: 36,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  periodActive: {
+    backgroundColor: Brand.purple,
+  },
+  periodLabel: {
+    fontWeight: '600',
+    fontSize: 14,
   },
 });

@@ -3,7 +3,6 @@ import { SectionList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { IconButton, Text } from 'react-native-paper';
 import GradientFAB from '../../components/common/GradientFAB';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,7 +13,7 @@ import {
   getEnrichedSessionsByDateRange,
 } from '../../database/repositories/classSessionRepository';
 import { extendActiveSeriesSessions } from '../../database/repositories/classSeriesRepository';
-import { getPersonalTrainingEarnings } from '../../database/repositories/paymentRepository';
+import { getWeekEarningsSplit } from '../../database/repositories/paymentRepository';
 import { getDatabase } from '../../database/db';
 import { formatDisplayTime, todayISO, addDays } from '../../utils/dateUtils';
 import { RootStackParamList } from '../../navigation/types';
@@ -22,9 +21,10 @@ import StatusBadge, { getDisplayStatus } from '../../components/common/StatusBad
 import EmptyState from '../../components/common/EmptyState';
 import HelpSheet from '../../components/common/HelpSheet';
 import HeroCard from '../../components/common/HeroCard';
+import EarningsCard from '../../components/common/EarningsCard';
 
 const HELP =
-  'Sessions for the next 7 days. Tap a session to mark complete or skip. Use the list icon (bottom right) to manage class series.';
+  'Sessions for the next 7 days. Tap a session to mark complete or skip. Use the + button to add a one-off session. Tap the chart icon for income reports.';
 
 type Nav = StackNavigationProp<RootStackParamList>;
 
@@ -37,12 +37,6 @@ function sectionTitle(isoDate: string, todayStr: string): string {
   return d.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short' });
 }
 
-const QUICK_ACTIONS = [
-  { icon: 'calendar-plus' as const, label: 'Add Session' },
-  { icon: 'calendar-month' as const, label: 'Calendar' },
-  { icon: 'chart-bar' as const, label: 'Reports' },
-];
-
 export default function DashboardScreen() {
   const { theme } = useAppTheme();
   const insets = useSafeAreaInsets();
@@ -50,13 +44,16 @@ export default function DashboardScreen() {
   const [sections, setSections] = useState<Section[]>([]);
   const [loading, setLoading] = useState(true);
   const [helpVisible, setHelpVisible] = useState(false);
-  const [weekEarnings, setWeekEarnings] = useState(0);
+  const [weekEarnings, setWeekEarnings] = useState<{ pending: number; paid: number }>({ pending: 0, paid: 0 });
   const [trainerName, setTrainerName] = useState<string | undefined>(undefined);
 
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <IconButton icon="help-circle-outline" iconColor={theme.colors.primary} onPress={() => setHelpVisible(true)} />
+        <View style={{ flexDirection: 'row' }}>
+          <IconButton icon="chart-bar" iconColor={theme.colors.primary} onPress={() => navigation.navigate('IncomeSummary')} />
+          <IconButton icon="help-circle-outline" iconColor={theme.colors.primary} onPress={() => setHelpVisible(true)} />
+        </View>
       ),
     });
   }, [navigation, theme.colors.primary]);
@@ -75,10 +72,9 @@ export default function DashboardScreen() {
       const end = addDays(today, 6);
       const weekStart = addDays(today, -6);
 
-      const [upcomingSessions, pastSessions, personalEarnings] = await Promise.all([
+      const [upcomingSessions, earningsSplit] = await Promise.all([
         getEnrichedSessionsByDateRange(today, end),
-        getEnrichedSessionsByDateRange(weekStart, today),
-        getPersonalTrainingEarnings(weekStart, today),
+        getWeekEarningsSplit(weekStart, today),
       ]);
 
       const map = new Map<string, EnrichedSession[]>();
@@ -93,11 +89,7 @@ export default function DashboardScreen() {
         result.push({ title: sectionTitle(date, today), data });
       }
       setSections(result);
-
-      const managerEarned = pastSessions
-        .filter(s => s.status === 'completed')
-        .reduce((sum, s) => sum + s.per_class_rate, 0);
-      setWeekEarnings(managerEarned + personalEarnings);
+      setWeekEarnings(earningsSplit);
     } finally {
       setLoading(false);
     }
@@ -110,16 +102,6 @@ export default function DashboardScreen() {
     : 0;
   const weekTotal = sections.reduce((acc, s) => acc + s.data.length, 0);
 
-  function handleQuickAction(label: string) {
-    if (label === 'Add Session') {
-      navigation.navigate('AddSession', {});
-    } else if (label === 'Calendar') {
-      (navigation as any).navigate('Calendar');
-    } else if (label === 'Reports') {
-      navigation.navigate('IncomeSummary');
-    }
-  }
-
   return (
     <Animated.View entering={FadeIn.duration(350)} style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <SectionList
@@ -129,29 +111,15 @@ export default function DashboardScreen() {
         stickySectionHeadersEnabled={false}
         ListHeaderComponent={
           <>
-            <HeroCard todayCount={todayCount} weekTotal={weekTotal} weekEarnings={weekEarnings} trainerName={trainerName} />
-            <View style={styles.quickActions}>
-              {QUICK_ACTIONS.map(({ icon, label }) => (
-                <TouchableOpacity
-                  key={label}
-                  onPress={() => handleQuickAction(label)}
-                  style={styles.quickActionItem}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.quickActionIcon}>
-                    <MaterialCommunityIcons name={icon} size={22} color={Brand.orange} />
-                  </View>
-                  <Text variant="bodySmall" style={styles.quickActionLabel}>{label}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+            <HeroCard todayCount={todayCount} weekTotal={weekTotal} trainerName={trainerName} />
+            <EarningsCard pending={weekEarnings.pending} paid={weekEarnings.paid} />
           </>
         }
         ListEmptyComponent={
           !loading ? (
             <EmptyState
               title="No upcoming sessions"
-              subtitle="Tap + to manage class series"
+              subtitle="Tap + to add a session"
             />
           ) : null
         }
@@ -200,9 +168,9 @@ export default function DashboardScreen() {
       />
 
       <GradientFAB
-        icon="view-list"
+        icon="plus"
         style={[styles.fab, { bottom: Layout.FAB_BOTTOM + insets.bottom }]}
-        onPress={() => navigation.navigate('ClassSeriesList')}
+        onPress={() => navigation.navigate('AddSession', {})}
       />
 
       <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP} />
@@ -213,37 +181,13 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   listContent: { flexGrow: 1, paddingBottom: Layout.LIST_PAD_WITH_FAB },
-  quickActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: 14,
-    marginBottom: Spacing.xs,
-  },
-  quickActionItem: { alignItems: 'center', flex: 1 },
-  quickActionIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: Radius.card,
-    backgroundColor: Brand.surfaceElevated,
-    borderWidth: 1,
-    borderColor: Brand.borderSubtle,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  quickActionLabel: {
-    ...Typography.caption,
-    color: Brand.textSecondary,
-    marginTop: 6,
-    textAlign: 'center',
-  },
   sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.lg,
     paddingBottom: Spacing.sm,
-    gap: 10,
+    gap: Spacing.sm,
   },
   sectionAccent: {
     width: 4,
@@ -262,7 +206,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginHorizontal: Spacing.lg,
-    paddingVertical: 14,
+    paddingVertical: Spacing.lg,
     paddingRight: Spacing.md,
     gap: Spacing.md,
     backgroundColor: Brand.surfaceDark,
@@ -276,7 +220,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
   },
   colorBar: { width: 4, alignSelf: 'stretch', borderRadius: Radius.xs, marginLeft: Spacing.sm },
-  sessionInfo: { flex: 1, gap: 2 },
+  sessionInfo: { flex: 1, gap: 0 },
   fab: {
     position: 'absolute',
     right: Spacing.lg,

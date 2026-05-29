@@ -15,7 +15,7 @@ const FitDeskTheme = {
     onPrimaryContainer:   Brand.textPrimary,
     secondary:            Brand.orange,
     onSecondary:          Brand.textPrimary,
-    background:           Brand.backgroundDark,
+    background:           Brand.surfaceDark,
     surface:              Brand.surfaceDark,
     onSurface:            Brand.textPrimary,
     onSurfaceVariant:     Brand.textMuted,

@@ -1,30 +1,23 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { IconButton, Searchbar, Text } from 'react-native-paper';
+import { Text } from 'react-native-paper';
+import AppSearchbar from '../../components/common/AppSearchbar';
 import GradientFAB from '../../components/common/GradientFAB';
-import { useNavigation, useFocusEffect, CompositeNavigationProp } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { MaterialTopTabNavigationProp } from '@react-navigation/material-top-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '../../theme';
-import { Brand, Layout, Radius } from '../../theme/brandColors';
+import { Brand, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { Manager } from '../../types';
 import { getAllManagers } from '../../database/repositories/managerRepository';
 import { getManagerOutstandingBalance } from '../../database/repositories/paymentRepository';
 import { formatCurrency } from '../../utils/currencyUtils';
 import EmptyState from '../../components/common/EmptyState';
-import { RootStackParamList, PeopleTabParamList } from '../../navigation/types';
-import HelpSheet from '../../components/common/HelpSheet';
+import { RootStackParamList } from '../../navigation/types';
 
-const HELP =
-  'Add managers who assign you classes. Outstanding balance (in orange) shows total unpaid sessions. Tap a manager to see their payment history.';
-
-type Nav = CompositeNavigationProp<
-  MaterialTopTabNavigationProp<PeopleTabParamList, 'Managers'>,
-  StackNavigationProp<RootStackParamList>
->;
+type Nav = StackNavigationProp<RootStackParamList>;
 
 interface ManagerWithBalance extends Manager {
   outstanding: number;
@@ -46,7 +39,6 @@ export default function ManagerListScreen() {
   const [managers, setManagers] = useState<ManagerWithBalance[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
-  const [helpVisible, setHelpVisible] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -61,17 +53,7 @@ export default function ManagerListScreen() {
     }
   }, []);
 
-  useFocusEffect(useCallback(() => {
-    load();
-    navigation.getParent()?.setOptions({
-      headerRight: () => (
-        <IconButton icon="help-circle-outline" iconColor={theme.colors.primary} onPress={() => setHelpVisible(true)} />
-      ),
-    });
-    return () => {
-      navigation.getParent()?.setOptions({ headerRight: undefined });
-    };
-  }, [load, navigation, theme.colors.primary]));
+  useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const filtered = useMemo(() => {
     if (!query.trim()) return managers;
@@ -81,14 +63,11 @@ export default function ManagerListScreen() {
 
   return (
     <Animated.View entering={FadeIn.duration(350)} style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <Searchbar
+      <AppSearchbar
         placeholder="Search managers"
         value={query}
         onChangeText={setQuery}
         style={[styles.searchbar, { backgroundColor: Brand.surfaceDark }]}
-        inputStyle={{ color: Brand.textPrimary }}
-        iconColor={Brand.textMuted}
-        placeholderTextColor={Brand.textMuted}
       />
       <FlatList
         data={filtered}
@@ -132,15 +111,14 @@ export default function ManagerListScreen() {
         onPress={() => navigation.navigate('AddEditManager', {})}
       />
 
-      <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP} />
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  searchbar: { margin: 12, borderRadius: Radius.lg, elevation: 0 },
-  listContent: { paddingHorizontal: 12, paddingBottom: Layout.LIST_PAD_WITH_FAB },
+  searchbar: { margin: Spacing.md, borderRadius: Radius.lg, elevation: 0, borderWidth: 1, borderColor: Brand.borderSubtle },
+  listContent: { paddingHorizontal: Spacing.md, paddingBottom: Layout.LIST_PAD_WITH_FAB },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -148,15 +126,15 @@ const styles = StyleSheet.create({
     borderRadius: Radius.item,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
-    paddingVertical: 14,
-    paddingHorizontal: 14,
-    marginBottom: 8,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.lg,
+    marginBottom: Spacing.sm,
     elevation: 4,
     shadowColor: Brand.purple,
     shadowOpacity: 0.15,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 6,
-    gap: 12,
+    gap: Spacing.md,
   },
   avatar: {
     width: 44,
@@ -166,19 +144,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: { color: Brand.textPrimary, fontWeight: '700', fontSize: 16 },
+  avatarText: { ...Typography.bodyLg, fontWeight: '700', color: Brand.textPrimary },
   cardContent: { flex: 1 },
-  cardTitle: { color: Brand.textPrimary, fontSize: 15, fontWeight: '600' },
-  cardSub: { color: Brand.textSecondary, fontSize: 13, marginTop: 2 },
+  cardTitle: { ...Typography.h4, color: Brand.textPrimary },
+  cardSub: { ...Typography.labelMd, fontFamily: 'Outfit_400Regular', color: Brand.textSecondary, marginTop: 0 },
   badge: {
     backgroundColor: `${Brand.orange}33`,
     borderRadius: Radius.full,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
   },
-  badgeText: { color: Brand.orange, fontSize: 12, fontWeight: '700' },
+  badgeText: { ...Typography.labelSm, color: Brand.orange },
   fab: {
     position: 'absolute',
-    right: 16,
+    right: Spacing.lg,
   },
 });

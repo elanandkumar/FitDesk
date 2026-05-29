@@ -8,7 +8,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { Calendar, CalendarProvider, WeekCalendar } from 'react-native-calendars';
 import type { DateData } from 'react-native-calendars';
 import { useAppTheme, Brand, Radius, Spacing } from '../../theme';
-import { Layout } from '../../theme/brandColors';
+import { Layout, Typography } from '../../theme/brandColors';
 import { EnrichedSession } from '../../types';
 import { getEnrichedSessionsByDateRange } from '../../database/repositories/classSessionRepository';
 import { formatDisplayDate, formatDisplayTime, todayISO } from '../../utils/dateUtils';
@@ -20,7 +20,7 @@ type Nav = StackNavigationProp<RootStackParamList>;
 type ViewMode = 'week' | 'month';
 
 const HELP =
-  'Swipe left/right to change week/month. Tap a date to see sessions. Coloured dots indicate class types scheduled on that date. Use the calendar icon in the header to switch between week and month view.';
+  'Swipe left/right to change week/month. Tap a date to see sessions. Coloured dots indicate class types scheduled on that date. Use the calendar icon to toggle week/month view. Use the table icon to manage class series.';
 
 type MarkedDates = Record<string, { dots: { key: string; color: string }[]; selected?: boolean; selectedColor?: string }>;
 
@@ -89,6 +89,11 @@ export default function CalendarScreen() {
     navigation.setOptions({
       headerRight: () => (
         <View style={{ flexDirection: 'row' }}>
+          <IconButton
+            icon="table-edit"
+            iconColor={Brand.purple}
+            onPress={() => navigation.navigate('ClassSeriesList')}
+          />
           <IconButton
             icon={viewMode === 'week' ? 'calendar-month' : 'calendar-week'}
             iconColor={Brand.purple}
@@ -190,7 +195,7 @@ export default function CalendarScreen() {
       <Divider style={{ backgroundColor: Brand.borderSubtle }} />
 
       <View style={styles.dayHeader}>
-        <Text variant="labelLarge" style={{ color: Brand.textSecondary, fontFamily: 'Montserrat_600SemiBold' }}>
+        <Text style={{ ...Typography.h3, color: Brand.textSecondary }}>
           {selectedDate === today ? 'Today' : formatDisplayDate(selectedDate)}
         </Text>
         <Text variant="bodySmall" style={{ color: Brand.textMuted }}>
@@ -253,14 +258,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
-    paddingVertical: 10,
+    paddingVertical: Spacing.sm,
   },
   emptyDay: { flex: 1, alignItems: 'center', paddingTop: Spacing.section },
   sessionCard: {
     flexDirection: 'row',
     alignItems: 'center',
     marginHorizontal: Spacing.lg,
-    paddingVertical: 14,
+    paddingVertical: Spacing.lg,
     paddingRight: Spacing.md,
     gap: Spacing.md,
     backgroundColor: Brand.surfaceDark,
@@ -274,7 +279,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
   },
   colorBar: { width: 4, alignSelf: 'stretch', borderRadius: Radius.xs, marginLeft: Spacing.sm },
-  sessionInfo: { flex: 1, gap: 2 },
+  sessionInfo: { flex: 1, gap: 0 },
   fab: {
     position: 'absolute',
     right: Spacing.lg,

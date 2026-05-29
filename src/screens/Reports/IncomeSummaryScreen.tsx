@@ -5,7 +5,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Brand, Gradients, Radius } from '../../theme/brandColors';
+import { Brand, Gradients, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { MonthlyIncomeSummary } from '../../types';
 import { getMonthlyIncomeSummary } from '../../database/repositories/paymentRepository';
@@ -148,56 +148,53 @@ export default function IncomeSummaryScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Brand.backgroundDark },
   heroCard: {
-    margin: 16,
+    margin: Spacing.lg,
     borderRadius: Radius.hero,
-    paddingVertical: 24,
-    paddingHorizontal: 20,
+    paddingVertical: Spacing.xxl,
+    paddingHorizontal: Spacing.xl,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     minHeight: 140,
   },
-  heroLeft: { flex: 1, gap: 4 },
+  heroLeft: { flex: 1, gap: Spacing.xs },
   heroLabel: {
+    ...Typography.labelMd,
     fontFamily: 'Outfit_400Regular',
-    fontSize: 13,
     color: Brand.textSecondary,
   },
   heroAmount: {
-    fontFamily: 'Poppins_700Bold',
+    ...Typography.h1,
     fontSize: 32,
     lineHeight: 40,
     color: Brand.textPrimary,
   },
   heroSub: {
-    fontFamily: 'Montserrat_600SemiBold',
-    fontSize: 12,
+    ...Typography.labelSm,
     color: Brand.textSecondary,
   },
-  heroRight: { gap: 10, alignItems: 'flex-end' },
+  heroRight: { gap: Spacing.sm, alignItems: 'flex-end' },
   pill: {
     backgroundColor: 'rgba(255, 122, 0, 0.20)',
     borderRadius: Radius.lg,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
     alignItems: 'center',
     minWidth: 100,
   },
   pendingPill: { backgroundColor: 'rgba(255, 45, 85, 0.15)' },
   pillLabel: {
-    fontFamily: 'Outfit_400Regular',
-    fontSize: 11,
+    ...Typography.caption,
     color: Brand.textSecondary,
   },
   pillValue: {
-    fontFamily: 'Montserrat_600SemiBold',
-    fontSize: 14,
+    ...Typography.labelLg,
   },
-  listContent: { padding: 16, gap: 8 },
+  listContent: { padding: Spacing.lg, gap: Spacing.sm },
   emptyContainer: { flex: 1 },
   monthCard: {
-    paddingVertical: 14,
-    paddingHorizontal: 14,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.lg,
     backgroundColor: Brand.surfaceDark,
     borderRadius: Radius.item,
     borderWidth: 1,
@@ -207,7 +204,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
-    gap: 8,
+    gap: Spacing.sm,
   },
   monthCardTop: {
     flexDirection: 'row',
@@ -215,14 +212,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   monthTitle: {
+    ...Typography.labelLg,
     color: Brand.textPrimary,
-    fontFamily: 'Montserrat_600SemiBold',
-    fontSize: 14,
   },
   monthRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  monthAmounts: { alignItems: 'flex-end', gap: 2 },
+  monthAmounts: { alignItems: 'flex-end', gap: 0 },
 });

@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Modal, Portal, Text } from 'react-native-paper';
-import { Brand, Radius, Spacing } from '../../theme/brandColors';
+import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
 import AppButton from './AppButton';
 
 interface AppModalProps {
@@ -48,7 +48,7 @@ export default function AppModal({
             <AppButton
               label={confirmLabel}
               onPress={onConfirm}
-              variant={destructive ? 'danger' : 'primary'}
+              variant={destructive ? 'danger' : 'filled'}
               loading={loading}
               disabled={loading}
               style={destructive ? undefined : styles.confirmBtn}
@@ -71,9 +71,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   title: {
-    fontFamily: 'Montserrat_600SemiBold',
-    fontSize: 16,
-    lineHeight: 22,
+    ...Typography.h3,
     color: Brand.textPrimary,
     paddingTop: Spacing.xl,
     paddingHorizontal: Spacing.xl,

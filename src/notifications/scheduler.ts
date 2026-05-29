@@ -51,9 +51,14 @@ export async function schedulePendingPaymentNotification(): Promise<void> {
   const total = row?.total ?? 0;
   if (total === 0) return;
 
+  const timeRow = await db.getFirstAsync<{ value: string }>(
+    "SELECT value FROM settings WHERE key = 'payment_notification_time'"
+  );
+  const [notifHour, notifMin] = (timeRow?.value ?? '09:00').split(':').map(Number);
+
   const now = new Date();
   const notifyAt = new Date(now);
-  notifyAt.setHours(9, 0, 0, 0);
+  notifyAt.setHours(notifHour, notifMin, 0, 0);
   if (notifyAt <= now) notifyAt.setDate(notifyAt.getDate() + 1);
 
   await Notifications.scheduleNotificationAsync({

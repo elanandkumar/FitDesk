@@ -7,18 +7,19 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Button, IconButton, List, Surface, Text, TextInput } from 'react-native-paper';
+import { IconButton, List, Surface, Text, TextInput } from 'react-native-paper';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '../../theme';
-import { Brand, Radius } from '../../theme/brandColors';
+import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { Trainee } from '../../types';
 import { getAllTrainees } from '../../database/repositories/traineeRepository';
 import { createTraineePackage } from '../../database/repositories/paymentRepository';
 import GradientButton from '../../components/common/GradientButton';
+import AppButton from '../../components/common/AppButton';
 
 type Nav = StackNavigationProp<RootStackParamList, 'AddPackage'>;
 type Route = RouteProp<RootStackParamList, 'AddPackage'>;
@@ -140,6 +141,7 @@ export default function AddPackageScreen() {
             onChangeText={(v) => setTotalSessions(v.replace(/[^0-9]/g, ''))}
             keyboardType="numeric"
             mode="outlined"
+            dense
           />
           <View style={styles.fieldGap} />
           <TextInput
@@ -148,6 +150,7 @@ export default function AddPackageScreen() {
             onChangeText={(v) => setAmount(v.replace(/[^0-9.]/g, ''))}
             keyboardType="decimal-pad"
             mode="outlined"
+            dense
           />
           <View style={styles.fieldGap} />
           <TextInput
@@ -163,15 +166,13 @@ export default function AddPackageScreen() {
         <View style={{ height: 16 }} />
       </ScrollView>
 
-      <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
-        <Button
-          mode="outlined"
+      <View style={[styles.footer, { paddingBottom: insets.bottom + Spacing.md }]}>
+        <AppButton
+          variant="ghost"
+          label="Cancel"
           onPress={() => navigation.goBack()}
           style={styles.cancelBtn}
-          textColor={Brand.textSecondary}
-        >
-          Cancel
-        </Button>
+        />
         <GradientButton
           label={saving ? 'Saving...' : 'Save'}
           onPress={handleSave}
@@ -214,20 +215,18 @@ export default function AddPackageScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: 16 },
+  content: { padding: Spacing.lg },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 10,
-    marginTop: 20,
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+    marginTop: Spacing.xl,
   },
   sectionAccent: { width: 3, height: 14, borderRadius: Radius.xs, backgroundColor: Brand.orange },
   sectionLabel: {
+    ...Typography.labelSm,
     color: Brand.textSecondary,
-    fontSize: 12,
-    fontWeight: '600',
-    fontFamily: 'Montserrat_600SemiBold',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
@@ -236,29 +235,29 @@ const styles = StyleSheet.create({
     borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
-    padding: 14,
+    padding: Spacing.lg,
   },
   monthCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 4,
+    padding: Spacing.xs,
   },
-  monthText: { color: Brand.textPrimary, fontSize: 16, fontWeight: '600', flex: 1, textAlign: 'center' },
+  monthText: { ...Typography.h3, color: Brand.textPrimary, flex: 1, textAlign: 'center' },
   pickerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: Spacing.sm,
     minHeight: 44,
   },
-  pickerText: { flex: 1, color: Brand.textPrimary, fontSize: 15 },
+  pickerText: { ...Typography.h4, flex: 1, color: Brand.textPrimary },
   pickerPlaceholder: { color: Brand.textMuted },
-  fieldGap: { height: 10 },
+  fieldGap: { height: Spacing.sm },
   footer: {
     flexDirection: 'row',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingTop: 12,
+    gap: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
     backgroundColor: Brand.backgroundDark,
     borderTopWidth: 1,
     borderTopColor: Brand.borderSubtle,
@@ -279,14 +278,13 @@ const styles = StyleSheet.create({
   sheet: {
     borderTopLeftRadius: Radius.item,
     borderTopRightRadius: Radius.item,
-    paddingBottom: 32,
+    paddingBottom: Spacing.section,
     maxHeight: '60%',
   },
   sheetTitle: {
+    ...Typography.h3,
     color: Brand.textPrimary,
-    fontSize: 16,
-    fontWeight: '600',
-    padding: 16,
-    paddingBottom: 8,
+    padding: Spacing.lg,
+    paddingBottom: Spacing.sm,
   },
 });

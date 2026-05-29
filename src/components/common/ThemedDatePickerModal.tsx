@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { useAppTheme, Radius } from '../../theme';
+import { Brand } from '../../theme/brandColors';
 import AppModal from './AppModal';
 
 interface Props {
@@ -31,8 +32,8 @@ export default function ThemedDatePickerModal({
   }, [visible, value]);
 
   const calTheme = {
-    backgroundColor: theme.colors.surface,
-    calendarBackground: theme.colors.surface,
+    backgroundColor: Brand.surfaceElevated,
+    calendarBackground: Brand.surfaceElevated,
     textSectionTitleColor: theme.colors.onSurfaceVariant,
     selectedDayBackgroundColor: theme.colors.primary,
     selectedDayTextColor: theme.colors.onPrimary,
@@ -65,5 +66,5 @@ export default function ThemedDatePickerModal({
 }
 
 const styles = StyleSheet.create({
-  calendar: { borderRadius: Radius.md },
+  calendar: { borderRadius: Radius.md, marginHorizontal: -4 },
 });

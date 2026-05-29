@@ -14,6 +14,12 @@ const MIGRATIONS: Array<{ version: number; sql: string }> = [
       INSERT OR IGNORE INTO settings (key, value) VALUES ('payment_notification_enabled', 'true');
     `,
   },
+  {
+    version: 4,
+    sql: `
+      INSERT OR IGNORE INTO settings (key, value) VALUES ('payment_notification_time', '09:00');
+    `,
+  },
 ];
 
 export async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {

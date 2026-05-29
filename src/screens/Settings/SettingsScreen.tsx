@@ -1,19 +1,20 @@
 import React, { useCallback, useLayoutEffect, useState } from 'react';
-import { Image, ScrollView, StyleSheet, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { IconButton, SegmentedButtons, Switch, Text } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { TouchableOpacity } from 'react-native';
 import Constants from 'expo-constants';
 import { useAppTheme } from '../../theme';
-import { Brand, Radius } from '../../theme/brandColors';
+import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { getDatabase } from '../../database/db';
 import { scheduleUpcomingNotifications, schedulePendingPaymentNotification } from '../../notifications/scheduler';
 import { requestNotificationPermission } from '../../notifications/permissions';
 import HelpSheet from '../../components/common/HelpSheet';
+import ThemedTimePickerModal from '../../components/common/ThemedTimePickerModal';
+import { formatDisplayTime } from '../../utils/dateUtils';
 
 const isExpoGo = Constants.appOwnership === 'expo';
 
@@ -80,6 +81,8 @@ export default function SettingsScreen() {
   const [notifEnabled, setNotifEnabled] = useState(true);
   const [minutesBefore, setMinutesBefore] = useState('60');
   const [paymentNotifEnabled, setPaymentNotifEnabled] = useState(true);
+  const [paymentNotifTime, setPaymentNotifTime] = useState('09:00');
+  const [timePickerVisible, setTimePickerVisible] = useState(false);
   const [helpVisible, setHelpVisible] = useState(false);
 
   useLayoutEffect(() => {
@@ -96,9 +99,11 @@ export default function SettingsScreen() {
         const enabled = await getSetting('notification_enabled');
         const mins = await getSetting('notification_minutes_before');
         const paymentEnabled = await getSetting('payment_notification_enabled');
+        const paymentTime = await getSetting('payment_notification_time');
         setNotifEnabled(enabled !== 'false');
         setMinutesBefore(mins ?? '60');
         setPaymentNotifEnabled(paymentEnabled !== 'false');
+        setPaymentNotifTime(paymentTime ?? '09:00');
       }
       loadSettings();
     }, [])
@@ -126,6 +131,15 @@ export default function SettingsScreen() {
     await setSetting('notification_minutes_before', val);
     if (notifEnabled && !isExpoGo) {
       await scheduleUpcomingNotifications();
+      await schedulePendingPaymentNotification();
+    }
+  };
+
+  const handlePaymentTimeChange = async (time: string) => {
+    setPaymentNotifTime(time);
+    setTimePickerVisible(false);
+    await setSetting('payment_notification_time', time);
+    if (paymentNotifEnabled && !isExpoGo) {
       await schedulePendingPaymentNotification();
     }
   };
@@ -187,7 +201,27 @@ export default function SettingsScreen() {
             color={Brand.purple}
           />
         </View>
+        {paymentNotifEnabled && (
+          <>
+            <View style={styles.divider} />
+            <TouchableOpacity style={styles.row} onPress={() => setTimePickerVisible(true)} activeOpacity={0.7}>
+              <View style={styles.rowIcon}>
+                <MaterialCommunityIcons name="clock-outline" size={20} color={Brand.purple} />
+              </View>
+              <Text style={[styles.rowLabel, { flex: 1 }]}>Reminder Time</Text>
+              <Text style={styles.timeValue}>{formatDisplayTime(paymentNotifTime)}</Text>
+              <MaterialCommunityIcons name="chevron-right" size={20} color={Brand.textMuted} />
+            </TouchableOpacity>
+          </>
+        )}
       </SettingsCard>
+
+      <ThemedTimePickerModal
+        visible={timePickerVisible}
+        value={paymentNotifTime}
+        onConfirm={handlePaymentTimeChange}
+        onDismiss={() => setTimePickerVisible(false)}
+      />
 
       <SectionHeader label="Data & Reports" />
       <SettingsCard>
@@ -200,11 +234,6 @@ export default function SettingsScreen() {
           icon="tag-multiple"
           label="Class Types"
           onPress={() => navigation.navigate('ClassTypes')}
-        />
-        <NavRow
-          icon="calendar-multiselect"
-          label="Class Series"
-          onPress={() => navigation.navigate('ClassSeriesList')}
         />
         <NavRow
           icon="database-export"
@@ -231,13 +260,13 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: 16, paddingBottom: 96 },
+  content: { padding: Spacing.lg, paddingBottom: 96 },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 10,
-    marginTop: 20,
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+    marginTop: Spacing.xl,
   },
   sectionAccent: {
     width: 3,
@@ -246,10 +275,8 @@ const styles = StyleSheet.create({
     backgroundColor: Brand.orange,
   },
   sectionLabel: {
+    ...Typography.labelMd,
     color: Brand.textSecondary,
-    fontSize: 13,
-    fontWeight: '600',
-    fontFamily: 'Montserrat_600SemiBold',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
@@ -263,9 +290,9 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    gap: 12,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.lg,
+    gap: Spacing.md,
   },
   rowIcon: {
     width: 32,
@@ -275,16 +302,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  rowLabel: { color: Brand.textPrimary, fontSize: 15 },
-  divider: { height: 1, backgroundColor: Brand.borderSubtle, marginHorizontal: 16 },
-  minutesRow: { padding: 16, gap: 10 },
-  minutesLabel: { color: Brand.textSecondary, fontSize: 13 },
-  about: { alignItems: 'center', paddingTop: 36, paddingBottom: 16, gap: 6 },
+  rowLabel: { ...Typography.h4, color: Brand.textPrimary },
+  divider: { height: 1, backgroundColor: Brand.borderSubtle, marginHorizontal: Spacing.lg },
+  minutesRow: { padding: Spacing.lg, gap: Spacing.sm },
+  timeValue: { ...Typography.body, color: Brand.purple, marginRight: Spacing.xs },
+  minutesLabel: { ...Typography.labelMd, fontFamily: 'Outfit_400Regular', color: Brand.textSecondary },
+  about: { alignItems: 'center', paddingTop: Spacing.section, paddingBottom: Spacing.lg, gap: Spacing.xs },
   logoImage: {
     width: 120,
     height: 30,
-    marginBottom: 4,
+    marginBottom: Spacing.xs,
   },
-  version: { color: Brand.textMuted, fontSize: 13 },
-  tagline: { color: Brand.textMuted, fontSize: 12 },
+  version: { ...Typography.labelMd, fontFamily: 'Outfit_400Regular', color: Brand.textMuted },
+  tagline: { ...Typography.bodySm, color: Brand.textMuted },
 });

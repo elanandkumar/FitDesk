@@ -49,6 +49,7 @@ export const Layout = {
   FAB_BOTTOM: 96,         // above tab bar (80px) + 16px gap
   LIST_PAD_WITH_FAB: 160, // clears FAB (56px) + gap + tab bar
   LIST_PAD_NO_FAB: 96,    // clears tab bar + buffer, no FAB
+  INPUT_HEIGHT: 48,       // dense MD3 outlined TextInput height
 } as const;
 
 export const Spacing = {
@@ -66,11 +67,14 @@ export const Typography = {
   h1:       { fontFamily: 'Poppins_700Bold',        fontSize: 24, lineHeight: 32 },
   h2:       { fontFamily: 'Montserrat_600SemiBold', fontSize: 18, lineHeight: 26 },
   h3:       { fontFamily: 'Montserrat_600SemiBold', fontSize: 16, lineHeight: 22 },
+  h4:       { fontFamily: 'Montserrat_600SemiBold', fontSize: 15, lineHeight: 22 },
   bodyLg:   { fontFamily: 'Outfit_400Regular',      fontSize: 16, lineHeight: 24 },
   body:     { fontFamily: 'Outfit_400Regular',      fontSize: 14, lineHeight: 20 },
   bodySm:   { fontFamily: 'Outfit_400Regular',      fontSize: 12, lineHeight: 18 },
   labelMd:  { fontFamily: 'Montserrat_600SemiBold', fontSize: 13, lineHeight: 18 },
   labelSm:  { fontFamily: 'Montserrat_600SemiBold', fontSize: 12, lineHeight: 16, letterSpacing: 0.2 },
+  labelLg:    { fontFamily: 'Montserrat_600SemiBold', fontSize: 14, lineHeight: 20 },
+  microLabel: { fontFamily: 'Montserrat_600SemiBold', fontSize: 11, lineHeight: 14 },
   caption:  { fontFamily: 'Outfit_400Regular',      fontSize: 11, lineHeight: 16 },
 } as const;
 

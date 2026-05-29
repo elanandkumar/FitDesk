@@ -2,11 +2,11 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Modal as RNModal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import ThemedDatePickerModal from '../../components/common/ThemedDatePickerModal';
 import ThemedTimePickerModal from '../../components/common/ThemedTimePickerModal';
-import { Button, List, SegmentedButtons, Surface, Text, TextInput } from 'react-native-paper';
+import { List, SegmentedButtons, Surface, Text, TextInput } from 'react-native-paper';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Brand, Radius } from '../../theme/brandColors';
+import { Brand, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { ClassType, LocationType, Manager, SourceType } from '../../types';
 import { getAllClassTypes } from '../../database/repositories/classTypeRepository';
@@ -19,6 +19,7 @@ import { todayISO } from '../../utils/dateUtils';
 import { DEFAULT_DURATION_MINUTES } from '../../constants';
 import { scheduleUpcomingNotifications } from '../../notifications/scheduler';
 import GradientButton from '../../components/common/GradientButton';
+import AppButton from '../../components/common/AppButton';
 
 type Nav = StackNavigationProp<RootStackParamList, 'AddSession'>;
 type Route = RouteProp<RootStackParamList, 'AddSession'>;
@@ -154,6 +155,8 @@ export default function AddSessionScreen() {
             value={title}
             onChangeText={setTitle}
             mode="outlined"
+            dense
+            style={styles.textInput}
           />
 
           <View style={styles.fieldGap} />
@@ -222,6 +225,8 @@ export default function AddSessionScreen() {
             onChangeText={(v) => setDuration(v.replace(/[^0-9]/g, ''))}
             keyboardType="numeric"
             mode="outlined"
+            dense
+            style={styles.textInput}
           />
         </View>
 
@@ -233,6 +238,8 @@ export default function AddSessionScreen() {
             value={location}
             onChangeText={setLocation}
             mode="outlined"
+            dense
+            style={styles.textInput}
           />
         </View>
 
@@ -332,15 +339,13 @@ export default function AddSessionScreen() {
         </RNModal>
       </ScrollView>
 
-      <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
-        <Button
-          mode="outlined"
+      <View style={[styles.footer, { paddingBottom: insets.bottom + Spacing.md }]}>
+        <AppButton
+          variant="ghost"
+          label="Cancel"
           onPress={() => navigation.goBack()}
           style={styles.cancelBtn}
-          textColor={Brand.textSecondary}
-        >
-          Cancel
-        </Button>
+        />
         <GradientButton
           label={saving ? 'Saving...' : 'Add Session'}
           onPress={handleSave}
@@ -355,20 +360,18 @@ export default function AddSessionScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Brand.backgroundDark },
-  content: { padding: 16 },
+  content: { padding: Spacing.lg },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 10,
-    marginTop: 20,
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+    marginTop: Spacing.xl,
   },
   sectionAccent: { width: 3, height: 14, borderRadius: Radius.xs, backgroundColor: Brand.orange },
   sectionLabel: {
+    ...Typography.microLabel,
     color: Brand.textSecondary,
-    fontSize: 11,
-    fontWeight: '600',
-    fontFamily: 'Montserrat_600SemiBold',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
@@ -377,27 +380,28 @@ const styles = StyleSheet.create({
     borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
-    padding: 14,
+    padding: Spacing.lg,
   },
-  fieldLabel: { color: Brand.textSecondary, marginBottom: 6 },
-  fieldGap: { height: 10 },
+  fieldLabel: { color: Brand.textSecondary, marginBottom: Spacing.xs },
+  fieldGap: { height: Spacing.sm },
+  textInput: { height: Layout.INPUT_HEIGHT },
   pickerButton: {
     borderWidth: 1,
     borderRadius: Radius.md,
     borderColor: Brand.borderSubtle,
-    padding: 14,
-    minHeight: 52,
+    paddingHorizontal: Spacing.lg,
+    minHeight: Layout.INPUT_HEIGHT,
     justifyContent: 'center',
   },
-  pickerSelected: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  pickerSelected: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   colorDot: { width: 16, height: 16, borderRadius: Radius.full },
-  twoColRow: { flexDirection: 'row', gap: 12 },
+  twoColRow: { flexDirection: 'row', gap: Spacing.md },
   twoColCell: { flex: 1 },
   footer: {
     flexDirection: 'row',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingTop: 12,
+    gap: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
     backgroundColor: Brand.backgroundDark,
     borderTopWidth: 1,
     borderTopColor: Brand.borderSubtle,
@@ -413,16 +417,15 @@ const styles = StyleSheet.create({
     backgroundColor: Brand.surfaceElevated,
     borderTopLeftRadius: Radius.item,
     borderTopRightRadius: Radius.item,
-    paddingBottom: 32,
+    paddingBottom: Spacing.section,
     maxHeight: '60%',
     borderTopWidth: 1,
     borderTopColor: Brand.borderSubtle,
   },
   sheetTitle: {
-    padding: 16,
-    paddingBottom: 8,
+    ...Typography.h4,
+    padding: Spacing.lg,
+    paddingBottom: Spacing.sm,
     color: Brand.textPrimary,
-    fontFamily: 'Montserrat_600SemiBold',
-    fontSize: 15,
   },
 });

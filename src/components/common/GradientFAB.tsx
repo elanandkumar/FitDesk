@@ -25,7 +25,7 @@ export default function GradientFAB({ icon, onPress, style, color = Brand.textPr
           end={{ x: 1, y: 1 }}
           style={styles.gradient}
         >
-          <MaterialCommunityIcons name={icon as any} size={24} color={color} />
+          <MaterialCommunityIcons name={icon as any} size={20} color={color} />
         </LinearGradient>
       </Pressable>
     </View>
@@ -46,8 +46,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   gradient: {
-    width: 56,
-    height: 56,
+    width: 48,
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
   },

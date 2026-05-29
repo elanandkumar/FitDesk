@@ -1,26 +1,2 @@
-import React from 'react';
-import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useAppTheme } from '../theme';
-import { PaymentsTabParamList } from './types';
-import ManagerPaymentsScreen from '../screens/Payments/ManagerPaymentsScreen';
-import TraineePackagesScreen from '../screens/Payments/TraineePackagesScreen';
-
-const Tab = createMaterialTopTabNavigator<PaymentsTabParamList>();
-
-export default function PaymentsNavigator() {
-  const { theme } = useAppTheme();
-  const insets = useSafeAreaInsets();
-  return (
-    <Tab.Navigator
-      screenOptions={{
-        tabBarActiveTintColor: theme.colors.primary,
-        tabBarIndicatorStyle: { backgroundColor: theme.colors.primary },
-        tabBarStyle: { backgroundColor: theme.colors.surface, paddingTop: insets.top },
-      }}
-    >
-      <Tab.Screen name="ManagerPayments" component={ManagerPaymentsScreen} options={{ title: 'Managers' }} />
-      <Tab.Screen name="TraineePackages" component={TraineePackagesScreen} options={{ title: 'Trainees' }} />
-    </Tab.Navigator>
-  );
-}
+// Replaced by src/screens/Payments/PaymentsTabScreen.tsx
+export {};

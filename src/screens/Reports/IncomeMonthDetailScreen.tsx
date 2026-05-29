@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useFocusEffect, useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Brand, Radius } from '../../theme/brandColors';
+import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { ManagerMonthIncome, TraineeMonthPackage } from '../../types';
 import { getManagerIncomeForMonth, getTraineePackagesForMonth } from '../../database/repositories/paymentRepository';
@@ -76,7 +76,7 @@ export default function IncomeMonthDetailScreen() {
 
       {packages.length > 0 && (
         <>
-          <Text style={[styles.sectionLabel, managers.length > 0 && { marginTop: 16 }]}>
+          <Text style={[styles.sectionLabel, managers.length > 0 && { marginTop: Spacing.lg }]}>
             Trainee Packages
           </Text>
           {packages.map((p) => (
@@ -97,8 +97,7 @@ export default function IncomeMonthDetailScreen() {
                     { backgroundColor: p.status === 'paid' ? Brand.purple + '33' : Brand.pink + '22' },
                   ]}>
                     <Text style={{
-                      fontSize: 10,
-                      fontWeight: '600',
+                      ...Typography.microLabel,
                       color: p.status === 'paid' ? Brand.purple : Brand.pink,
                     }}>
                       {p.status === 'paid' ? 'Paid' : 'Pending'}
@@ -123,18 +122,17 @@ export default function IncomeMonthDetailScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Brand.backgroundDark },
-  content: { padding: 16, gap: 8, paddingBottom: 32 },
+  content: { padding: Spacing.lg, gap: Spacing.sm, paddingBottom: Spacing.section },
   sectionLabel: {
+    ...Typography.microLabel,
     color: Brand.textSecondary,
-    fontFamily: 'Montserrat_600SemiBold',
-    fontSize: 11,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
-    marginBottom: 6,
+    marginBottom: Spacing.xs,
   },
   itemCard: {
-    paddingVertical: 12,
-    paddingHorizontal: 14,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
     backgroundColor: Brand.surfaceDark,
     borderRadius: Radius.card,
     borderWidth: 1,
@@ -147,21 +145,21 @@ const styles = StyleSheet.create({
   },
   itemRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   itemName: { color: Brand.textPrimary, fontWeight: '600' },
-  paidAmount: { color: Brand.orange, fontFamily: 'Poppins_700Bold', fontSize: 14 },
+  paidAmount: { ...Typography.labelLg, color: Brand.orange },
   pendingAmount: { color: Brand.pink },
-  amounts: { alignItems: 'flex-end', gap: 4 },
+  amounts: { alignItems: 'flex-end', gap: Spacing.xs },
   statusPill: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: Radius.full },
   totalCard: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 14,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.lg,
     backgroundColor: Brand.surfaceElevated,
     borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
-    marginTop: 8,
+    marginTop: Spacing.sm,
   },
-  totalAmount: { color: Brand.orange, fontFamily: 'Poppins_700Bold', fontSize: 20 },
+  totalAmount: { ...Typography.h1, fontSize: 20, color: Brand.orange },
 });

@@ -17,7 +17,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Brand, Radius } from '../../theme/brandColors';
+import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { getDatabase } from '../../database/db';
 import { RootStackParamList } from '../../navigation/types';
 import GradientButton from '../../components/common/GradientButton';
@@ -40,21 +40,21 @@ const SLIDES: Slide[] = [
     icon: 'dumbbell',
     title: 'Welcome to FitDesk',
     body: 'Your personal fitness class companion. Manage your classes, clients, and payments — all in one place, right on your device.',
-    gradient: ['#3D1DB5', '#1B102F'],
+    gradient: ['#3D1DB5', Brand.backgroundDark],
   },
   {
     key: '2',
     icon: 'calendar-check',
     title: 'How It Works',
     body: 'Manager-sourced classes: External managers assign you Zumba, Yoga, or Dance sessions — track each class and get paid per session.\n\nPersonal training: Manage your own clients with monthly session packages and automatic session tracking.',
-    gradient: ['#2E1D50', '#1B102F'],
+    gradient: [Brand.surfaceElevated, Brand.backgroundDark],
   },
   {
     key: '3',
     icon: 'shield-lock-outline',
     title: 'Your Data, Your Device',
     body: 'All data is stored locally on this device only.\n\nUninstalling the app or clearing app data will permanently erase everything. Use Settings → Export to keep regular backups.',
-    gradient: ['#1B102F', '#241640'],
+    gradient: [Brand.backgroundDark, Brand.surfaceDark],
   },
 ];
 
@@ -101,7 +101,7 @@ export default function OnboardingScreen() {
   if (phase === 'name') {
     return (
       <LinearGradient
-        colors={['#1B102F', '#241640']}
+        colors={[Brand.backgroundDark, Brand.surfaceDark]}
         start={{ x: 0.3, y: 0 }}
         end={{ x: 0.7, y: 1 }}
         style={styles.container}
@@ -211,9 +211,9 @@ export default function OnboardingScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Brand.backgroundDark },
-  slide: { flex: 1, padding: 32, justifyContent: 'center', alignItems: 'center', gap: 24 },
+  slide: { flex: 1, padding: Spacing.section, justifyContent: 'center', alignItems: 'center', gap: Spacing.xxl },
   namePhase: { flex: 1 },
-  nameContent: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32, gap: 20 },
+  nameContent: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: Spacing.section, gap: Spacing.xl },
   iconCircle: {
     width: 88,
     height: 88,
@@ -221,65 +221,59 @@ const styles = StyleSheet.create({
     backgroundColor: Brand.surfaceElevated,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   title: {
-    color: Brand.textPrimary,
+    ...Typography.h1,
     fontSize: 26,
-    fontWeight: '700',
+    color: Brand.textPrimary,
     textAlign: 'center',
-    fontFamily: 'Poppins_700Bold',
   },
   body: {
-    color: Brand.textSecondary,
+    ...Typography.bodyLg,
     fontSize: 15,
+    color: Brand.textSecondary,
     textAlign: 'center',
-    lineHeight: 24,
-    fontFamily: 'Outfit_400Regular',
   },
   nameInput: {
     width: '100%',
     backgroundColor: Brand.surfaceElevated,
     borderRadius: Radius.lg,
     paddingHorizontal: 18,
-    paddingVertical: 14,
+    paddingVertical: Spacing.lg,
     color: Brand.textPrimary,
-    fontSize: 18,
-    fontFamily: 'Outfit_400Regular',
+    ...Typography.bodyLg,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
     textAlign: 'center',
   },
   footer: {
-    paddingHorizontal: 32,
-    paddingTop: 24,
-    gap: 16,
+    paddingHorizontal: Spacing.section,
+    paddingTop: Spacing.xxl,
+    gap: Spacing.lg,
     alignItems: 'center',
     backgroundColor: Brand.backgroundDark,
   },
-  dots: { flexDirection: 'row', gap: 8 },
-  dot: { height: 8, borderRadius: Radius.full },
+  dots: { flexDirection: 'row', gap: Spacing.sm },
+  dot: { height: Spacing.sm, borderRadius: Radius.full },
   dotActive: { width: 24, backgroundColor: Brand.purple },
-  dotInactive: { width: 8, backgroundColor: Brand.borderSubtle },
+  dotInactive: { width: Spacing.sm, backgroundColor: Brand.borderSubtle },
   button: { width: 260 },
-  skipBtn: { paddingVertical: 8 },
-  skipText: { color: Brand.textMuted, fontSize: 14 },
-  heroLogo: { width: 160, height: 160, marginBottom: 8, borderRadius: Radius.hero },
-  welcomeRow: { flexDirection: 'column', alignItems: 'center', gap: 2 },
+  skipBtn: { paddingVertical: Spacing.sm },
+  skipText: { ...Typography.body, color: Brand.textMuted },
+  heroLogo: { width: 160, height: 160, marginBottom: Spacing.sm, borderRadius: Radius.hero },
+  welcomeRow: { flexDirection: 'column', alignItems: 'center', gap: 0 },
   welcomeText: {
+    ...Typography.bodyLg,
     color: Brand.textSecondary,
-    fontSize: 18,
-    fontWeight: '400',
     textAlign: 'center',
-    fontFamily: 'Outfit_400Regular',
     letterSpacing: 1,
   },
   brandName: {
-    color: Brand.purple,
+    ...Typography.h1,
     fontSize: 36,
-    fontWeight: '700',
+    color: Brand.purple,
     textAlign: 'center',
-    fontFamily: 'Poppins_700Bold',
     letterSpacing: 2,
   },
 });

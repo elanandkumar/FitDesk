@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, ScrollView, StyleSheet, View } from 'react-native';
-import { Button, Text, TextInput } from 'react-native-paper';
+import { Text, TextInput } from 'react-native-paper';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '../../theme';
-import { Brand, Radius } from '../../theme/brandColors';
+import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import {
   createTrainee,
@@ -13,6 +13,7 @@ import {
   getTraineeById,
 } from '../../database/repositories/traineeRepository';
 import GradientButton from '../../components/common/GradientButton';
+import AppButton from '../../components/common/AppButton';
 
 type Nav = StackNavigationProp<RootStackParamList, 'AddEditTrainee'>;
 type Route = RouteProp<RootStackParamList, 'AddEditTrainee'>;
@@ -94,11 +95,12 @@ export default function AddEditTraineeScreen() {
             value={name}
             onChangeText={setName}
             mode="outlined"
+            dense
             error={!!nameError}
             autoFocus
           />
           {nameError ? (
-            <Text variant="bodySmall" style={{ color: theme.colors.error, marginTop: 4 }}>
+            <Text variant="bodySmall" style={{ color: theme.colors.error, marginTop: Spacing.xs }}>
               {nameError}
             </Text>
           ) : null}
@@ -109,6 +111,7 @@ export default function AddEditTraineeScreen() {
             onChangeText={setPhone}
             mode="outlined"
             keyboardType="phone-pad"
+            dense
           />
           <View style={styles.fieldGap} />
           <TextInput
@@ -118,6 +121,7 @@ export default function AddEditTraineeScreen() {
             mode="outlined"
             keyboardType="email-address"
             autoCapitalize="none"
+            dense
           />
         </View>
 
@@ -136,15 +140,13 @@ export default function AddEditTraineeScreen() {
         <View style={{ height: 16 }} />
       </ScrollView>
 
-      <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
-        <Button
-          mode="outlined"
+      <View style={[styles.footer, { paddingBottom: insets.bottom + Spacing.md }]}>
+        <AppButton
+          variant="ghost"
+          label="Cancel"
           onPress={() => navigation.goBack()}
           style={styles.cancelBtn}
-          textColor={Brand.textSecondary}
-        >
-          Cancel
-        </Button>
+        />
         <GradientButton
           label={saving ? 'Saving...' : 'Save'}
           onPress={handleSave}
@@ -158,20 +160,18 @@ export default function AddEditTraineeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: 16 },
+  content: { padding: Spacing.lg },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 10,
-    marginTop: 20,
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+    marginTop: Spacing.xl,
   },
   sectionAccent: { width: 3, height: 14, borderRadius: Radius.xs, backgroundColor: Brand.orange },
   sectionLabel: {
+    ...Typography.labelSm,
     color: Brand.textSecondary,
-    fontSize: 12,
-    fontWeight: '600',
-    fontFamily: 'Montserrat_600SemiBold',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
@@ -180,14 +180,14 @@ const styles = StyleSheet.create({
     borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
-    padding: 14,
+    padding: Spacing.lg,
   },
-  fieldGap: { height: 10 },
+  fieldGap: { height: Spacing.sm },
   footer: {
     flexDirection: 'row',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingTop: 12,
+    gap: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
     backgroundColor: Brand.backgroundDark,
     borderTopWidth: 1,
     borderTopColor: Brand.borderSubtle,

@@ -1,10 +1,10 @@
 import React, { useCallback, useState } from 'react';
 import { Alert, SectionList, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Chip, IconButton, Text } from 'react-native-paper';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { Chip, Text } from 'react-native-paper';
+import { useFocusEffect } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '../../theme';
-import { Brand, Layout, Radius } from '../../theme/brandColors';
+import { Brand, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { EnrichedManagerPayment } from '../../types';
 import {
   getAllEnrichedManagerPayments,
@@ -14,14 +14,10 @@ import { formatCurrency } from '../../utils/currencyUtils';
 import { formatDisplayDate, formatDisplayTime, todayISO } from '../../utils/dateUtils';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import EmptyState from '../../components/common/EmptyState';
-import HelpSheet from '../../components/common/HelpSheet';
 import { schedulePendingPaymentNotification } from '../../notifications/scheduler';
 import Constants from 'expo-constants';
 
 const isExpoGo = Constants.appOwnership === 'expo';
-
-const HELP =
-  'Payments are auto-created when sessions are marked complete. Tap "Mark Paid" after you receive payment from the manager. Mark each payment individually to verify.';
 
 type Section = {
   manager: string;
@@ -47,12 +43,10 @@ function groupByManager(payments: EnrichedManagerPayment[]): Section[] {
 
 export default function ManagerPaymentsScreen() {
   const { theme } = useAppTheme();
-  const navigation = useNavigation();
   const [sections, setSections] = useState<Section[]>([]);
   const [allPayments, setAllPayments] = useState<EnrichedManagerPayment[]>([]);
   const [pendingOnly, setPendingOnly] = useState(true);
   const [confirmPayment, setConfirmPayment] = useState<EnrichedManagerPayment | null>(null);
-  const [helpVisible, setHelpVisible] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -67,17 +61,7 @@ export default function ManagerPaymentsScreen() {
   const totalPending = allPayments.filter(p => p.status === 'pending').reduce((s, p) => s + p.amount, 0);
   const totalPaid = allPayments.filter(p => p.status === 'paid').reduce((s, p) => s + p.amount, 0);
 
-  useFocusEffect(
-    useCallback(() => {
-      load();
-      navigation.getParent()?.setOptions({
-        headerRight: () => (
-          <IconButton icon="help-circle-outline" iconColor={theme.colors.primary} onPress={() => setHelpVisible(true)} />
-        ),
-      });
-      return () => { navigation.getParent()?.setOptions({ headerRight: undefined }); };
-    }, [load, navigation, theme.colors.primary])
-  );
+  useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const handleMarkPaid = async () => {
     if (!confirmPayment) return;
@@ -197,14 +181,13 @@ export default function ManagerPaymentsScreen() {
         onDismiss={() => setConfirmPayment(null)}
       />
 
-      <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  filterRow: { flexDirection: 'row', gap: 8, padding: 12, paddingBottom: 4 },
+  filterRow: { flexDirection: 'row', gap: Spacing.sm, padding: Spacing.md },
   filterChip: { backgroundColor: Brand.surfaceDark, borderColor: Brand.borderSubtle },
   filterChipActive: { backgroundColor: Brand.purple },
   summaryCard: {
@@ -213,10 +196,10 @@ const styles = StyleSheet.create({
     borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
-    marginHorizontal: 12,
-    marginBottom: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
+    marginHorizontal: Spacing.md,
+    marginBottom: Spacing.sm,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
     elevation: 4,
     shadowColor: Brand.purple,
     shadowOpacity: 0.12,
@@ -224,32 +207,30 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
   },
   summaryItem: { flex: 1, alignItems: 'center' },
-  summaryLabel: { color: Brand.textSecondary, fontSize: 12, fontWeight: '500', marginBottom: 4 },
-  summaryAmount: { fontSize: 18, fontWeight: '700', fontFamily: 'Montserrat_600SemiBold' },
+  summaryLabel: { ...Typography.bodySm, fontWeight: '500', color: Brand.textSecondary, marginBottom: Spacing.xs },
+  summaryAmount: { ...Typography.h2 },
   summarySep: { width: 1, backgroundColor: Brand.borderSubtle, marginVertical: 4 },
-  listContent: { paddingHorizontal: 12, paddingBottom: Layout.LIST_PAD_NO_FAB },
+  listContent: { paddingHorizontal: Spacing.md, paddingBottom: Layout.LIST_PAD_NO_FAB },
   emptyContainer: { flex: 1 },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 4,
-    paddingVertical: 10,
-    marginTop: 8,
+    paddingHorizontal: Spacing.xs,
+    paddingVertical: Spacing.sm,
+    marginTop: Spacing.sm,
   },
   sectionTitle: {
+    ...Typography.h4,
     color: Brand.textPrimary,
-    fontSize: 15,
-    fontWeight: '700',
-    fontFamily: 'Montserrat_600SemiBold',
   },
   dueBadge: {
     backgroundColor: `${Brand.orange}33`,
     borderRadius: Radius.full,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
   },
-  dueText: { color: Brand.orange, fontSize: 12, fontWeight: '700' },
+  dueText: { ...Typography.labelSm, color: Brand.orange },
   item: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -257,32 +238,32 @@ const styles = StyleSheet.create({
     borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginBottom: 6,
-    gap: 10,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    marginBottom: Spacing.xs,
+    gap: Spacing.sm,
   },
   dot: { width: 10, height: 10, borderRadius: Radius.full, flexShrink: 0 },
   itemText: { flex: 1 },
-  itemTitle: { color: Brand.textPrimary, fontSize: 14, fontWeight: '500' },
-  itemSub: { color: Brand.textSecondary, fontSize: 12, marginTop: 2 },
-  itemRight: { alignItems: 'flex-end', gap: 6 },
-  amount: { color: Brand.orange, fontSize: 15, fontWeight: '700' },
+  itemTitle: { ...Typography.body, fontWeight: '500', color: Brand.textPrimary },
+  itemSub: { ...Typography.bodySm, color: Brand.textSecondary, marginTop: 0 },
+  itemRight: { alignItems: 'flex-end', gap: Spacing.xs },
+  amount: { ...Typography.h4, fontWeight: '700', color: Brand.orange },
   markPaidBtn: {
     backgroundColor: `${Brand.purple}33`,
     borderRadius: Radius.full,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
   },
-  markPaidText: { color: Brand.purple, fontSize: 12, fontWeight: '700' },
+  markPaidText: { ...Typography.labelSm, color: Brand.purple },
   paidBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
+    gap: Spacing.xs,
     backgroundColor: `${Brand.pink}1A`,
     borderRadius: Radius.full,
-    paddingHorizontal: 8,
+    paddingHorizontal: Spacing.sm,
     paddingVertical: 3,
   },
-  paidText: { color: Brand.pink, fontSize: 11, fontWeight: '600' },
+  paidText: { ...Typography.microLabel, color: Brand.pink },
 });

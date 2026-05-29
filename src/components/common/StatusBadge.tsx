@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { SessionStatus } from '../../types';
-import { Brand, Radius } from '../../theme';
+import { Brand, Radius, Typography } from '../../theme';
 
 export type DisplayStatus = SessionStatus | 'missed';
 
@@ -42,8 +42,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   label: {
-    fontFamily: 'Montserrat_600SemiBold',
-    fontSize: 12,
-    letterSpacing: 0.2,
+    ...Typography.labelSm,
   },
 });

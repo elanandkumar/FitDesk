@@ -325,7 +325,7 @@ export default function ClassSessionDetailScreen() {
       >
         {isManager ? (
           <>
-            <Text variant="bodySmall" style={{ color: Brand.textSecondary, marginBottom: 8 }}>
+            <Text variant="bodySmall" style={{ color: Brand.textSecondary, marginBottom: Spacing.sm }}>
               How many students attended?
             </Text>
             <TextInput
@@ -334,16 +334,17 @@ export default function ClassSessionDetailScreen() {
               value={studentCount}
               onChangeText={setStudentCount}
               keyboardType="number-pad"
+              dense
             />
           </>
         ) : (
           <>
-            <Text variant="bodySmall" style={{ color: Brand.textSecondary, marginBottom: 8 }}>
+            <Text variant="bodySmall" style={{ color: Brand.textSecondary, marginBottom: Spacing.sm }}>
               Select attending trainees ({attendingIds.size} selected):
             </Text>
             <ScrollView style={{ maxHeight: 260 }}>
               {allTrainees.length === 0 ? (
-                <Text variant="bodyMedium" style={{ color: Brand.textMuted, paddingVertical: 8 }}>
+                <Text variant="bodyMedium" style={{ color: Brand.textMuted, paddingVertical: Spacing.sm }}>
                   No trainees added yet.
                 </Text>
               ) : (
@@ -366,6 +367,7 @@ export default function ClassSessionDetailScreen() {
           value={completeNotes}
           onChangeText={setCompleteNotes}
           style={{ marginTop: Spacing.md }}
+          dense
         />
       </AppModal>
 
@@ -393,13 +395,13 @@ export default function ClassSessionDetailScreen() {
       >
         <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.editRow}>
           <Text variant="labelMedium" style={{ color: Brand.textSecondary, width: 64 }}>Date</Text>
-          <Text variant="bodyMedium" style={{ color: Brand.purple, flex: 1 }}>{formatDisplayDate(editDate)}</Text>
-          <IconButton icon="calendar" size={18} iconColor={Brand.purple} style={{ margin: 0 }} onPress={() => setShowDatePicker(true)} />
+          <Text variant="bodyMedium" style={{ color: Brand.textPrimary, flex: 1 }}>{formatDisplayDate(editDate)}</Text>
+          <IconButton icon="calendar" size={18} iconColor={Brand.purple} onPress={() => setShowDatePicker(true)} />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => setShowTimePicker(true)} style={styles.editRow}>
           <Text variant="labelMedium" style={{ color: Brand.textSecondary, width: 64 }}>Time</Text>
-          <Text variant="bodyMedium" style={{ color: Brand.purple, flex: 1 }}>{formatDisplayTime(editTime)}</Text>
-          <IconButton icon="clock-outline" size={18} iconColor={Brand.purple} style={{ margin: 0 }} onPress={() => setShowTimePicker(true)} />
+          <Text variant="bodyMedium" style={{ color: Brand.textPrimary, flex: 1 }}>{formatDisplayTime(editTime)}</Text>
+          <IconButton icon="clock-outline" size={18} iconColor={Brand.purple} onPress={() => setShowTimePicker(true)} />
         </TouchableOpacity>
       </AppModal>
 
@@ -432,7 +434,7 @@ export default function ClassSessionDetailScreen() {
           variant="primary"
           loading={saving}
           disabled={saving}
-          style={{ flex: 1, margin: 1 }}
+          style={{ flex: 1 }}
         />
       </View>
     )}
@@ -460,23 +462,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.lg,
     borderRadius: Radius.card,
-    gap: 10,
+    gap: Spacing.sm,
     backgroundColor: Brand.surfaceDark,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
   },
   heroTitle: {
+    ...Typography.h2,
     color: Brand.textPrimary,
-    fontFamily: 'Poppins_700Bold',
-    fontSize: 18,
   },
-  badgeRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
+  badgeRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, flexWrap: 'wrap' },
   detailCard: {
     backgroundColor: Brand.surfaceDark,
     borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
-    padding: 14,
+    padding: Spacing.lg,
     gap: Spacing.sm,
     elevation: 4,
     shadowColor: Brand.purple,
@@ -488,7 +489,7 @@ const styles = StyleSheet.create({
     color: Brand.textSecondary,
     marginBottom: Spacing.xs,
   },
-  rowDivider: { backgroundColor: Brand.borderSubtle, marginVertical: 2 },
+  rowDivider: { backgroundColor: Brand.borderSubtle, marginVertical: 0 },
   detailRow: { flexDirection: 'row', alignItems: 'flex-start' },
   detailLabel: { color: Brand.textSecondary, width: 88 },
   detailValue: { color: Brand.textPrimary, flex: 1 },
@@ -505,7 +506,7 @@ const styles = StyleSheet.create({
   editRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: Brand.borderSubtle,
   },

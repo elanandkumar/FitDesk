@@ -47,11 +47,11 @@ const styles = StyleSheet.create({
   wrapper: { borderRadius: Radius.lg, overflow: 'hidden' },
   pressable: { width: '100%' },
   gradient: {
-    paddingVertical: 14,
+    paddingVertical: 12,
     paddingHorizontal: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 52,
+    minHeight: 48,
   },
   label: {
     color: Brand.textPrimary,

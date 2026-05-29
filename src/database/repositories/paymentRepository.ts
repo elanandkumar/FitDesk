@@ -108,8 +108,11 @@ export async function markManagerPaymentPaid(id: number, paidDate: string): Prom
   );
 }
 
-export async function getAllEnrichedTraineePackages(): Promise<EnrichedTraineePackage[]> {
+export async function getAllEnrichedTraineePackages(
+  pendingOnly: boolean = false
+): Promise<EnrichedTraineePackage[]> {
   const db = await getDatabase();
+  const whereClause = pendingOnly ? 'WHERE tp.status = "pending"' : '';
   return db.getAllAsync<EnrichedTraineePackage>(
     `SELECT
       tp.id, tp.trainee_id, tp.month, tp.total_sessions, tp.used_sessions,
@@ -117,6 +120,7 @@ export async function getAllEnrichedTraineePackages(): Promise<EnrichedTraineePa
       t.name AS trainee_name
     FROM trainee_packages tp
     JOIN trainees t ON tp.trainee_id = t.id
+    ${whereClause}
     ORDER BY tp.status ASC, tp.month DESC`
   );
 }
@@ -223,6 +227,42 @@ export async function getManagerIncomeForMonth(month: string): Promise<ManagerMo
     GROUP BY m.id
     ORDER BY m.name
   `, [month]);
+}
+
+export async function getWeekEarningsSplit(
+  startDate: string,
+  endDate: string
+): Promise<{ pending: number; paid: number }> {
+  const db = await getDatabase();
+
+  const managerRow = await db.getFirstAsync<{ pending: number; paid: number }>(`
+    SELECT
+      COALESCE(SUM(CASE WHEN mp.status = 'pending' THEN mp.amount ELSE 0 END), 0) AS pending,
+      COALESCE(SUM(CASE WHEN mp.status = 'paid'    THEN mp.amount ELSE 0 END), 0) AS paid
+    FROM manager_payments mp
+    JOIN class_sessions cs ON mp.session_id = cs.id
+    WHERE cs.session_date >= ? AND cs.session_date <= ?
+  `, [startDate, endDate]);
+
+  const personalRow = await db.getFirstAsync<{ pending: number; paid: number }>(`
+    SELECT
+      COALESCE(SUM(CASE WHEN tp.status = 'pending' THEN CAST(tp.amount AS REAL) / NULLIF(tp.total_sessions, 0) ELSE 0 END), 0) AS pending,
+      COALESCE(SUM(CASE WHEN tp.status = 'paid'    THEN CAST(tp.amount AS REAL) / NULLIF(tp.total_sessions, 0) ELSE 0 END), 0) AS paid
+    FROM session_trainees st
+    JOIN class_sessions cs ON st.session_id = cs.id
+    JOIN class_series ser ON cs.series_id = ser.id
+    JOIN trainee_packages tp
+      ON tp.trainee_id = st.trainee_id
+      AND tp.month = SUBSTR(cs.session_date, 1, 7)
+    WHERE cs.status = 'completed'
+      AND ser.source_type = 'personal'
+      AND cs.session_date >= ? AND cs.session_date <= ?
+  `, [startDate, endDate]);
+
+  return {
+    pending: (managerRow?.pending ?? 0) + (personalRow?.pending ?? 0),
+    paid:    (managerRow?.paid    ?? 0) + (personalRow?.paid    ?? 0),
+  };
 }
 
 export async function getPersonalTrainingEarnings(startDate: string, endDate: string): Promise<number> {

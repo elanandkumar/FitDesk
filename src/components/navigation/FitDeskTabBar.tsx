@@ -1,12 +1,6 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
-import { Text } from 'react-native-paper';
+import { View, TouchableOpacity, StyleSheet, Text } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-} from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
 import {
   House,
@@ -21,13 +15,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const TABS = [
   { name: 'Dashboard', label: 'Home', Icon: House },
   { name: 'Calendar', label: 'Calendar', Icon: CalendarBlank },
-  { name: 'People', label: 'People', Icon: Users },
+  { name: 'Contacts', label: 'Contacts', Icon: Users },
   { name: 'Payments', label: 'Payments', Icon: CurrencyInr },
   { name: 'Settings', label: 'Settings', Icon: Gear },
 ] as const;
 
 const TAB_HEIGHT = 72;
-const SPRING_CONFIG = { damping: 18, stiffness: 200, mass: 0.8 };
 
 function TabItem({
   tab,
@@ -38,32 +31,28 @@ function TabItem({
   isActive: boolean;
   onPress: () => void;
 }) {
-  const pressScale = useSharedValue(1);
-  const pressStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: pressScale.value }],
-  }));
-
   return (
     <TouchableOpacity
       style={styles.tabItem}
       onPress={onPress}
-      activeOpacity={1}
-      onPressIn={() => { pressScale.value = withSpring(0.88, SPRING_CONFIG); }}
-      onPressOut={() => { pressScale.value = withSpring(1, SPRING_CONFIG); }}
+      activeOpacity={0.7}
     >
-      <Animated.View style={[styles.tabItemInner, pressStyle]}>
-        <tab.Icon
-          size={22}
-          color={isActive ? Brand.purple : Brand.textSecondary}
-          weight={isActive ? 'fill' : 'regular'}
-        />
-        <Animated.Text
-          style={[styles.label, { color: isActive ? Brand.purple : Brand.textSecondary }]}
+      <View style={styles.tabItemInner}>
+        <View style={styles.iconWrap}>
+          {isActive && <View style={styles.iconPill} />}
+          <tab.Icon
+            size={22}
+            color={isActive ? Brand.textAccent : Brand.textMuted}
+            weight={isActive ? 'duotone' : 'regular'}
+          />
+        </View>
+        <Text
+          style={[styles.label, { color: isActive ? Brand.textAccent : Brand.textMuted }]}
           numberOfLines={1}
         >
           {tab.label}
-        </Animated.Text>
-      </Animated.View>
+        </Text>
+      </View>
     </TouchableOpacity>
   );
 }
@@ -86,9 +75,7 @@ export default function FitDeskTabBar({ state, navigation }: BottomTabBarProps) 
               tab={tab}
               isActive={isActive}
               onPress={() => {
-                if (!isActive) {
-                  navigation.navigate(route.name);
-                }
+                if (!isActive) navigation.navigate(route.name);
               }}
             />
           );
@@ -139,6 +126,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 3,
+  },
+  iconWrap: {
+    width: 46,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconPill: {
+    position: 'absolute',
+    width: 46,
+    height: 30,
+    borderRadius: Radius.full,
+    backgroundColor: Brand.purple + '2A',
+    borderWidth: 1,
+    borderColor: Brand.purple + '50',
   },
   label: {
     fontSize: 10,

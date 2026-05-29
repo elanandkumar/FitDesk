@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
-import { ActivityIndicator, Button, Text } from 'react-native-paper';
-import { Brand, Radius } from '../../theme/brandColors';
+import { ActivityIndicator, Text } from 'react-native-paper';
+import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
 import GradientButton from '../../components/common/GradientButton';
+import AppButton from '../../components/common/AppButton';
 import { exportData, pickAndImportData } from '../../utils/exportUtils';
 
 export default function DataScreen() {
@@ -73,17 +74,15 @@ export default function DataScreen() {
           </Text>
         </View>
         {importing ? (
-          <ActivityIndicator animating style={{ marginTop: 12 }} color={Brand.pink} />
+          <ActivityIndicator animating style={{ marginTop: Spacing.md }} color={Brand.pink} />
         ) : (
-          <Button
-            mode="outlined"
-            icon="database-import"
+          <AppButton
+            variant="secondary"
+            color={Brand.pink}
+            label="Import Backup"
             onPress={handleImport}
-            textColor={Brand.pink}
             style={styles.importBtn}
-          >
-            Import Backup
-          </Button>
+          />
         )}
       </View>
     </ScrollView>
@@ -92,7 +91,7 @@ export default function DataScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Brand.backgroundDark },
-  content: { padding: 16, gap: 16 },
+  content: { padding: Spacing.lg, gap: Spacing.lg },
   card: {
     backgroundColor: Brand.surfaceDark,
     borderRadius: Radius.item,
@@ -103,13 +102,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
-    padding: 16,
-    gap: 12,
+    padding: Spacing.lg,
+    gap: Spacing.md,
   },
   sectionTitle: {
+    ...Typography.h4,
     color: Brand.textPrimary,
-    fontFamily: 'Montserrat_600SemiBold',
-    fontSize: 15,
   },
   sectionDesc: {
     color: Brand.textSecondary,
@@ -117,7 +115,7 @@ const styles = StyleSheet.create({
   warningBox: {
     backgroundColor: Brand.pink + '18',
     borderRadius: Radius.md,
-    padding: 10,
+    padding: Spacing.sm,
   },
-  importBtn: { borderColor: Brand.pink, marginTop: 4, borderRadius: Radius.lg },
+  importBtn: { marginTop: Spacing.xs },
 });

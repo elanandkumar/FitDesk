@@ -1,15 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import {
-  Button,
-  Dialog,
   IconButton,
-  Portal,
   Text,
   TextInput,
 } from 'react-native-paper';
+import AppModal from '../../components/common/AppModal';
 import GradientFAB from '../../components/common/GradientFAB';
-import { Brand, Radius } from '../../theme/brandColors';
+import { Brand, Layout, Radius, Spacing } from '../../theme/brandColors';
 import { ClassType } from '../../types';
 import {
   getAllClassTypes,
@@ -121,55 +119,41 @@ export default function ClassTypesScreen() {
         onPress={openAdd}
       />
 
-      <Portal>
-        <Dialog
-          visible={dialogVisible}
-          onDismiss={() => setDialogVisible(false)}
-          style={{ backgroundColor: Brand.surfaceElevated }}
-        >
-          <Dialog.Title style={{ color: Brand.textPrimary }}>
-            {editTarget ? 'Edit Class Type' : 'Add Class Type'}
-          </Dialog.Title>
-          <Dialog.Content style={styles.dialogContent}>
-            <TextInput
-              label="Name *"
-              value={name}
-              onChangeText={setName}
-              mode="outlined"
-              autoFocus
-            />
-            <Text variant="labelMedium" style={{ color: Brand.textSecondary }}>
-              Color
-            </Text>
-            <View style={styles.colorRow}>
-              {DEFAULT_CLASS_COLORS.map((c) => (
-                <TouchableOpacity
-                  key={c}
-                  onPress={() => setSelectedColor(c)}
-                  style={[
-                    styles.colorSwatch,
-                    { backgroundColor: c },
-                    selectedColor === c && styles.colorSelected,
-                  ]}
-                />
-              ))}
-            </View>
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button textColor={Brand.textSecondary} onPress={() => setDialogVisible(false)}>
-              Cancel
-            </Button>
-            <Button
-              textColor={Brand.purple}
-              onPress={handleSave}
-              loading={saving}
-              disabled={!name.trim() || saving}
-            >
-              Save
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
+      <AppModal
+        visible={dialogVisible}
+        onDismiss={() => setDialogVisible(false)}
+        title={editTarget ? 'Edit Class Type' : 'Add Class Type'}
+        confirmLabel="Save"
+        onConfirm={handleSave}
+        loading={saving}
+      >
+        <View style={styles.dialogContent}>
+          <TextInput
+            label="Name *"
+            value={name}
+            onChangeText={setName}
+            mode="outlined"
+            dense
+            autoFocus
+          />
+          <Text variant="labelMedium" style={{ color: Brand.textSecondary }}>
+            Color
+          </Text>
+          <View style={styles.colorRow}>
+            {DEFAULT_CLASS_COLORS.map((c) => (
+              <TouchableOpacity
+                key={c}
+                onPress={() => setSelectedColor(c)}
+                style={[
+                  styles.colorSwatch,
+                  { backgroundColor: c },
+                  selectedColor === c && styles.colorSelected,
+                ]}
+              />
+            ))}
+          </View>
+        </View>
+      </AppModal>
 
       <ConfirmDialog
         visible={!!deleteTarget}
@@ -184,12 +168,12 @@ export default function ClassTypesScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Brand.backgroundDark },
-  listContent: { padding: 16, paddingBottom: 96 },
+  listContent: { padding: Spacing.lg, paddingBottom: Layout.LIST_PAD_NO_FAB },
   itemCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
     backgroundColor: Brand.surfaceDark,
     borderRadius: Radius.card,
     borderWidth: 1,
@@ -199,14 +183,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
-    gap: 12,
+    gap: Spacing.md,
   },
   itemName: { flex: 1, color: Brand.textPrimary },
   colorDot: { width: 24, height: 24, borderRadius: Radius.full },
   rowActions: { flexDirection: 'row', alignItems: 'center' },
-  fab: { position: 'absolute', bottom: 16, right: 16 },
-  dialogContent: { gap: 12 },
-  colorRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  fab: { position: 'absolute', bottom: Spacing.lg, right: Spacing.lg },
+  dialogContent: { gap: Spacing.md },
+  colorRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
   colorSwatch: { width: 28, height: 28, borderRadius: Radius.full },
   colorSelected: { borderWidth: 3, borderColor: Brand.textPrimary },
 });

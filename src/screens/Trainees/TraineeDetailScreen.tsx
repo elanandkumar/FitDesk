@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
-import { Button, Divider, IconButton, Text } from 'react-native-paper';
+import { Divider, IconButton, Text } from 'react-native-paper';
 import GradientFAB from '../../components/common/GradientFAB';
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Brand, Radius, Spacing } from '../../theme/brandColors';
+import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { Trainee, TraineePackage, EnrichedSession } from '../../types';
 import { getTraineeById, deleteTrainee } from '../../database/repositories/traineeRepository';
@@ -14,6 +14,7 @@ import { getEnrichedSessionsForTrainee } from '../../database/repositories/class
 import { formatCurrency } from '../../utils/currencyUtils';
 import { formatDisplayDate, formatDisplayTime } from '../../utils/dateUtils';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
+import AppButton from '../../components/common/AppButton';
 import StatusBadge from '../../components/common/StatusBadge';
 import HelpSheet from '../../components/common/HelpSheet';
 
@@ -118,7 +119,7 @@ export default function TraineeDetailScreen() {
           ) : (
             packages.map((pkg, i) => (
               <View key={pkg.id}>
-                {i > 0 && <Divider style={{ backgroundColor: Brand.borderSubtle, marginVertical: 6 }} />}
+                {i > 0 && <Divider style={{ backgroundColor: Brand.borderSubtle, marginVertical: Spacing.xs }} />}
                 <View style={styles.packageRow}>
                   <View style={{ flex: 1 }}>
                     <Text variant="bodyMedium" style={{ color: Brand.textPrimary }}>
@@ -139,8 +140,7 @@ export default function TraineeDetailScreen() {
                       },
                     ]}>
                       <Text style={{
-                        fontSize: 10,
-                        fontWeight: '600',
+                        ...Typography.microLabel,
                         color: pkg.status === 'pending' ? Brand.pink : Brand.purple,
                       }}>
                         {pkg.status === 'pending' ? 'Pending' : 'Paid'}
@@ -163,10 +163,10 @@ export default function TraineeDetailScreen() {
             <View style={styles.card}>
               {sessions.slice(0, 10).map((s, i) => (
                 <View key={s.id}>
-                  {i > 0 && <Divider style={{ backgroundColor: Brand.borderSubtle, marginVertical: 6 }} />}
+                  {i > 0 && <Divider style={{ backgroundColor: Brand.borderSubtle, marginVertical: Spacing.xs }} />}
                   <View style={styles.sessionRow}>
                     <View style={[styles.colorBar, { backgroundColor: s.class_type_color }]} />
-                    <View style={{ flex: 1, gap: 2 }}>
+                    <View style={{ flex: 1, gap: 0 }}>
                       <Text variant="bodyMedium" style={{ color: Brand.textPrimary }}>
                         {s.series_title}
                       </Text>
@@ -202,14 +202,13 @@ export default function TraineeDetailScreen() {
           </>
         ) : null}
 
-        <Button
-          mode="outlined"
+        <AppButton
+          variant="danger"
+          label="Delete Trainee"
           onPress={() => setDeleteVisible(true)}
-          textColor={Brand.pink}
-          style={{ borderColor: Brand.pink, marginTop: Spacing.sm }}
-        >
-          Delete Trainee
-        </Button>
+          style={{ marginTop: Spacing.sm }}
+          fullWidth={false}
+        />
 
         <ConfirmDialog
           visible={deleteVisible}
@@ -252,9 +251,8 @@ const styles = StyleSheet.create({
   },
   sectionAccent: { width: 3, height: 14, borderRadius: Radius.xs, backgroundColor: Brand.orange },
   sectionLabel: {
+    ...Typography.microLabel,
     color: Brand.textSecondary,
-    fontSize: 11,
-    fontFamily: 'Montserrat_600SemiBold',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
@@ -265,7 +263,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     marginLeft: Spacing.xs,
   },
-  pendingBadgeText: { color: Brand.pink, fontSize: 11, fontWeight: '600' },
+  pendingBadgeText: { ...Typography.microLabel, color: Brand.pink },
   card: {
     backgroundColor: Brand.surfaceDark,
     borderRadius: Radius.card,
@@ -276,23 +274,22 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
-    padding: 14,
+    padding: Spacing.lg,
   },
-  infoRow: { gap: 2, marginBottom: 6 },
+  infoRow: { gap: 0, marginBottom: Spacing.xs },
   packageRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 4,
+    paddingVertical: Spacing.xs,
   },
-  packageRight: { alignItems: 'flex-end', gap: 4 },
+  packageRight: { alignItems: 'flex-end', gap: Spacing.xs },
   packageAmount: {
+    ...Typography.labelLg,
     color: Brand.orange,
-    fontFamily: 'Poppins_700Bold',
-    fontSize: 14,
   },
-  statusPill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: Radius.full },
-  sessionRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 4 },
+  statusPill: { paddingHorizontal: Spacing.sm, paddingVertical: 3, borderRadius: Radius.full },
+  sessionRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, paddingVertical: Spacing.xs },
   colorBar: { width: 3, alignSelf: 'stretch', borderRadius: Radius.xs },
   fab: {
     position: 'absolute',
