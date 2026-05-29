@@ -58,3 +58,11 @@ yarn-error.log*
 
 # Test coverage
 coverage/
+
+# Internal docs (local only)
+CLAUDE.md
+PLAN.md
+PLAN_TRAINEE_SESSIONS.md
+DESIGN_REVAMP.md
+DESIGN_SYSTEM.md
+marketing/
