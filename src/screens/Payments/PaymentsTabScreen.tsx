@@ -2,31 +2,39 @@ import React, { useLayoutEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { IconButton, SegmentedButtons } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { useAppTheme } from '../../theme';
 import { Brand, Spacing } from '../../theme/brandColors';
+import { RootStackParamList } from '../../navigation/types';
 import ManagerPaymentsScreen from './ManagerPaymentsScreen';
 import TraineePackagesScreen from './TraineePackagesScreen';
 import HelpSheet from '../../components/common/HelpSheet';
+import { HELP } from '../../constants/helpContent';
 
-const HELP_MANAGERS =
-  'Payments are auto-created when sessions are marked complete. Tap "Mark Paid" after you receive payment from the manager. Mark each payment individually to verify.';
-const HELP_TRAINEES =
-  'Create a monthly package per trainee. Session count increments automatically when a personal session is marked complete. Mark the package paid after receiving payment.';
+type Nav = StackNavigationProp<RootStackParamList>;
 
 export default function PaymentsTabScreen() {
   const { theme } = useAppTheme();
-  const navigation = useNavigation();
+  const navigation = useNavigation<Nav>();
   const [segment, setSegment] = useState<'managers' | 'trainees'>('managers');
   const [helpVisible, setHelpVisible] = useState(false);
 
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <IconButton
-          icon="help-circle-outline"
-          iconColor={theme.colors.primary}
-          onPress={() => setHelpVisible(true)}
-        />
+        <View style={styles.headerActions}>
+          <IconButton
+            icon="chart-bar"
+            iconColor={Brand.textAccent}
+            size={22}
+            onPress={() => navigation.navigate('IncomeSummary')}
+          />
+          <IconButton
+            icon="help-circle-outline"
+            iconColor={Brand.textAccent}
+            onPress={() => setHelpVisible(true)}
+          />
+        </View>
       ),
     });
   }, [navigation, theme.colors.primary]);
@@ -52,7 +60,7 @@ export default function PaymentsTabScreen() {
       <HelpSheet
         visible={helpVisible}
         onDismiss={() => setHelpVisible(false)}
-        content={segment === 'managers' ? HELP_MANAGERS : HELP_TRAINEES}
+        content={segment === 'managers' ? HELP.paymentsManagers : HELP.paymentsTrainees}
       />
     </View>
   );
@@ -61,4 +69,5 @@ export default function PaymentsTabScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   segment: { marginHorizontal: Spacing.md, marginTop: Spacing.md, marginBottom: Spacing.xs },
+  headerActions: { flexDirection: 'row', alignItems: 'center' },
 });

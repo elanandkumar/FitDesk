@@ -3,6 +3,7 @@ export const CREATE_CLASS_TYPES = `
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     name       TEXT NOT NULL UNIQUE,
     color      TEXT NOT NULL DEFAULT '#6200ee',
+    is_active  INTEGER NOT NULL DEFAULT 1,
     created_at TEXT NOT NULL
   );
 `;
@@ -16,6 +17,7 @@ export const CREATE_MANAGERS = `
     per_class_rate  REAL NOT NULL DEFAULT 0,
     currency        TEXT NOT NULL DEFAULT 'INR',
     notes           TEXT,
+    is_active       INTEGER NOT NULL DEFAULT 1,
     created_at      TEXT NOT NULL
   );
 `;
@@ -27,6 +29,7 @@ export const CREATE_TRAINEES = `
     phone      TEXT,
     email      TEXT,
     notes      TEXT,
+    is_active  INTEGER NOT NULL DEFAULT 1,
     created_at TEXT NOT NULL
   );
 `;
@@ -48,21 +51,43 @@ export const CREATE_CLASS_SERIES = `
     location          TEXT,
     notes             TEXT,
     is_active         INTEGER NOT NULL DEFAULT 1,
+    center_id         INTEGER REFERENCES centers(id) ON DELETE SET NULL,
     created_at        TEXT NOT NULL
   );
 `;
 
 export const CREATE_CLASS_SESSIONS = `
   CREATE TABLE IF NOT EXISTS class_sessions (
-    id           INTEGER PRIMARY KEY AUTOINCREMENT,
-    series_id    INTEGER NOT NULL REFERENCES class_series(id),
-    session_date TEXT NOT NULL,
-    class_time   TEXT NOT NULL,
-    status       TEXT NOT NULL DEFAULT 'upcoming'
-                   CHECK(status IN ('upcoming','completed','cancelled','skipped')),
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    series_id     INTEGER NOT NULL REFERENCES class_series(id),
+    session_date  TEXT NOT NULL,
+    class_time    TEXT NOT NULL,
+    status        TEXT NOT NULL DEFAULT 'upcoming'
+                    CHECK(status IN ('upcoming','completed','cancelled','skipped')),
     student_count INTEGER DEFAULT 0,
-    notes        TEXT,
-    created_at   TEXT NOT NULL
+    notes         TEXT,
+    guest_name    TEXT,
+    center_id     INTEGER REFERENCES centers(id) ON DELETE SET NULL,
+    created_at    TEXT NOT NULL
+  );
+`;
+
+export const CREATE_CENTERS = `
+  CREATE TABLE IF NOT EXISTS centers (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    name       TEXT NOT NULL,
+    address    TEXT,
+    is_active  INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL
+  );
+`;
+
+export const CREATE_SERIES_TRAINEES = `
+  CREATE TABLE IF NOT EXISTS series_trainees (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    series_id  INTEGER NOT NULL REFERENCES class_series(id) ON DELETE CASCADE,
+    trainee_id INTEGER NOT NULL REFERENCES trainees(id) ON DELETE CASCADE,
+    UNIQUE(series_id, trainee_id)
   );
 `;
 
@@ -113,10 +138,12 @@ export const CREATE_SETTINGS = `
 
 export const ALL_TABLES = [
   CREATE_CLASS_TYPES,
+  CREATE_CENTERS,
   CREATE_MANAGERS,
   CREATE_TRAINEES,
   CREATE_CLASS_SERIES,
   CREATE_CLASS_SESSIONS,
+  CREATE_SERIES_TRAINEES,
   CREATE_SESSION_TRAINEES,
   CREATE_MANAGER_PAYMENTS,
   CREATE_TRAINEE_PACKAGES,

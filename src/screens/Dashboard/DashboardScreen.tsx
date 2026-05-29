@@ -22,13 +22,18 @@ import EmptyState from '../../components/common/EmptyState';
 import HelpSheet from '../../components/common/HelpSheet';
 import HeroCard from '../../components/common/HeroCard';
 import EarningsCard from '../../components/common/EarningsCard';
-
-const HELP =
-  'Sessions for the next 7 days. Tap a session to mark complete or skip. Use the + button to add a one-off session. Tap the chart icon for income reports.';
+import { HELP } from '../../constants/helpContent';
 
 type Nav = StackNavigationProp<RootStackParamList>;
 
 type Section = { title: string; data: EnrichedSession[] };
+
+function traineeLabel(names?: string): string | null {
+  if (!names) return null;
+  const parts = names.split(', ');
+  if (parts.length === 1) return parts[0];
+  return `${parts[0]} +${parts.length - 1}`;
+}
 
 function sectionTitle(isoDate: string, todayStr: string): string {
   if (isoDate === todayStr) return 'Today';
@@ -51,12 +56,12 @@ export default function DashboardScreen() {
     navigation.setOptions({
       headerRight: () => (
         <View style={{ flexDirection: 'row' }}>
-          <IconButton icon="chart-bar" iconColor={theme.colors.primary} onPress={() => navigation.navigate('IncomeSummary')} />
-          <IconButton icon="help-circle-outline" iconColor={theme.colors.primary} onPress={() => setHelpVisible(true)} />
+          <IconButton icon="chart-bar" iconColor={Brand.textAccent} onPress={() => navigation.navigate('IncomeSummary')} />
+          <IconButton icon="help-circle-outline" iconColor={Brand.textAccent} onPress={() => setHelpVisible(true)} />
         </View>
       ),
     });
-  }, [navigation, theme.colors.primary]);
+  }, [navigation]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -153,6 +158,11 @@ export default function DashboardScreen() {
               <Text variant="bodySmall" style={{ color: Brand.textSecondary }}>
                 {formatDisplayTime(item.class_time)} · {item.class_type_name} · {item.duration_minutes} min
               </Text>
+              {item.source_type === 'personal' && traineeLabel(item.trainee_names) && (
+                <Text variant="bodySmall" style={{ color: Brand.textAccent }}>
+                  {traineeLabel(item.trainee_names)}
+                </Text>
+              )}
               {item.location && (
                 <Text variant="bodySmall" style={{ color: Brand.textMuted }}>
                   {item.location}
@@ -173,7 +183,7 @@ export default function DashboardScreen() {
         onPress={() => navigation.navigate('AddSession', {})}
       />
 
-      <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP} />
+      <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP.dashboard} />
     </Animated.View>
   );
 }

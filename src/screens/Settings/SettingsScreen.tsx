@@ -15,11 +15,9 @@ import { requestNotificationPermission } from '../../notifications/permissions';
 import HelpSheet from '../../components/common/HelpSheet';
 import ThemedTimePickerModal from '../../components/common/ThemedTimePickerModal';
 import { formatDisplayTime } from '../../utils/dateUtils';
+import { HELP } from '../../constants/helpContent';
 
 const isExpoGo = Constants.appOwnership === 'expo';
-
-const HELP =
-  'Configure notification reminders, manage class types, and export/import your data. Export regularly to keep a backup — data is stored locally only.';
 
 type Nav = StackNavigationProp<RootStackParamList>;
 
@@ -88,7 +86,7 @@ export default function SettingsScreen() {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <IconButton icon="help-circle-outline" iconColor={theme.colors.primary} onPress={() => setHelpVisible(true)} />
+        <IconButton icon="help-circle-outline" iconColor={Brand.textAccent} onPress={() => setHelpVisible(true)} />
       ),
     });
   }, [navigation, theme.colors.primary]);
@@ -223,17 +221,17 @@ export default function SettingsScreen() {
         onDismiss={() => setTimePickerVisible(false)}
       />
 
-      <SectionHeader label="Data & Reports" />
+      <SectionHeader label="Data" />
       <SettingsCard>
-        <NavRow
-          icon="chart-bar"
-          label="Income Summary"
-          onPress={() => navigation.navigate('IncomeSummary')}
-        />
         <NavRow
           icon="tag-multiple"
           label="Class Types"
           onPress={() => navigation.navigate('ClassTypes')}
+        />
+        <NavRow
+          icon="map-marker-multiple"
+          label="Centers"
+          onPress={() => navigation.navigate('Centers')}
         />
         <NavRow
           icon="database-export"
@@ -253,7 +251,7 @@ export default function SettingsScreen() {
         <Text style={styles.tagline}>Your fitness class companion</Text>
       </View>
 
-      <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP} />
+      <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP.settings} />
     </ScrollView>
   );
 }
@@ -302,7 +300,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  rowLabel: { ...Typography.h4, color: Brand.textPrimary },
+  rowLabel: { ...Typography.h4, color: Brand.textPrimary, flex: 1 },
   divider: { height: 1, backgroundColor: Brand.borderSubtle, marginHorizontal: Spacing.lg },
   minutesRow: { padding: Spacing.lg, gap: Spacing.sm },
   timeValue: { ...Typography.body, color: Brand.purple, marginRight: Spacing.xs },

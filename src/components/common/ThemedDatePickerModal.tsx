@@ -32,8 +32,8 @@ export default function ThemedDatePickerModal({
   }, [visible, value]);
 
   const calTheme = {
-    backgroundColor: Brand.surfaceElevated,
-    calendarBackground: Brand.surfaceElevated,
+    backgroundColor: Brand.surfaceDark,
+    calendarBackground: Brand.surfaceDark,
     textSectionTitleColor: theme.colors.onSurfaceVariant,
     selectedDayBackgroundColor: theme.colors.primary,
     selectedDayTextColor: theme.colors.onPrimary,

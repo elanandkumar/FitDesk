@@ -1,35 +1,30 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
-import {
-  IconButton,
-  Text,
-  TextInput,
-} from 'react-native-paper';
+import { FlatList, StyleSheet, View } from 'react-native';
+import { IconButton, Text, TextInput } from 'react-native-paper';
 import AppModal from '../../components/common/AppModal';
 import GradientFAB from '../../components/common/GradientFAB';
-import { Brand, Layout, Radius, Spacing } from '../../theme/brandColors';
-import { ClassType } from '../../types';
-import {
-  getAllClassTypes,
-  createClassType,
-  updateClassType,
-  deleteClassType,
-} from '../../database/repositories/classTypeRepository';
-import { DEFAULT_CLASS_COLORS } from '../../constants';
 import EmptyState from '../../components/common/EmptyState';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
+import { Brand, Layout, Radius, Spacing } from '../../theme/brandColors';
+import { Center } from '../../types';
+import {
+  getAllCenters,
+  createCenter,
+  updateCenter,
+  deleteCenter,
+} from '../../database/repositories/centerRepository';
 
-export default function ClassTypesScreen() {
-  const [classTypes, setClassTypes] = useState<ClassType[]>([]);
+export default function CentersScreen() {
+  const [centers, setCenters] = useState<Center[]>([]);
   const [dialogVisible, setDialogVisible] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<ClassType | null>(null);
-  const [editTarget, setEditTarget] = useState<ClassType | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Center | null>(null);
+  const [editTarget, setEditTarget] = useState<Center | null>(null);
   const [name, setName] = useState('');
-  const [selectedColor, setSelectedColor] = useState(DEFAULT_CLASS_COLORS[0]);
+  const [address, setAddress] = useState('');
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
-    setClassTypes(await getAllClassTypes());
+    setCenters(await getAllCenters());
   }, []);
 
   useEffect(() => {
@@ -39,14 +34,14 @@ export default function ClassTypesScreen() {
   function openAdd() {
     setEditTarget(null);
     setName('');
-    setSelectedColor(DEFAULT_CLASS_COLORS[0]);
+    setAddress('');
     setDialogVisible(true);
   }
 
-  function openEdit(ct: ClassType) {
-    setEditTarget(ct);
-    setName(ct.name);
-    setSelectedColor(ct.color);
+  function openEdit(center: Center) {
+    setEditTarget(center);
+    setName(center.name);
+    setAddress(center.address ?? '');
     setDialogVisible(true);
   }
 
@@ -54,10 +49,11 @@ export default function ClassTypesScreen() {
     if (!name.trim()) return;
     setSaving(true);
     try {
+      const data = { name: name.trim(), address: address.trim() || undefined };
       if (editTarget) {
-        await updateClassType(editTarget.id, name.trim(), selectedColor);
+        await updateCenter(editTarget.id, data);
       } else {
-        await createClassType(name.trim(), selectedColor);
+        await createCenter(data);
       }
       setDialogVisible(false);
       await load();
@@ -68,7 +64,7 @@ export default function ClassTypesScreen() {
 
   async function handleDelete() {
     if (!deleteTarget) return;
-    await deleteClassType(deleteTarget.id);
+    await deleteCenter(deleteTarget.id);
     setDeleteTarget(null);
     await load();
   }
@@ -76,14 +72,18 @@ export default function ClassTypesScreen() {
   return (
     <View style={styles.container}>
       <FlatList
-        data={classTypes}
+        data={centers}
         keyExtractor={(item) => String(item.id)}
         contentContainerStyle={[styles.listContent, { flexGrow: 1 }]}
-        ListEmptyComponent={<EmptyState title="No class types" subtitle="Tap + to add one" />}
+        ListEmptyComponent={<EmptyState title="No centers" subtitle="Tap + to add a venue" />}
         renderItem={({ item }) => (
           <View style={styles.itemCard}>
-            <View style={[styles.colorDot, { backgroundColor: item.color }]} />
-            <Text variant="titleSmall" style={styles.itemName}>{item.name}</Text>
+            <View style={styles.itemText}>
+              <Text variant="titleSmall" style={styles.itemName}>{item.name}</Text>
+              {item.address ? (
+                <Text variant="bodySmall" style={styles.itemAddress}>{item.address}</Text>
+              ) : null}
+            </View>
             <View style={styles.rowActions}>
               <IconButton
                 icon="pencil"
@@ -112,7 +112,7 @@ export default function ClassTypesScreen() {
       <AppModal
         visible={dialogVisible}
         onDismiss={() => setDialogVisible(false)}
-        title={editTarget ? 'Edit Class Type' : 'Add Class Type'}
+        title={editTarget ? 'Edit Center' : 'Add Center'}
         confirmLabel="Save"
         onConfirm={handleSave}
         loading={saving}
@@ -126,29 +126,20 @@ export default function ClassTypesScreen() {
             dense
             autoFocus
           />
-          <Text variant="labelMedium" style={{ color: Brand.textSecondary }}>
-            Color
-          </Text>
-          <View style={styles.colorRow}>
-            {DEFAULT_CLASS_COLORS.map((c) => (
-              <TouchableOpacity
-                key={c}
-                onPress={() => setSelectedColor(c)}
-                style={[
-                  styles.colorSwatch,
-                  { backgroundColor: c },
-                  selectedColor === c && styles.colorSelected,
-                ]}
-              />
-            ))}
-          </View>
+          <TextInput
+            label="Address (optional)"
+            value={address}
+            onChangeText={setAddress}
+            mode="outlined"
+            dense
+          />
         </View>
       </AppModal>
 
       <ConfirmDialog
         visible={!!deleteTarget}
-        title="Delete Class Type"
-        message={`Delete "${deleteTarget?.name}"? If used by series, it will be archived instead.`}
+        title="Remove Center"
+        message={`Remove "${deleteTarget?.name}"? If referenced by sessions or series, it will be archived instead.`}
         onConfirm={handleDelete}
         onDismiss={() => setDeleteTarget(null)}
       />
@@ -173,14 +164,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
-    gap: Spacing.md,
   },
-  itemName: { flex: 1, color: Brand.textPrimary },
-  colorDot: { width: 24, height: 24, borderRadius: Radius.full },
+  itemText: { flex: 1, gap: 2 },
+  itemName: { color: Brand.textPrimary },
+  itemAddress: { color: Brand.textMuted },
   rowActions: { flexDirection: 'row', alignItems: 'center' },
   fab: { position: 'absolute', bottom: Spacing.lg, right: Spacing.lg },
   dialogContent: { gap: Spacing.md },
-  colorRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
-  colorSwatch: { width: 28, height: 28, borderRadius: Radius.full },
-  colorSelected: { borderWidth: 3, borderColor: Brand.textPrimary },
 });

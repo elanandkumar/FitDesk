@@ -5,8 +5,8 @@ import { useFocusEffect, useNavigation, useRoute, RouteProp } from '@react-navig
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
-import { ManagerMonthIncome, TraineeMonthPackage } from '../../types';
-import { getManagerIncomeForMonth, getTraineePackagesForMonth } from '../../database/repositories/paymentRepository';
+import { CenterMonthIncome, ManagerMonthIncome, TraineeMonthPackage } from '../../types';
+import { getCenterIncomeForMonth, getManagerIncomeForMonth, getTraineePackagesForMonth } from '../../database/repositories/paymentRepository';
 import { formatCurrency } from '../../utils/currencyUtils';
 import EmptyState from '../../components/common/EmptyState';
 
@@ -27,6 +27,7 @@ export default function IncomeMonthDetailScreen() {
   const { month } = route.params;
   const [managers, setManagers] = useState<ManagerMonthIncome[]>([]);
   const [packages, setPackages] = useState<TraineeMonthPackage[]>([]);
+  const [centers, setCenters] = useState<CenterMonthIncome[]>([]);
 
   useLayoutEffect(() => {
     navigation.setOptions({ title: formatMonth(month) });
@@ -36,6 +37,7 @@ export default function IncomeMonthDetailScreen() {
     useCallback(() => {
       getManagerIncomeForMonth(month).then(setManagers);
       getTraineePackagesForMonth(month).then(setPackages);
+      getCenterIncomeForMonth(month).then(setCenters);
     }, [month])
   );
 
@@ -103,6 +105,31 @@ export default function IncomeMonthDetailScreen() {
                       {p.status === 'paid' ? 'Paid' : 'Pending'}
                     </Text>
                   </View>
+                </View>
+              </View>
+            </View>
+          ))}
+        </>
+      )}
+
+      {centers.length > 0 && (
+        <>
+          <Text style={[styles.sectionLabel, (managers.length > 0 || packages.length > 0) && { marginTop: Spacing.lg }]}>
+            By Center
+          </Text>
+          {centers.map((c) => (
+            <View key={c.center_id} style={styles.itemCard}>
+              <View style={styles.itemRow}>
+                <Text variant="bodyMedium" style={styles.itemName}>{c.center_name}</Text>
+                <View style={styles.amounts}>
+                  {c.paid > 0 && (
+                    <Text style={styles.paidAmount}>{formatCurrency(c.paid)} paid</Text>
+                  )}
+                  {c.pending > 0 && (
+                    <Text variant="bodySmall" style={styles.pendingAmount}>
+                      {formatCurrency(c.pending)} due
+                    </Text>
+                  )}
                 </View>
               </View>
             </View>

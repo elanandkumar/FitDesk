@@ -1,58 +1,63 @@
 import React, { useCallback, useState } from 'react';
-import { Alert, SectionList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Chip, Text } from 'react-native-paper';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '../../theme';
 import { Brand, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { EnrichedManagerPayment } from '../../types';
-import {
-  getAllEnrichedManagerPayments,
-  markManagerPaymentPaid,
-} from '../../database/repositories/paymentRepository';
+import { getAllEnrichedManagerPayments } from '../../database/repositories/paymentRepository';
 import { formatCurrency } from '../../utils/currencyUtils';
-import { formatDisplayDate, formatDisplayTime, todayISO } from '../../utils/dateUtils';
-import ConfirmDialog from '../../components/common/ConfirmDialog';
+import { RootStackParamList } from '../../navigation/types';
 import EmptyState from '../../components/common/EmptyState';
-import { schedulePendingPaymentNotification } from '../../notifications/scheduler';
-import Constants from 'expo-constants';
 
-const isExpoGo = Constants.appOwnership === 'expo';
+type Nav = StackNavigationProp<RootStackParamList>;
 
-type Section = {
-  manager: string;
+type ManagerSummary = {
   managerId: number;
+  managerName: string;
+  sessionCount: number;
+  paidTotal: number;
   pendingTotal: number;
-  data: EnrichedManagerPayment[];
 };
 
-function groupByManager(payments: EnrichedManagerPayment[]): Section[] {
-  const map = new Map<number, Section>();
+function buildSummaries(payments: EnrichedManagerPayment[]): ManagerSummary[] {
+  const map = new Map<number, ManagerSummary>();
   for (const p of payments) {
     if (!map.has(p.manager_id)) {
-      map.set(p.manager_id, { manager: p.manager_name, managerId: p.manager_id, pendingTotal: 0, data: [] });
+      map.set(p.manager_id, {
+        managerId: p.manager_id,
+        managerName: p.manager_name,
+        sessionCount: 0,
+        paidTotal: 0,
+        pendingTotal: 0,
+      });
     }
-    const sec = map.get(p.manager_id)!;
-    sec.data.push(p);
-    if (p.status === 'pending') sec.pendingTotal += p.amount;
+    const s = map.get(p.manager_id)!;
+    s.sessionCount += 1;
+    if (p.status === 'paid') s.paidTotal += p.amount;
+    else s.pendingTotal += p.amount;
   }
   return Array.from(map.values()).sort((a, b) =>
-    b.pendingTotal !== a.pendingTotal ? b.pendingTotal - a.pendingTotal : a.manager.localeCompare(b.manager)
+    b.pendingTotal !== a.pendingTotal
+      ? b.pendingTotal - a.pendingTotal
+      : a.managerName.localeCompare(b.managerName)
   );
 }
 
 export default function ManagerPaymentsScreen() {
   const { theme } = useAppTheme();
-  const [sections, setSections] = useState<Section[]>([]);
+  const navigation = useNavigation<Nav>();
+  const [summaries, setSummaries] = useState<ManagerSummary[]>([]);
   const [allPayments, setAllPayments] = useState<EnrichedManagerPayment[]>([]);
   const [pendingOnly, setPendingOnly] = useState(true);
-  const [confirmPayment, setConfirmPayment] = useState<EnrichedManagerPayment | null>(null);
 
   const load = useCallback(async () => {
     try {
       const payments = await getAllEnrichedManagerPayments(pendingOnly);
       setAllPayments(payments);
-      setSections(groupByManager(payments));
+      setSummaries(buildSummaries(payments));
     } catch {
       // list stays empty on DB error
     }
@@ -63,53 +68,45 @@ export default function ManagerPaymentsScreen() {
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
-  const handleMarkPaid = async () => {
-    if (!confirmPayment) return;
-    try {
-      await markManagerPaymentPaid(confirmPayment.id, todayISO());
-      setConfirmPayment(null);
-      load();
-      if (!isExpoGo) schedulePendingPaymentNotification().catch(() => {});
-    } catch {
-      setConfirmPayment(null);
-      Alert.alert('Error', 'Could not mark payment as paid. Please try again.');
-    }
-  };
-
-  const renderItem = ({ item }: { item: EnrichedManagerPayment }) => (
-    <View style={styles.item}>
-      <View style={[styles.dot, { backgroundColor: item.class_type_color }]} />
-      <View style={styles.itemText}>
-        <Text style={styles.itemTitle}>{item.series_title}</Text>
-        <Text style={styles.itemSub}>
-          {formatDisplayDate(item.session_date)} · {formatDisplayTime(item.class_time)}
-        </Text>
+  const renderItem = ({ item }: { item: ManagerSummary }) => (
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => navigation.navigate('ManagerPaymentDetail', {
+        managerId: item.managerId,
+        managerName: item.managerName,
+      })}
+      activeOpacity={0.75}
+    >
+      <View style={styles.cardTop}>
+        <Text style={styles.managerName}>{item.managerName}</Text>
+        <View style={styles.viewBtn}>
+          <Text style={styles.viewBtnText}>View</Text>
+          <MaterialCommunityIcons name="chevron-right" size={14} color={Brand.purple} />
+        </View>
       </View>
-      <View style={styles.itemRight}>
-        <Text style={styles.amount}>{formatCurrency(item.amount)}</Text>
-        {item.status === 'pending' ? (
-          <TouchableOpacity style={styles.markPaidBtn} onPress={() => setConfirmPayment(item)}>
-            <Text style={styles.markPaidText}>Mark Paid</Text>
-          </TouchableOpacity>
-        ) : (
+      <Text style={styles.sessionCount}>
+        {item.sessionCount} session{item.sessionCount !== 1 ? 's' : ''}
+      </Text>
+      <View style={styles.amountRow}>
+        {item.paidTotal > 0 && (
           <View style={styles.paidBadge}>
             <MaterialCommunityIcons name="check" size={11} color={Brand.pink} />
-            <Text style={styles.paidText}>Paid</Text>
+            <Text style={styles.paidText}>{formatCurrency(item.paidTotal)} paid</Text>
+          </View>
+        )}
+        {item.pendingTotal > 0 && (
+          <View style={styles.pendingBadge}>
+            <Text style={styles.pendingText}>{formatCurrency(item.pendingTotal)} pending</Text>
+          </View>
+        )}
+        {item.paidTotal > 0 && item.pendingTotal === 0 && (
+          <View style={styles.allPaidBadge}>
+            <MaterialCommunityIcons name="check-all" size={13} color={Brand.pink} />
+            <Text style={styles.allPaidText}>All Paid</Text>
           </View>
         )}
       </View>
-    </View>
-  );
-
-  const renderSectionHeader = ({ section }: { section: Section }) => (
-    <View style={styles.sectionHeader}>
-      <Text style={styles.sectionTitle}>{section.manager}</Text>
-      {section.pendingTotal > 0 && (
-        <View style={styles.dueBadge}>
-          <Text style={styles.dueText}>{formatCurrency(section.pendingTotal)} due</Text>
-        </View>
-      )}
-    </View>
+    </TouchableOpacity>
   );
 
   return (
@@ -147,12 +144,10 @@ export default function ManagerPaymentsScreen() {
         </View>
       )}
 
-      <SectionList
-        sections={sections}
-        keyExtractor={(item) => String(item.id)}
+      <FlatList
+        data={summaries}
+        keyExtractor={(item) => String(item.managerId)}
         renderItem={renderItem}
-        renderSectionHeader={renderSectionHeader}
-        SectionSeparatorComponent={() => <View style={{ height: 4 }} />}
         ListEmptyComponent={
           <EmptyState
             icon="cash-check"
@@ -164,23 +159,8 @@ export default function ManagerPaymentsScreen() {
             }
           />
         }
-        contentContainerStyle={sections.length === 0 ? styles.emptyContainer : styles.listContent}
+        contentContainerStyle={summaries.length === 0 ? styles.emptyContainer : styles.listContent}
       />
-
-      <ConfirmDialog
-        visible={confirmPayment !== null}
-        title="Mark as Paid"
-        message={
-          confirmPayment
-            ? `Mark ${formatCurrency(confirmPayment.amount)} for "${confirmPayment.series_title}" as paid?`
-            : ''
-        }
-        confirmLabel="Mark Paid"
-        destructive={false}
-        onConfirm={handleMarkPaid}
-        onDismiss={() => setConfirmPayment(null)}
-      />
-
     </View>
   );
 }
@@ -212,50 +192,30 @@ const styles = StyleSheet.create({
   summarySep: { width: 1, backgroundColor: Brand.borderSubtle, marginVertical: 4 },
   listContent: { paddingHorizontal: Spacing.md, paddingBottom: Layout.LIST_PAD_NO_FAB },
   emptyContainer: { flex: 1 },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.xs,
-    paddingVertical: Spacing.sm,
-    marginTop: Spacing.sm,
-  },
-  sectionTitle: {
-    ...Typography.h4,
-    color: Brand.textPrimary,
-  },
-  dueBadge: {
-    backgroundColor: `${Brand.orange}33`,
-    borderRadius: Radius.full,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-  },
-  dueText: { ...Typography.labelSm, color: Brand.orange },
-  item: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  card: {
     backgroundColor: Brand.surfaceDark,
     borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
+  cardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: Spacing.xs,
-    gap: Spacing.sm,
   },
-  dot: { width: 10, height: 10, borderRadius: Radius.full, flexShrink: 0 },
-  itemText: { flex: 1 },
-  itemTitle: { ...Typography.body, fontWeight: '500', color: Brand.textPrimary },
-  itemSub: { ...Typography.bodySm, color: Brand.textSecondary, marginTop: 0 },
-  itemRight: { alignItems: 'flex-end', gap: Spacing.xs },
-  amount: { ...Typography.h4, fontWeight: '700', color: Brand.orange },
-  markPaidBtn: {
-    backgroundColor: `${Brand.purple}33`,
-    borderRadius: Radius.full,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
+  managerName: { ...Typography.h4, color: Brand.textPrimary, flex: 1 },
+  viewBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
   },
-  markPaidText: { ...Typography.labelSm, color: Brand.purple },
+  viewBtnText: { ...Typography.labelSm, color: Brand.purple },
+  sessionCount: { ...Typography.bodySm, color: Brand.textSecondary, marginBottom: Spacing.sm },
+  amountRow: { flexDirection: 'row', gap: Spacing.sm, flexWrap: 'wrap' },
   paidBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -266,4 +226,21 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   paidText: { ...Typography.microLabel, color: Brand.pink },
+  pendingBadge: {
+    backgroundColor: `${Brand.orange}22`,
+    borderRadius: Radius.full,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 3,
+  },
+  pendingText: { ...Typography.microLabel, color: Brand.orange },
+  allPaidBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    backgroundColor: `${Brand.pink}1A`,
+    borderRadius: Radius.full,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 3,
+  },
+  allPaidText: { ...Typography.microLabel, color: Brand.pink },
 });

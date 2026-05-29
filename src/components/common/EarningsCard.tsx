@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
     color: Brand.orange,
   },
   paidAmount: {
-    color: '#34D399',
+    color: Brand.pink,
   },
   mutedAmount: {
     color: Brand.textMuted,

@@ -1,11 +1,10 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Alert, KeyboardAvoidingView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import ThemedDatePickerModal from '../../components/common/ThemedDatePickerModal';
 import ThemedTimePickerModal from '../../components/common/ThemedTimePickerModal';
+import SearchablePickerModal from '../../components/common/SearchablePickerModal';
 import {
-  List,
   SegmentedButtons,
-  Surface,
   Text,
   TextInput,
 } from 'react-native-paper';
@@ -14,15 +13,22 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Brand, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
-import { ClassType, Manager, RecurrenceType, LocationType, SourceType } from '../../types';
+import { ClassType, Manager, Trainee, Center, TraineePackage, RecurrenceType, LocationType, SourceType } from '../../types';
 import { getAllClassTypes } from '../../database/repositories/classTypeRepository';
 import { getAllManagers } from '../../database/repositories/managerRepository';
+import { getAllTrainees } from '../../database/repositories/traineeRepository';
+import { getAllCenters } from '../../database/repositories/centerRepository';
+import { getActivePackageForTrainee } from '../../database/repositories/paymentRepository';
 import { scheduleUpcomingNotifications } from '../../notifications/scheduler';
 import {
   createClassSeries,
   updateClassSeries,
   getClassSeriesById,
   deactivateClassSeries,
+  getTraineesForSeries,
+  setTraineesForSeries,
+  hasSeriesHistory,
+  hardDeleteClassSeries,
 } from '../../database/repositories/classSeriesRepository';
 import {
   createSessionsBatch,
@@ -70,11 +76,15 @@ export default function AddEditClassSeriesScreen() {
 
   const [classTypes, setClassTypes] = useState<ClassType[]>([]);
   const [managers, setManagers] = useState<Manager[]>([]);
+  const [trainees, setTrainees] = useState<Trainee[]>([]);
+  const [centers, setCenters] = useState<Center[]>([]);
 
   const [title, setTitle] = useState('');
   const [selectedClassTypeId, setSelectedClassTypeId] = useState<number | null>(null);
   const [sourceType, setSourceType] = useState<SourceType>('manager');
   const [selectedManagerId, setSelectedManagerId] = useState<number | null>(null);
+  const [selectedCenterId, setSelectedCenterId] = useState<number | null>(null);
+  const [selectedTraineeIds, setSelectedTraineeIds] = useState<number[]>([]);
   const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>('weekly');
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
   const [startDate, setStartDate] = useState('');
@@ -87,8 +97,12 @@ export default function AddEditClassSeriesScreen() {
 
   const [saving, setSaving] = useState(false);
   const [cancelVisible, setCancelVisible] = useState(false);
+  const [deleteVisible, setDeleteVisible] = useState(false);
+  const [deleteHasHistory, setDeleteHasHistory] = useState(false);
   const [classTypePickerVisible, setClassTypePickerVisible] = useState(false);
   const [managerPickerVisible, setManagerPickerVisible] = useState(false);
+  const [traineePickerVisible, setTraineePickerVisible] = useState(false);
+  const [centerPickerVisible, setCenterPickerVisible] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
@@ -96,18 +110,29 @@ export default function AddEditClassSeriesScreen() {
 
   const loadData = useCallback(async () => {
     try {
-      const [types, mgrs] = await Promise.all([getAllClassTypes(), getAllManagers()]);
+      const [types, mgrs, traineeList, centerList] = await Promise.all([
+        getAllClassTypes(),
+        getAllManagers(),
+        getAllTrainees(),
+        getAllCenters(),
+      ]);
       setClassTypes(types);
       setManagers(mgrs);
+      setTrainees(traineeList);
+      setCenters(centerList);
 
       if (seriesId) {
         navigation.setOptions({ title: 'Edit Class Series' });
-        const s = await getClassSeriesById(seriesId);
+        const [s, linkedTrainees] = await Promise.all([
+          getClassSeriesById(seriesId),
+          getTraineesForSeries(seriesId),
+        ]);
         if (s) {
           setTitle(s.title);
           setSelectedClassTypeId(s.class_type_id);
           setSourceType(s.source_type);
           setSelectedManagerId(s.manager_id ?? null);
+          setSelectedCenterId(s.center_id ?? null);
           setRecurrenceType(s.recurrence_type);
           setSelectedDays(s.recurrence_days ? (JSON.parse(s.recurrence_days) as number[]) : []);
           setStartDate(s.start_date);
@@ -117,6 +142,7 @@ export default function AddEditClassSeriesScreen() {
           setLocationType(s.location_type);
           setLocation(s.location ?? '');
           setNotes(s.notes ?? '');
+          setSelectedTraineeIds(linkedTrainees.map((t) => t.id));
         }
       } else {
         navigation.setOptions({ title: 'New Class Series' });
@@ -171,6 +197,7 @@ export default function AddEditClassSeriesScreen() {
         class_type_id: selectedClassTypeId!,
         source_type: sourceType,
         manager_id: sourceType === 'manager' ? selectedManagerId ?? undefined : undefined,
+        center_id: sourceType === 'manager' ? selectedCenterId ?? undefined : undefined,
         recurrence_type: recurrenceType,
         recurrence_days: recurrenceDays ?? undefined,
         start_date: startDate,
@@ -190,16 +217,69 @@ export default function AddEditClassSeriesScreen() {
         endDate.trim() || undefined
       );
 
+      let savedSeriesId: number;
       if (isEdit) {
         await updateClassSeries(seriesId!, data);
         await deleteUpcomingSessionsForSeries(seriesId!);
         await createSessionsBatch(seriesId!, dates, classTime);
+        savedSeriesId = seriesId!;
       } else {
         const created = await createClassSeries(data);
         await createSessionsBatch(created.id, dates, classTime);
+        savedSeriesId = created.id;
+      }
+
+      if (sourceType === 'personal') {
+        await setTraineesForSeries(savedSeriesId, selectedTraineeIds);
       }
 
       await scheduleUpcomingNotifications();
+
+      if (sourceType === 'personal' && selectedTraineeIds.length > 0) {
+        const currentMonth = new Date().toISOString().slice(0, 7);
+        const packages = await Promise.all(
+          selectedTraineeIds.map((tid) => getActivePackageForTrainee(tid, currentMonth))
+        );
+
+        const alerts: string[] = [];
+
+        const packagesWithData = packages.filter((p): p is TraineePackage => p !== null);
+        if (packagesWithData.length > 0) {
+          const remainings = packagesWithData.map((p) => p.total_sessions - p.used_sessions);
+          const minRemaining = Math.min(...remainings);
+          if (dates.length > minRemaining) {
+            const minIdx = remainings.indexOf(minRemaining);
+            const minTid = packagesWithData[minIdx].trainee_id;
+            const tname = trainees.find((t) => t.id === minTid)?.name ?? 'A trainee';
+            alerts.push(
+              `Session overflow: This series will create ${dates.length} sessions. ${tname}'s active package covers ${minRemaining} more. Extra sessions can be skipped from the calendar.`
+            );
+          }
+        }
+
+        const missing = selectedTraineeIds
+          .filter((_, i) => packages[i] === null)
+          .map((tid) => trainees.find((t) => t.id === tid)?.name)
+          .filter((n): n is string => n !== undefined);
+
+        if (missing.length > 0) {
+          const monthDisplay = new Date(currentMonth + '-15').toLocaleDateString('en-IN', {
+            month: 'long',
+            year: 'numeric',
+          });
+          alerts.push(
+            `No package for ${monthDisplay}: ${missing.join(', ')}. Add packages from the Trainees screen.`
+          );
+        }
+
+        if (alerts.length > 0) {
+          Alert.alert('Heads Up', alerts.join('\n\n'), [
+            { text: 'OK', onPress: () => navigation.goBack() },
+          ]);
+          return;
+        }
+      }
+
       navigation.goBack();
     } finally {
       setSaving(false);
@@ -213,6 +293,27 @@ export default function AddEditClassSeriesScreen() {
       navigation.goBack();
     } catch {
       Alert.alert('Error', 'Could not cancel series. Please try again.');
+    }
+  }
+
+  async function openDeleteSeries() {
+    if (!seriesId) return;
+    const history = await hasSeriesHistory(seriesId);
+    setDeleteHasHistory(history);
+    setDeleteVisible(true);
+  }
+
+  async function handleDeleteSeries() {
+    if (!seriesId) return;
+    try {
+      if (deleteHasHistory) {
+        await deactivateClassSeries(seriesId);
+      } else {
+        await hardDeleteClassSeries(seriesId);
+      }
+      navigation.goBack();
+    } catch {
+      Alert.alert('Error', 'Could not delete series. Please try again.');
     }
   }
 
@@ -239,6 +340,24 @@ export default function AddEditClassSeriesScreen() {
 
   const selectedClassType = classTypes.find((ct) => ct.id === selectedClassTypeId);
   const selectedManager = managers.find((m) => m.id === selectedManagerId);
+  const selectedCenter = centers.find((c) => c.id === selectedCenterId);
+
+  const classTypePickerItems = useMemo(
+    () => classTypes.map((ct) => ({ id: ct.id, label: ct.name, leftColor: ct.color })),
+    [classTypes]
+  );
+  const managerPickerItems = useMemo(
+    () => managers.map((m) => ({ id: m.id, label: m.name })),
+    [managers]
+  );
+  const traineePickerItems = useMemo(
+    () => trainees.map((t) => ({ id: t.id, label: t.name })),
+    [trainees]
+  );
+  const centerPickerItems = useMemo(
+    () => centers.map((c) => ({ id: c.id, label: c.name, hint: c.address })),
+    [centers]
+  );
 
   return (
     <>
@@ -307,6 +426,44 @@ export default function AddEditClassSeriesScreen() {
                   )}
                 </TouchableOpacity>
                 {errors.manager ? <ErrorText msg={errors.manager} /> : null}
+
+                <View style={styles.fieldGap} />
+                <Text variant="labelMedium" style={styles.fieldLabel}>Center (optional)</Text>
+                <TouchableOpacity
+                  onPress={() => setCenterPickerVisible(true)}
+                  style={[styles.pickerButton, styles.endDateRow]}
+                >
+                  <Text style={{ color: selectedCenter ? Brand.textPrimary : Brand.textMuted, flex: 1 }}>
+                    {selectedCenter ? selectedCenter.name : 'Select center...'}
+                  </Text>
+                  {selectedCenterId !== null && (
+                    <TouchableOpacity
+                      onPress={() => setSelectedCenterId(null)}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <Text style={{ ...Typography.bodyLg, color: Brand.textMuted }}>✕</Text>
+                    </TouchableOpacity>
+                  )}
+                </TouchableOpacity>
+              </>
+            )}
+
+            {sourceType === 'personal' && (
+              <>
+                <View style={styles.fieldGap} />
+                <Text variant="labelMedium" style={styles.fieldLabel}>Trainees (optional)</Text>
+                <TouchableOpacity
+                  onPress={() => setTraineePickerVisible(true)}
+                  style={styles.pickerButton}
+                >
+                  <Text style={{ color: selectedTraineeIds.length > 0 ? Brand.textPrimary : Brand.textMuted }}>
+                    {selectedTraineeIds.length === 0
+                      ? 'Select trainees...'
+                      : selectedTraineeIds.length === 1
+                      ? trainees.find((t) => t.id === selectedTraineeIds[0])?.name ?? '1 trainee'
+                      : `${selectedTraineeIds.length} trainees selected`}
+                  </Text>
+                </TouchableOpacity>
               </>
             )}
           </View>
@@ -447,13 +604,21 @@ export default function AddEditClassSeriesScreen() {
           </View>
 
           {isEdit && (
-            <AppButton
-              variant="danger"
-              label="Cancel This Series"
-              onPress={() => setCancelVisible(true)}
-              style={{ marginTop: Spacing.sm }}
-              fullWidth={false}
-            />
+            <View style={{ gap: Spacing.sm, marginTop: Spacing.sm }}>
+              <AppButton
+                variant="danger"
+                label="Cancel This Series"
+                onPress={() => setCancelVisible(true)}
+                fullWidth={false}
+              />
+              <AppButton
+                variant="ghost"
+                label="Delete Series"
+                onPress={openDeleteSeries}
+                fullWidth={false}
+                style={{ borderColor: Brand.pink }}
+              />
+            </View>
           )}
 
           <View style={{ height: Spacing.lg }} />
@@ -507,66 +672,42 @@ export default function AddEditClassSeriesScreen() {
         onDismiss={() => setShowTimePicker(false)}
       />
 
-      {/* Class Type Picker Modal */}
-      <Modal
+      <SearchablePickerModal
         visible={classTypePickerVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setClassTypePickerVisible(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalBackdrop}
-          onPress={() => setClassTypePickerVisible(false)}
-          activeOpacity={1}
-        >
-          <Surface style={styles.modalSheet}>
-            <Text style={styles.modalTitle}>Select Class Type</Text>
-            {classTypes.map((ct) => (
-              <List.Item
-                key={ct.id}
-                title={ct.name}
-                titleStyle={{ color: Brand.textPrimary }}
-                left={() => (
-                  <View style={[styles.colorDot, { backgroundColor: ct.color, marginVertical: 'auto', marginLeft: 8 }]} />
-                )}
-                onPress={() => {
-                  setSelectedClassTypeId(ct.id);
-                  setClassTypePickerVisible(false);
-                }}
-              />
-            ))}
-          </Surface>
-        </TouchableOpacity>
-      </Modal>
+        onDismiss={() => setClassTypePickerVisible(false)}
+        title="Select Class Type"
+        items={classTypePickerItems}
+        selectedIds={selectedClassTypeId ? [selectedClassTypeId] : []}
+        onSelect={(ids) => { if (ids[0] !== undefined) setSelectedClassTypeId(ids[0]); }}
+      />
 
-      {/* Manager Picker Modal */}
-      <Modal
+      <SearchablePickerModal
         visible={managerPickerVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setManagerPickerVisible(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalBackdrop}
-          onPress={() => setManagerPickerVisible(false)}
-          activeOpacity={1}
-        >
-          <Surface style={styles.modalSheet}>
-            <Text style={styles.modalTitle}>Select Manager</Text>
-            {managers.map((m) => (
-              <List.Item
-                key={m.id}
-                title={m.name}
-                titleStyle={{ color: Brand.textPrimary }}
-                onPress={() => {
-                  setSelectedManagerId(m.id);
-                  setManagerPickerVisible(false);
-                }}
-              />
-            ))}
-          </Surface>
-        </TouchableOpacity>
-      </Modal>
+        onDismiss={() => setManagerPickerVisible(false)}
+        title="Select Manager"
+        items={managerPickerItems}
+        selectedIds={selectedManagerId ? [selectedManagerId] : []}
+        onSelect={(ids) => { if (ids[0] !== undefined) setSelectedManagerId(ids[0]); }}
+      />
+
+      <SearchablePickerModal
+        visible={traineePickerVisible}
+        onDismiss={() => setTraineePickerVisible(false)}
+        title="Select Trainees"
+        items={traineePickerItems}
+        selectedIds={selectedTraineeIds}
+        multiSelect
+        onSelect={(ids) => setSelectedTraineeIds(ids)}
+      />
+
+      <SearchablePickerModal
+        visible={centerPickerVisible}
+        onDismiss={() => setCenterPickerVisible(false)}
+        title="Select Center"
+        items={centerPickerItems}
+        selectedIds={selectedCenterId !== null ? [selectedCenterId] : []}
+        onSelect={(ids) => setSelectedCenterId(ids[0] ?? null)}
+      />
 
       <LoadingOverlay visible={saving} />
 
@@ -577,6 +718,19 @@ export default function AddEditClassSeriesScreen() {
         confirmLabel="Cancel Series"
         onConfirm={handleCancelSeries}
         onDismiss={() => setCancelVisible(false)}
+      />
+
+      <ConfirmDialog
+        visible={deleteVisible}
+        title={deleteHasHistory ? 'Cancel Series' : 'Delete Series'}
+        message={
+          deleteHasHistory
+            ? 'This series has completed sessions. It will be cancelled (deactivated) rather than deleted.'
+            : 'Delete this series permanently? All upcoming sessions will be removed.'
+        }
+        confirmLabel={deleteHasHistory ? 'Cancel Series' : 'Delete'}
+        onConfirm={handleDeleteSeries}
+        onDismiss={() => setDeleteVisible(false)}
       />
     </>
   );
@@ -643,24 +797,4 @@ const styles = StyleSheet.create({
   },
   cancelBtn: { flex: 0, width: 100, borderColor: Brand.borderSubtle, justifyContent: 'center', borderRadius: Radius.lg },
   saveBtn: { flex: 1 },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'flex-end',
-  },
-  modalSheet: {
-    backgroundColor: Brand.surfaceElevated,
-    borderTopLeftRadius: Radius.item,
-    borderTopRightRadius: Radius.item,
-    paddingBottom: Spacing.section,
-    maxHeight: '60%',
-    borderTopWidth: 1,
-    borderTopColor: Brand.borderSubtle,
-  },
-  modalTitle: {
-    ...Typography.h4,
-    padding: Spacing.lg,
-    paddingBottom: Spacing.sm,
-    color: Brand.textPrimary,
-  },
 });

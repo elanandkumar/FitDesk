@@ -1,13 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
-  Modal as RNModal,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { IconButton, List, Surface, Text, TextInput } from 'react-native-paper';
+import { IconButton, Text, TextInput } from 'react-native-paper';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -20,6 +19,7 @@ import { getAllTrainees } from '../../database/repositories/traineeRepository';
 import { createTraineePackage } from '../../database/repositories/paymentRepository';
 import GradientButton from '../../components/common/GradientButton';
 import AppButton from '../../components/common/AppButton';
+import SearchablePickerModal, { PickerItem } from '../../components/common/SearchablePickerModal';
 
 type Nav = StackNavigationProp<RootStackParamList, 'AddPackage'>;
 type Route = RouteProp<RootStackParamList, 'AddPackage'>;
@@ -55,6 +55,7 @@ export default function AddPackageScreen() {
   const [trainees, setTrainees] = useState<Trainee[]>([]);
   const [traineePickerVisible, setTraineePickerVisible] = useState(false);
   const [traineeId, setTraineeId] = useState<number | null>(route.params?.traineeId ?? null);
+  const traineePickerItems: PickerItem[] = trainees.map(t => ({ id: t.id, label: t.name }));
   const [month, setMonth] = useState(currentYearMonth());
   const [totalSessions, setTotalSessions] = useState('');
   const [amount, setAmount] = useState('');
@@ -109,7 +110,7 @@ export default function AddPackageScreen() {
     >
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <FormSection label="Trainee" />
-        <View style={styles.card}>
+        <View style={[styles.card, styles.pickerCard]}>
           <TouchableOpacity
             onPress={() => setTraineePickerVisible(true)}
             style={styles.pickerRow}
@@ -182,33 +183,19 @@ export default function AddPackageScreen() {
         />
       </View>
 
-      <RNModal
+      <SearchablePickerModal
         visible={traineePickerVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setTraineePickerVisible(false)}
-      >
-        <TouchableOpacity
-          style={styles.backdrop}
-          onPress={() => setTraineePickerVisible(false)}
-          activeOpacity={1}
-        >
-          <Surface style={[styles.sheet, { backgroundColor: Brand.surfaceElevated }]}>
-            <Text style={styles.sheetTitle}>Select Trainee</Text>
-            {trainees.map((t) => (
-              <List.Item
-                key={t.id}
-                title={t.name}
-                titleStyle={{ color: Brand.textPrimary }}
-                onPress={() => {
-                  setTraineeId(t.id);
-                  setTraineePickerVisible(false);
-                }}
-              />
-            ))}
-          </Surface>
-        </TouchableOpacity>
-      </RNModal>
+        onDismiss={() => setTraineePickerVisible(false)}
+        title="Select Trainee"
+        items={traineePickerItems}
+        selectedIds={traineeId !== null ? [traineeId] : []}
+        multiSelect={false}
+        onSelect={(ids) => {
+          setTraineeId(ids[0] ?? null);
+          setTraineePickerVisible(false);
+        }}
+        addNewEntityLabel="trainee"
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -244,6 +231,10 @@ const styles = StyleSheet.create({
     padding: Spacing.xs,
   },
   monthText: { ...Typography.h3, color: Brand.textPrimary, flex: 1, textAlign: 'center' },
+  pickerCard: {
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+  },
   pickerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -270,21 +261,4 @@ const styles = StyleSheet.create({
     borderRadius: Radius.lg,
   },
   saveBtn: { flex: 1 },
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    borderTopLeftRadius: Radius.item,
-    borderTopRightRadius: Radius.item,
-    paddingBottom: Spacing.section,
-    maxHeight: '60%',
-  },
-  sheetTitle: {
-    ...Typography.h3,
-    color: Brand.textPrimary,
-    padding: Spacing.lg,
-    paddingBottom: Spacing.sm,
-  },
 });

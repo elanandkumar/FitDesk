@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button, Modal, Portal, Text } from 'react-native-paper';
-import { useAppTheme, Radius } from '../../theme';
+import { useAppTheme, Brand, Radius } from '../../theme';
 
 interface Props {
   visible: boolean;
@@ -24,7 +24,7 @@ export default function HelpSheet({ visible, onDismiss, content }: Props) {
         <Text variant="bodyMedium" style={{ color: theme.colors.onSurface, lineHeight: 22 }}>
           {content}
         </Text>
-        <Button mode="text" onPress={onDismiss} style={styles.close}>
+        <Button mode="text" textColor={Brand.textAccent} onPress={onDismiss} style={styles.close}>
           Got it
         </Button>
       </Modal>

@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Modal, Portal, Text } from 'react-native-paper';
+import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Text } from 'react-native-paper';
+import { BlurView } from 'expo-blur';
 import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
 import AppButton from './AppButton';
 
@@ -28,44 +29,58 @@ export default function AppModal({
   destructive,
 }: AppModalProps) {
   return (
-    <Portal>
-      <Modal
-        visible={visible}
-        onDismiss={onDismiss}
-        contentContainerStyle={styles.container}
-      >
-        <Text style={styles.title}>{title}</Text>
-        <View style={styles.body}>{children}</View>
-        <View style={styles.footer}>
-          <AppButton
-            label={cancelLabel}
-            onPress={onDismiss}
-            variant="ghost"
-            disabled={loading}
-            fullWidth={false}
-          />
-          {onConfirm && (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onDismiss}
+      statusBarTranslucent
+    >
+      <View style={styles.overlay}>
+        <BlurView intensity={60} tint="dark" style={[StyleSheet.absoluteFill, styles.blur]} />
+        <Pressable style={StyleSheet.absoluteFill} onPress={onDismiss} />
+        <View style={styles.container}>
+          <Text style={styles.title}>{title}</Text>
+          <View style={styles.body}>{children}</View>
+          <View style={styles.footer}>
             <AppButton
-              label={confirmLabel}
-              onPress={onConfirm}
-              variant={destructive ? 'danger' : 'filled'}
-              loading={loading}
+              label={cancelLabel}
+              onPress={onDismiss}
+              variant="ghost"
               disabled={loading}
-              style={destructive ? undefined : styles.confirmBtn}
               fullWidth={false}
             />
-          )}
+            {onConfirm && (
+              <AppButton
+                label={confirmLabel}
+                onPress={onConfirm}
+                variant={destructive ? 'danger' : 'filled'}
+                loading={loading}
+                disabled={loading}
+                style={destructive ? undefined : styles.confirmBtn}
+                fullWidth={false}
+              />
+            )}
+          </View>
         </View>
-      </Modal>
-    </Portal>
+      </View>
+    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.lg,
+    backgroundColor: 'rgba(10, 5, 25, 0.6)',
+  },
+  blur: {
+    backgroundColor: 'rgba(10, 5, 25, 0.4)',
+  },
   container: {
-    marginHorizontal: Spacing.lg,
     borderRadius: Radius.card,
-    backgroundColor: Brand.surfaceElevated,
+    backgroundColor: Brand.surfaceDark,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
     overflow: 'hidden',

@@ -9,7 +9,11 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { Manager, EnrichedManagerPayment } from '../../types';
-import { getManagerById, deleteManager } from '../../database/repositories/managerRepository';
+import {
+  getManagerById,
+  getUpcomingSessionCountForManager,
+  softDeleteManager,
+} from '../../database/repositories/managerRepository';
 import {
   getManagerOutstandingBalance,
   getEnrichedManagerPaymentsByManager,
@@ -18,9 +22,7 @@ import { formatCurrency } from '../../utils/currencyUtils';
 import { formatDisplayDate, formatDisplayTime } from '../../utils/dateUtils';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import HelpSheet from '../../components/common/HelpSheet';
-
-const HELP =
-  'Shows payment history per class. Mark individual sessions paid after receiving payment from this manager.';
+import { HELP } from '../../constants/helpContent';
 
 type Nav = StackNavigationProp<RootStackParamList, 'ManagerDetail'>;
 type Route = RouteProp<RootStackParamList, 'ManagerDetail'>;
@@ -34,19 +36,22 @@ export default function ManagerDetailScreen() {
   const [manager, setManager] = useState<Manager | null>(null);
   const [outstanding, setOutstanding] = useState(0);
   const [payments, setPayments] = useState<EnrichedManagerPayment[]>([]);
+  const [upcomingCount, setUpcomingCount] = useState(0);
   const [deleteVisible, setDeleteVisible] = useState(false);
   const [helpVisible, setHelpVisible] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      const [m, bal, pmts] = await Promise.all([
+      const [m, bal, pmts, cnt] = await Promise.all([
         getManagerById(managerId),
         getManagerOutstandingBalance(managerId),
         getEnrichedManagerPaymentsByManager(managerId),
+        getUpcomingSessionCountForManager(managerId),
       ]);
       setManager(m);
       setOutstanding(bal);
       setPayments(pmts);
+      setUpcomingCount(cnt);
     } catch {
       // screen shows nothing on DB error
     }
@@ -59,7 +64,7 @@ export default function ManagerDetailScreen() {
       navigation.setOptions({
         title: manager.name,
         headerRight: () => (
-          <IconButton icon="help-circle-outline" iconColor={Brand.purple} onPress={() => setHelpVisible(true)} />
+          <IconButton icon="help-circle-outline" iconColor={Brand.textAccent} onPress={() => setHelpVisible(true)} />
         ),
       });
     }
@@ -67,10 +72,10 @@ export default function ManagerDetailScreen() {
 
   async function handleDelete() {
     try {
-      await deleteManager(managerId);
+      await softDeleteManager(managerId);
       navigation.goBack();
     } catch {
-      Alert.alert('Error', 'Could not delete manager. Please try again.');
+      Alert.alert('Error', 'Could not remove manager. Please try again.');
     }
   }
 
@@ -174,7 +179,7 @@ export default function ManagerDetailScreen() {
 
         <AppButton
           variant="danger"
-          label="Delete Manager"
+          label="Remove Manager"
           onPress={() => setDeleteVisible(true)}
           style={{ marginTop: Spacing.sm }}
           fullWidth={false}
@@ -182,13 +187,18 @@ export default function ManagerDetailScreen() {
 
         <ConfirmDialog
           visible={deleteVisible}
-          title="Delete Manager"
-          message={`Delete "${manager.name}"? Their class history and payments will also be removed.`}
+          title="Remove Manager"
+          message={
+            upcomingCount > 0
+              ? `"${manager.name}" has ${upcomingCount} upcoming session${upcomingCount > 1 ? 's' : ''}. They will be archived but their history and payments will remain.`
+              : `Archive "${manager.name}"? Their history and payments will remain.`
+          }
+          confirmLabel="Remove"
           onConfirm={handleDelete}
           onDismiss={() => setDeleteVisible(false)}
         />
 
-        <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP} />
+        <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP.managerDetail} />
       </ScrollView>
 
       <GradientFAB

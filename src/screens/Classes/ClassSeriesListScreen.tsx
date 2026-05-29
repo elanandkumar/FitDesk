@@ -18,9 +18,7 @@ import { Chip } from 'react-native-paper';
 import EmptyState from '../../components/common/EmptyState';
 import { RootStackParamList } from '../../navigation/types';
 import HelpSheet from '../../components/common/HelpSheet';
-
-const HELP =
-  'A series defines a recurring class schedule. Sessions are auto-generated 90 days ahead. Tap a series to edit it. Tap + to create a new one.';
+import { HELP } from '../../constants/helpContent';
 
 type Nav = StackNavigationProp<RootStackParamList>;
 
@@ -38,7 +36,7 @@ export default function ClassSeriesListScreen() {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <IconButton icon="help-circle-outline" iconColor={theme.colors.primary} onPress={() => setHelpVisible(true)} />
+        <IconButton icon="help-circle-outline" iconColor={Brand.textAccent} onPress={() => setHelpVisible(true)} />
       ),
     });
   }, [navigation, theme.colors.primary]);
@@ -144,7 +142,7 @@ export default function ClassSeriesListScreen() {
         onPress={() => navigation.navigate('AddEditClassSeries', {})}
       />
 
-      <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP} />
+      <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP.classSeriesList} />
     </Animated.View>
   );
 }

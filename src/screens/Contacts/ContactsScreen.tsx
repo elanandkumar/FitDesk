@@ -7,11 +7,7 @@ import { Brand, Spacing } from '../../theme/brandColors';
 import ManagerListScreen from '../Managers/ManagerListScreen';
 import TraineeListScreen from '../Trainees/TraineeListScreen';
 import HelpSheet from '../../components/common/HelpSheet';
-
-const HELP_MANAGERS =
-  'Add managers who assign you classes. Outstanding balance (in orange) shows total unpaid sessions. Tap a manager to see their payment history.';
-const HELP_TRAINEES =
-  'Add your personal training clients here. Tap a trainee to view their packages and session history.';
+import { HELP } from '../../constants/helpContent';
 
 export default function ContactsScreen() {
   const { theme } = useAppTheme();
@@ -24,7 +20,7 @@ export default function ContactsScreen() {
       headerRight: () => (
         <IconButton
           icon="help-circle-outline"
-          iconColor={theme.colors.primary}
+          iconColor={Brand.textAccent}
           onPress={() => setHelpVisible(true)}
         />
       ),
@@ -52,7 +48,7 @@ export default function ContactsScreen() {
       <HelpSheet
         visible={helpVisible}
         onDismiss={() => setHelpVisible(false)}
-        content={segment === 'managers' ? HELP_MANAGERS : HELP_TRAINEES}
+        content={segment === 'managers' ? HELP.contactsManagers : HELP.contactsTrainees}
       />
     </View>
   );

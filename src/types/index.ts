@@ -2,12 +2,21 @@ export type SourceType = 'manager' | 'personal';
 export type RecurrenceType = 'daily' | 'weekly' | 'custom';
 export type SessionStatus = 'upcoming' | 'completed' | 'cancelled' | 'skipped';
 export type PaymentStatus = 'pending' | 'paid';
-export type LocationType = 'offline';
+export type LocationType = 'offline' | 'online';
 
 export interface ClassType {
   id: number;
   name: string;
   color: string;
+  is_active: number;
+  created_at: string;
+}
+
+export interface Center {
+  id: number;
+  name: string;
+  address?: string;
+  is_active: number;
   created_at: string;
 }
 
@@ -19,6 +28,7 @@ export interface Manager {
   per_class_rate: number;
   currency: string;
   notes?: string;
+  is_active: number;
   created_at: string;
 }
 
@@ -28,7 +38,14 @@ export interface Trainee {
   phone?: string;
   email?: string;
   notes?: string;
+  is_active: number;
   created_at: string;
+}
+
+export interface SeriesTrainee {
+  id: number;
+  series_id: number;
+  trainee_id: number;
 }
 
 export interface ClassSeries {
@@ -47,6 +64,7 @@ export interface ClassSeries {
   location?: string;
   notes?: string;
   is_active: number;
+  center_id?: number;
   created_at: string;
 }
 
@@ -58,6 +76,8 @@ export interface ClassSession {
   status: SessionStatus;
   student_count: number;
   notes?: string;
+  guest_name?: string;
+  center_id?: number;
   created_at: string;
 }
 
@@ -145,6 +165,13 @@ export interface ManagerMonthIncome {
   pending: number;
 }
 
+export interface CenterMonthIncome {
+  center_id: number;
+  center_name: string;
+  paid: number;
+  pending: number;
+}
+
 export interface TraineeMonthPackage {
   trainee_id: number;
   trainee_name: string;
@@ -162,6 +189,9 @@ export interface EnrichedSession {
   status: SessionStatus;
   student_count: number;
   notes?: string;
+  guest_name?: string;
+  center_id?: number;
+  trainee_names?: string; // comma-joined names from series_trainees, populated by specific queries
   created_at: string;
   series_title: string;
   class_type_name: string;

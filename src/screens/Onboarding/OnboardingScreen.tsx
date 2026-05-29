@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState } from "react";
 import {
   Dimensions,
   FlatList,
@@ -10,21 +10,21 @@ import {
   TouchableOpacity,
   View,
   ViewToken,
-} from 'react-native';
-import { Text } from 'react-native-paper';
-import { LinearGradient } from 'expo-linear-gradient';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
-import { getDatabase } from '../../database/db';
-import { RootStackParamList } from '../../navigation/types';
-import GradientButton from '../../components/common/GradientButton';
+} from "react-native";
+import { Text } from "react-native-paper";
+import { LinearGradient } from "expo-linear-gradient";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Brand, Radius, Spacing, Typography } from "../../theme/brandColors";
+import { getDatabase } from "../../database/db";
+import { RootStackParamList } from "../../navigation/types";
+import GradientButton from "../../components/common/GradientButton";
 
 type Nav = StackNavigationProp<RootStackParamList>;
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 type Slide = {
   key: string;
@@ -36,24 +36,24 @@ type Slide = {
 
 const SLIDES: Slide[] = [
   {
-    key: '1',
-    icon: 'dumbbell',
-    title: 'Welcome to FitDesk',
-    body: 'Your personal fitness class companion. Manage your classes, clients, and payments — all in one place, right on your device.',
-    gradient: ['#3D1DB5', Brand.backgroundDark],
+    key: "1",
+    icon: "dumbbell",
+    title: "Welcome to FitDesk",
+    body: "Your personal fitness class companion. Manage your classes, clients, and payments — all in one place, right on your device.",
+    gradient: ["#3D1DB5", Brand.backgroundDark],
   },
   {
-    key: '2',
-    icon: 'calendar-check',
-    title: 'How It Works',
-    body: 'Manager-sourced classes: External managers assign you Zumba, Yoga, or Dance sessions — track each class and get paid per session.\n\nPersonal training: Manage your own clients with monthly session packages and automatic session tracking.',
+    key: "2",
+    icon: "calendar-check",
+    title: "How It Works",
+    body: "Manager-sourced classes: External managers assign you Zumba, Yoga, or Dance sessions — track each class and get paid per session.\n\nPersonal training: Manage your own clients with monthly session packages and automatic session tracking.",
     gradient: [Brand.surfaceElevated, Brand.backgroundDark],
   },
   {
-    key: '3',
-    icon: 'shield-lock-outline',
-    title: 'Your Data, Your Device',
-    body: 'All data is stored locally on this device only.\n\nUninstalling the app or clearing app data will permanently erase everything. Use Settings → Export to keep regular backups.',
+    key: "3",
+    icon: "shield-lock-outline",
+    title: "Your Data, Your Device",
+    body: "All data is stored locally on this device only.\n\nUninstalling the app or clearing app data will permanently erase everything. Use Settings → Export to keep regular backups.",
     gradient: [Brand.backgroundDark, Brand.surfaceDark],
   },
 ];
@@ -62,8 +62,8 @@ export default function OnboardingScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
   const [activeIndex, setActiveIndex] = useState(0);
-  const [phase, setPhase] = useState<'slides' | 'name'>('slides');
-  const [trainerName, setTrainerName] = useState('');
+  const [phase, setPhase] = useState<"slides" | "name">("slides");
+  const [trainerName, setTrainerName] = useState("");
   const listRef = useRef<FlatList>(null);
 
   const onViewableItemsChanged = useRef(
@@ -71,34 +71,37 @@ export default function OnboardingScreen() {
       if (viewableItems.length > 0 && viewableItems[0].index !== null) {
         setActiveIndex(viewableItems[0].index);
       }
-    }
+    },
   ).current;
 
   async function finish(name: string) {
     const db = await getDatabase();
     await db.runAsync(
-      "INSERT OR REPLACE INTO settings (key, value) VALUES ('onboarding_done', 'true')"
+      "INSERT OR REPLACE INTO settings (key, value) VALUES ('onboarding_done', 'true')",
     );
     if (name.trim()) {
       await db.runAsync(
         "INSERT OR REPLACE INTO settings (key, value) VALUES ('trainer_name', ?)",
-        [name.trim()]
+        [name.trim()],
       );
     }
-    navigation.replace('MainTabs', undefined as never);
+    navigation.replace("MainTabs", undefined as never);
   }
 
   function next() {
     if (activeIndex < SLIDES.length - 1) {
-      listRef.current?.scrollToIndex({ index: activeIndex + 1, animated: true });
+      listRef.current?.scrollToIndex({
+        index: activeIndex + 1,
+        animated: true,
+      });
     } else {
-      setPhase('name');
+      setPhase("name");
     }
   }
 
   const isLast = activeIndex === SLIDES.length - 1;
 
-  if (phase === 'name') {
+  if (phase === "name") {
     return (
       <LinearGradient
         colors={[Brand.backgroundDark, Brand.surfaceDark]}
@@ -108,11 +111,15 @@ export default function OnboardingScreen() {
       >
         <KeyboardAvoidingView
           style={styles.namePhase}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
           <View style={styles.nameContent}>
             <View style={styles.iconCircle}>
-              <MaterialCommunityIcons name="account-circle-outline" size={40} color={Brand.purple} />
+              <MaterialCommunityIcons
+                name="account-circle-outline"
+                size={40}
+                color={Brand.purple}
+              />
             </View>
             <Text style={styles.title}>What's your name?</Text>
             <Text style={styles.body}>
@@ -161,20 +168,28 @@ export default function OnboardingScreen() {
           >
             {index === 0 ? (
               <Image
-                source={require('../../../assets/logo.png')}
+                source={require("../../../assets/logo.png")}
                 style={styles.heroLogo}
                 resizeMode="contain"
               />
             ) : (
               <View style={styles.iconCircle}>
-                <MaterialCommunityIcons name={item.icon as never} size={40} color={Brand.purple} />
+                <MaterialCommunityIcons
+                  name={item.icon as never}
+                  size={40}
+                  color={Brand.purple}
+                />
               </View>
             )}
 
             {index === 0 ? (
               <View style={styles.welcomeRow}>
                 <Text style={styles.welcomeText}>Welcome to</Text>
-                <Text style={styles.brandName}>FitDesk</Text>
+                <Image
+                  source={require("../../../assets/logo-text.png")}
+                  style={styles.logoImage}
+                  resizeMode="contain"
+                />
               </View>
             ) : (
               <Text style={styles.title}>{item.title}</Text>
@@ -199,11 +214,10 @@ export default function OnboardingScreen() {
         </View>
 
         <GradientButton
-          label={isLast ? 'Get Started' : 'Next'}
+          label={isLast ? "Get Started" : "Next"}
           onPress={next}
           style={styles.button}
         />
-
       </View>
     </View>
   );
@@ -211,32 +225,49 @@ export default function OnboardingScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Brand.backgroundDark },
-  slide: { flex: 1, padding: Spacing.section, justifyContent: 'center', alignItems: 'center', gap: Spacing.xxl },
+  slide: {
+    flex: 1,
+    padding: Spacing.section,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: Spacing.xxl,
+  },
+  logoImage: {
+    width: 100,
+    height: 30,
+    marginBottom: Spacing.xs,
+  },
   namePhase: { flex: 1 },
-  nameContent: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: Spacing.section, gap: Spacing.xl },
+  nameContent: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: Spacing.section,
+    gap: Spacing.xl,
+  },
   iconCircle: {
     width: 88,
     height: 88,
     borderRadius: Radius.full,
     backgroundColor: Brand.surfaceElevated,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: Spacing.sm,
   },
   title: {
     ...Typography.h1,
     fontSize: 26,
     color: Brand.textPrimary,
-    textAlign: 'center',
+    textAlign: "center",
   },
   body: {
     ...Typography.bodyLg,
     fontSize: 15,
     color: Brand.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
   nameInput: {
-    width: '100%',
+    width: "100%",
     backgroundColor: Brand.surfaceElevated,
     borderRadius: Radius.lg,
     paddingHorizontal: 18,
@@ -245,35 +276,40 @@ const styles = StyleSheet.create({
     ...Typography.bodyLg,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
-    textAlign: 'center',
+    textAlign: "center",
   },
   footer: {
     paddingHorizontal: Spacing.section,
     paddingTop: Spacing.xxl,
     gap: Spacing.lg,
-    alignItems: 'center',
+    alignItems: "center",
     backgroundColor: Brand.backgroundDark,
   },
-  dots: { flexDirection: 'row', gap: Spacing.sm },
+  dots: { flexDirection: "row", gap: Spacing.sm },
   dot: { height: Spacing.sm, borderRadius: Radius.full },
   dotActive: { width: 24, backgroundColor: Brand.purple },
   dotInactive: { width: Spacing.sm, backgroundColor: Brand.borderSubtle },
   button: { width: 260 },
   skipBtn: { paddingVertical: Spacing.sm },
   skipText: { ...Typography.body, color: Brand.textMuted },
-  heroLogo: { width: 160, height: 160, marginBottom: Spacing.sm, borderRadius: Radius.hero },
-  welcomeRow: { flexDirection: 'column', alignItems: 'center', gap: 0 },
+  heroLogo: {
+    width: 160,
+    height: 160,
+    marginBottom: Spacing.sm,
+    borderRadius: Radius.hero,
+  },
+  welcomeRow: { flexDirection: "row", gap: 4 },
   welcomeText: {
-    ...Typography.bodyLg,
+    ...Typography.h1,
     color: Brand.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     letterSpacing: 1,
   },
   brandName: {
     ...Typography.h1,
     fontSize: 36,
     color: Brand.purple,
-    textAlign: 'center',
+    textAlign: "center",
     letterSpacing: 2,
   },
 });

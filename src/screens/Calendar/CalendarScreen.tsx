@@ -15,14 +15,19 @@ import { formatDisplayDate, formatDisplayTime, todayISO } from '../../utils/date
 import { RootStackParamList } from '../../navigation/types';
 import StatusBadge, { getDisplayStatus } from '../../components/common/StatusBadge';
 import HelpSheet from '../../components/common/HelpSheet';
+import { HELP } from '../../constants/helpContent';
 
 type Nav = StackNavigationProp<RootStackParamList>;
 type ViewMode = 'week' | 'month';
 
-const HELP =
-  'Swipe left/right to change week/month. Tap a date to see sessions. Coloured dots indicate class types scheduled on that date. Use the calendar icon to toggle week/month view. Use the table icon to manage class series.';
-
 type MarkedDates = Record<string, { dots: { key: string; color: string }[]; selected?: boolean; selectedColor?: string }>;
+
+function traineeLabel(names?: string): string | null {
+  if (!names) return null;
+  const parts = names.split(', ');
+  if (parts.length === 1) return parts[0];
+  return `${parts[0]} +${parts.length - 1}`;
+}
 
 function localISO(date: Date): string {
   const y = date.getFullYear();
@@ -91,12 +96,12 @@ export default function CalendarScreen() {
         <View style={{ flexDirection: 'row' }}>
           <IconButton
             icon="table-edit"
-            iconColor={Brand.purple}
+            iconColor={Brand.textAccent}
             onPress={() => navigation.navigate('ClassSeriesList')}
           />
           <IconButton
             icon={viewMode === 'week' ? 'calendar-month' : 'calendar-week'}
-            iconColor={Brand.purple}
+            iconColor={Brand.textAccent}
             onPress={() =>
               setViewMode((prev) => {
                 const next = prev === 'week' ? 'month' : 'week';
@@ -108,7 +113,7 @@ export default function CalendarScreen() {
           />
           <IconButton
             icon="help-circle-outline"
-            iconColor={Brand.purple}
+            iconColor={Brand.textAccent}
             onPress={() => setHelpVisible(true)}
           />
         </View>
@@ -228,6 +233,11 @@ export default function CalendarScreen() {
               <Text variant="bodySmall" style={{ color: Brand.textSecondary }}>
                 {formatDisplayTime(item.class_time)} · {item.class_type_name} · {item.duration_minutes} min
               </Text>
+              {item.source_type === 'personal' && traineeLabel(item.trainee_names) && (
+                <Text variant="bodySmall" style={{ color: Brand.textAccent }}>
+                  {traineeLabel(item.trainee_names)}
+                </Text>
+              )}
               {item.location && (
                 <Text variant="bodySmall" style={{ color: Brand.textMuted }}>
                   {item.location}
@@ -246,7 +256,7 @@ export default function CalendarScreen() {
         onPress={() => navigation.navigate('AddSession', { initialDate: selectedDate })}
       />
 
-      <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP} />
+      <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP.calendar} />
     </View>
   );
 }

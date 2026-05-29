@@ -1,5 +1,6 @@
 import { getDatabase } from '../db';
 import {
+  CenterMonthIncome,
   EnrichedManagerPayment,
   EnrichedTraineePackage,
   ManagerMonthIncome,
@@ -226,6 +227,25 @@ export async function getManagerIncomeForMonth(month: string): Promise<ManagerMo
     WHERE SUBSTR(cs.session_date, 1, 7) = ?
     GROUP BY m.id
     ORDER BY m.name
+  `, [month]);
+}
+
+export async function getCenterIncomeForMonth(month: string): Promise<CenterMonthIncome[]> {
+  const db = await getDatabase();
+  return db.getAllAsync<CenterMonthIncome>(`
+    SELECT
+      COALESCE(cs.center_id, ser.center_id) AS center_id,
+      c.name AS center_name,
+      SUM(CASE WHEN mp.status = 'paid'    THEN mp.amount ELSE 0 END) AS paid,
+      SUM(CASE WHEN mp.status = 'pending' THEN mp.amount ELSE 0 END) AS pending
+    FROM manager_payments mp
+    JOIN class_sessions cs ON mp.session_id = cs.id
+    JOIN class_series ser ON cs.series_id = ser.id
+    LEFT JOIN centers c ON COALESCE(cs.center_id, ser.center_id) = c.id
+    WHERE SUBSTR(cs.session_date, 1, 7) = ?
+      AND COALESCE(cs.center_id, ser.center_id) IS NOT NULL
+    GROUP BY COALESCE(cs.center_id, ser.center_id)
+    ORDER BY c.name
   `, [month]);
 }
 

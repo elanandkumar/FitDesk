@@ -15,8 +15,7 @@ import HelpSheet from '../../components/common/HelpSheet';
 
 type Nav = StackNavigationProp<RootStackParamList>;
 
-const HELP =
-  'Shows total earned vs pending per month across manager classes and trainee packages. Only completed sessions and existing packages are counted.';
+import { HELP } from '../../constants/helpContent';
 
 function formatMonth(ym: string): string {
   const [y, m] = ym.split('-');
@@ -34,7 +33,7 @@ export default function IncomeSummaryScreen() {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <IconButton icon="help-circle-outline" iconColor={Brand.purple} onPress={() => setHelpVisible(true)} />
+        <IconButton icon="help-circle-outline" iconColor={Brand.textAccent} onPress={() => setHelpVisible(true)} />
       ),
     });
   }, [navigation]);
@@ -140,7 +139,7 @@ export default function IncomeSummaryScreen() {
         }
       />
 
-      <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP} />
+      <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP.incomeSummary} />
     </View>
   );
 }

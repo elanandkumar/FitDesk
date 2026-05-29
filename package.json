@@ -12,7 +12,7 @@
     "@react-navigation/material-top-tabs": "^7.4.27",
     "@react-navigation/native": "^7.2.4",
     "@react-navigation/stack": "^7.9.2",
-    "expo": "~56.0.5",
+    "expo": "~56.0.6",
     "expo-blur": "~56.0.3",
     "expo-file-system": "~56.0.7",
     "expo-font": "~56.0.5",

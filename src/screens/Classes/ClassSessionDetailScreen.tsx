@@ -1,9 +1,8 @@
 import React, { useCallback, useLayoutEffect, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ActivityIndicator,
-  Checkbox,
   Divider,
   IconButton,
   Text,
@@ -16,7 +15,7 @@ import {
   useFocusEffect,
 } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { Brand, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { EnrichedSession, Trainee } from '../../types';
 import {
   getEnrichedSessionById,
@@ -25,10 +24,12 @@ import {
   updateSessionDateTime,
   completeManagerSession,
   completePersonalSession,
+  getSessionNumberForTrainee,
+  deleteAdHocSession,
 } from '../../database/repositories/classSessionRepository';
 import ThemedDatePickerModal from '../../components/common/ThemedDatePickerModal';
 import ThemedTimePickerModal from '../../components/common/ThemedTimePickerModal';
-import { getAllTrainees } from '../../database/repositories/traineeRepository';
+import { getTraineesForSeries, getClassSeriesById } from '../../database/repositories/classSeriesRepository';
 import { getTraineesForSession } from '../../database/repositories/sessionTraineeRepository';
 import { formatDisplayDate, formatDisplayTime } from '../../utils/dateUtils';
 import { formatCurrency } from '../../utils/currencyUtils';
@@ -40,11 +41,9 @@ import AppButton from '../../components/common/AppButton';
 import AppModal from '../../components/common/AppModal';
 import { schedulePendingPaymentNotification } from '../../notifications/scheduler';
 import Constants from 'expo-constants';
+import { HELP } from '../../constants/helpContent';
 
 const isExpoGo = Constants.appOwnership === 'expo';
-
-const HELP =
-  'Mark Complete to record attendance and auto-create a payment record. Skip keeps the series active but marks this session as skipped. Notes are saved separately.';
 
 type Route = RouteProp<RootStackParamList, 'ClassSessionDetail'>;
 type Nav = StackNavigationProp<RootStackParamList>;
@@ -61,14 +60,17 @@ export default function ClassSessionDetailScreen() {
   const [notes, setNotes] = useState('');
   const [notesChanged, setNotesChanged] = useState(false);
 
+  const [linkedTrainees, setLinkedTrainees] = useState<Trainee[]>([]);
+  const [sessionNums, setSessionNums] = useState<Record<number, { session_number: number; total_sessions: number }>>({});
+
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
   const [studentCount, setStudentCount] = useState('0');
-  const [allTrainees, setAllTrainees] = useState<Trainee[]>([]);
-  const [attendingIds, setAttendingIds] = useState<Set<number>>(new Set());
   const [completeNotes, setCompleteNotes] = useState('');
 
   const [showSkipDialog, setShowSkipDialog] = useState(false);
   const [helpVisible, setHelpVisible] = useState(false);
+  const [isAdhoc, setIsAdhoc] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [editDate, setEditDate] = useState('');
@@ -84,6 +86,28 @@ export default function ClassSessionDetailScreen() {
       setSession(s);
       setNotes(s?.notes ?? '');
       setNotesChanged(false);
+
+      if (s?.source_type === 'personal') {
+        if (s.status === 'completed') {
+          const attendees = await getTraineesForSession(sessionId);
+          setLinkedTrainees(attendees);
+          const nums: Record<number, { session_number: number; total_sessions: number }> = {};
+          for (const t of attendees) {
+            const n = await getSessionNumberForTrainee(sessionId, t.id);
+            if (n) nums[t.id] = n;
+          }
+          setSessionNums(nums);
+        } else {
+          const st = await getTraineesForSeries(s.series_id);
+          setLinkedTrainees(st);
+          setSessionNums({});
+        }
+      }
+
+      if (s) {
+        const ser = await getClassSeriesById(s.series_id);
+        setIsAdhoc(!!ser && ser.is_active === 0 && ser.start_date === ser.end_date);
+      }
     } finally {
       setLoading(false);
     }
@@ -99,7 +123,7 @@ export default function ClassSessionDetailScreen() {
           {session?.status === 'upcoming' && (
             <IconButton
               icon="pencil-outline"
-              iconColor={Brand.purple}
+              iconColor={Brand.textAccent}
               onPress={() => {
                 setEditDate(session.session_date);
                 setEditTime(session.class_time);
@@ -107,29 +131,17 @@ export default function ClassSessionDetailScreen() {
               }}
             />
           )}
-          <IconButton icon="help-circle-outline" iconColor={Brand.purple} onPress={() => setHelpVisible(true)} />
+          <IconButton icon="help-circle-outline" iconColor={Brand.textAccent} onPress={() => setHelpVisible(true)} />
         </View>
       ),
     });
   }, [navigation, session]);
 
-  async function openCompleteDialog() {
+  function openCompleteDialog() {
     if (!session) return;
     setCompleteNotes(notes);
     setStudentCount('0');
-    try {
-      if (session.source_type === 'personal') {
-        const [trainees, existing] = await Promise.all([
-          getAllTrainees(),
-          getTraineesForSession(sessionId),
-        ]);
-        setAllTrainees(trainees);
-        setAttendingIds(new Set(existing.map((t) => t.id)));
-      }
-      setShowCompleteDialog(true);
-    } catch {
-      Alert.alert('Error', 'Could not load trainee data. Please try again.');
-    }
+    setShowCompleteDialog(true);
   }
 
   async function handleComplete() {
@@ -147,7 +159,7 @@ export default function ClassSessionDetailScreen() {
       } else if (session.source_type === 'personal') {
         await completePersonalSession(
           session.id,
-          Array.from(attendingIds),
+          linkedTrainees.map((t) => t.id),
           session.session_date.slice(0, 7),
           completeNotes || undefined
         );
@@ -197,13 +209,14 @@ export default function ClassSessionDetailScreen() {
     }
   }
 
-  function toggleTrainee(id: number) {
-    setAttendingIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+  async function handleDeleteSession() {
+    if (!session) return;
+    try {
+      await deleteAdHocSession(session.id, session.series_id);
+      navigation.goBack();
+    } catch {
+      // handled by ConfirmDialog staying open
+    }
   }
 
   if (loading) {
@@ -260,26 +273,58 @@ export default function ClassSessionDetailScreen() {
         />
         <Divider style={styles.rowDivider} />
         {isManager ? (
-          <DetailRow
-            label="Manager"
-            value={
-              session.manager_name
-                ? `${session.manager_name} | ${formatCurrency(session.per_class_rate)}/class`
-                : '—'
-            }
-          />
-        ) : (
-          <DetailRow label="Source" value="Personal Training" />
-        )}
-        {session.status === 'completed' && (
           <>
-            <Divider style={styles.rowDivider} />
-            <DetailRow label="Students" value={String(session.student_count)} />
+            <DetailRow
+              label="Manager"
+              value={
+                session.manager_name
+                  ? `${session.manager_name} | ${formatCurrency(session.per_class_rate)}/class`
+                  : '—'
+              }
+            />
+            {session.status === 'completed' && (
+              <>
+                <Divider style={styles.rowDivider} />
+                <DetailRow label="Students" value={String(session.student_count)} />
+              </>
+            )}
+          </>
+        ) : (
+          <>
+            <DetailRow label="Source" value="Personal Training" />
+            {session.guest_name ? (
+              <>
+                <Divider style={styles.rowDivider} />
+                <DetailRow label="Guest" value={session.guest_name} />
+              </>
+            ) : linkedTrainees.length > 0 ? (
+              <>
+                <Divider style={styles.rowDivider} />
+                <View style={styles.detailRow}>
+                  <Text variant="labelMedium" style={styles.detailLabel}>Trainees</Text>
+                  <View style={{ flex: 1, gap: Spacing.xs }}>
+                    {linkedTrainees.map((t) => {
+                      const num = sessionNums[t.id];
+                      return (
+                        <View key={t.id} style={styles.traineeRow}>
+                          <Text variant="bodyMedium" style={{ color: Brand.textPrimary }}>{t.name}</Text>
+                          {num && (
+                            <Text variant="labelSmall" style={{ color: Brand.purple }}>
+                              Session {num.session_number} / {num.total_sessions}
+                            </Text>
+                          )}
+                        </View>
+                      );
+                    })}
+                  </View>
+                </View>
+              </>
+            ) : null}
           </>
         )}
       </View>
 
-      {/* Notes card — always show when upcoming, hide when completed/skipped and no notes */}
+      {/* Notes card */}
       {(isUpcoming || session.notes) && (
         <View style={styles.detailCard}>
           <Text variant="labelLarge" style={styles.cardLabel}>Notes</Text>
@@ -339,26 +384,26 @@ export default function ClassSessionDetailScreen() {
           </>
         ) : (
           <>
-            <Text variant="bodySmall" style={{ color: Brand.textSecondary, marginBottom: Spacing.sm }}>
-              Select attending trainees ({attendingIds.size} selected):
-            </Text>
-            <ScrollView style={{ maxHeight: 260 }}>
-              {allTrainees.length === 0 ? (
-                <Text variant="bodyMedium" style={{ color: Brand.textMuted, paddingVertical: Spacing.sm }}>
-                  No trainees added yet.
+            {session.guest_name ? (
+              <Text variant="bodySmall" style={{ color: Brand.textSecondary, marginBottom: Spacing.sm }}>
+                Completing for guest: {session.guest_name}
+              </Text>
+            ) : linkedTrainees.length > 0 ? (
+              <View style={{ marginBottom: Spacing.sm }}>
+                <Text variant="bodySmall" style={{ color: Brand.textSecondary, marginBottom: Spacing.xs }}>
+                  Completing for:
                 </Text>
-              ) : (
-                allTrainees.map((t) => (
-                  <Checkbox.Item
-                    key={t.id}
-                    label={t.name}
-                    status={attendingIds.has(t.id) ? 'checked' : 'unchecked'}
-                    onPress={() => toggleTrainee(t.id)}
-                    labelStyle={{ color: Brand.textPrimary }}
-                  />
-                ))
-              )}
-            </ScrollView>
+                {linkedTrainees.map((t) => (
+                  <Text key={t.id} variant="bodyMedium" style={{ color: Brand.textPrimary }}>
+                    • {t.name}
+                  </Text>
+                ))}
+              </View>
+            ) : (
+              <Text variant="bodySmall" style={{ color: Brand.textSecondary, marginBottom: Spacing.sm }}>
+                No trainees linked. Session will be marked complete.
+              </Text>
+            )}
           </>
         )}
         <TextInput
@@ -382,7 +427,16 @@ export default function ClassSessionDetailScreen() {
         onDismiss={() => setShowSkipDialog(false)}
       />
 
-      <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP} />
+      <ConfirmDialog
+        visible={showDeleteDialog}
+        title="Delete Session"
+        message="Delete this session permanently? This cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={handleDeleteSession}
+        onDismiss={() => setShowDeleteDialog(false)}
+      />
+
+      <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP.classSessionDetail} />
 
       {/* Edit date/time modal */}
       <AppModal
@@ -393,16 +447,20 @@ export default function ClassSessionDetailScreen() {
         onConfirm={handleSaveDateTime}
         loading={saving}
       >
-        <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.editRow}>
-          <Text variant="labelMedium" style={{ color: Brand.textSecondary, width: 64 }}>Date</Text>
-          <Text variant="bodyMedium" style={{ color: Brand.textPrimary, flex: 1 }}>{formatDisplayDate(editDate)}</Text>
-          <IconButton icon="calendar" size={18} iconColor={Brand.purple} onPress={() => setShowDatePicker(true)} />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => setShowTimePicker(true)} style={styles.editRow}>
-          <Text variant="labelMedium" style={{ color: Brand.textSecondary, width: 64 }}>Time</Text>
-          <Text variant="bodyMedium" style={{ color: Brand.textPrimary, flex: 1 }}>{formatDisplayTime(editTime)}</Text>
-          <IconButton icon="clock-outline" size={18} iconColor={Brand.purple} onPress={() => setShowTimePicker(true)} />
-        </TouchableOpacity>
+        <View style={styles.editTwoCol}>
+          <View style={styles.editColCell}>
+            <Text variant="labelMedium" style={styles.editFieldLabel}>Date</Text>
+            <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.editPickerButton}>
+              <Text style={{ color: Brand.textPrimary }}>{formatDisplayDate(editDate)}</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.editColCell}>
+            <Text variant="labelMedium" style={styles.editFieldLabel}>Time</Text>
+            <TouchableOpacity onPress={() => setShowTimePicker(true)} style={styles.editPickerButton}>
+              <Text style={{ color: Brand.textPrimary }}>{formatDisplayTime(editTime)}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </AppModal>
 
       <ThemedDatePickerModal
@@ -421,21 +479,43 @@ export default function ClassSessionDetailScreen() {
 
     {isUpcoming && (
       <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
-        <AppButton
-          label="Skip"
-          onPress={() => setShowSkipDialog(true)}
-          variant="secondary"
-          disabled={saving}
-          style={styles.skipBtn}
-        />
-        <AppButton
-          label="Mark Complete"
-          onPress={openCompleteDialog}
-          variant="primary"
-          loading={saving}
-          disabled={saving}
-          style={{ flex: 1 }}
-        />
+        {isAdhoc ? (
+          <>
+            <AppButton
+              label="Delete"
+              onPress={() => setShowDeleteDialog(true)}
+              variant="danger"
+              disabled={saving}
+              style={styles.skipBtn}
+            />
+            <AppButton
+              label="Mark Complete"
+              onPress={openCompleteDialog}
+              variant="primary"
+              loading={saving}
+              disabled={saving}
+              style={{ flex: 1 }}
+            />
+          </>
+        ) : (
+          <>
+            <AppButton
+              label="Skip"
+              onPress={() => setShowSkipDialog(true)}
+              variant="secondary"
+              disabled={saving}
+              style={styles.skipBtn}
+            />
+            <AppButton
+              label="Mark Complete"
+              onPress={openCompleteDialog}
+              variant="primary"
+              loading={saving}
+              disabled={saving}
+              style={{ flex: 1 }}
+            />
+          </>
+        )}
       </View>
     )}
     </KeyboardAvoidingView>
@@ -493,6 +573,7 @@ const styles = StyleSheet.create({
   detailRow: { flexDirection: 'row', alignItems: 'flex-start' },
   detailLabel: { color: Brand.textSecondary, width: 88 },
   detailValue: { color: Brand.textPrimary, flex: 1 },
+  traineeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   footer: {
     flexDirection: 'row',
     gap: Spacing.md,
@@ -503,11 +584,15 @@ const styles = StyleSheet.create({
     borderTopColor: Brand.borderSubtle,
   },
   skipBtn: { borderRadius: Radius.lg },
-  editRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Brand.borderSubtle,
+  editTwoCol: { flexDirection: 'row', gap: Spacing.md },
+  editColCell: { flex: 1 },
+  editFieldLabel: { color: Brand.textSecondary, marginBottom: Spacing.xs },
+  editPickerButton: {
+    borderWidth: 1,
+    borderRadius: Radius.md,
+    borderColor: Brand.borderSubtle,
+    paddingHorizontal: Spacing.lg,
+    minHeight: Layout.INPUT_HEIGHT,
+    justifyContent: 'center',
   },
 });

@@ -12,11 +12,13 @@ import TraineeDetailScreen from '../screens/Trainees/TraineeDetailScreen';
 import ClassSeriesListScreen from '../screens/Classes/ClassSeriesListScreen';
 import AddEditClassSeriesScreen from '../screens/Classes/AddEditClassSeriesScreen';
 import ClassTypesScreen from '../screens/Settings/ClassTypesScreen';
+import CentersScreen from '../screens/Settings/CentersScreen';
 import ClassSessionDetailScreen from '../screens/Classes/ClassSessionDetailScreen';
 import IncomeSummaryScreen from '../screens/Reports/IncomeSummaryScreen';
 import IncomeMonthDetailScreen from '../screens/Reports/IncomeMonthDetailScreen';
 import DataScreen from '../screens/Settings/DataScreen';
 import AddPackageScreen from '../screens/Payments/AddPackageScreen';
+import ManagerPaymentDetailScreen from '../screens/Payments/ManagerPaymentDetailScreen';
 import AddSessionScreen from '../screens/Calendar/AddSessionScreen';
 import { getDatabase } from '../database/db';
 
@@ -75,6 +77,11 @@ export default function AppNavigator() {
           options={{ title: 'Class Types' }}
         />
         <Stack.Screen
+          name="Centers"
+          component={CentersScreen}
+          options={{ title: 'Centers' }}
+        />
+        <Stack.Screen
           name="ClassSessionDetail"
           component={ClassSessionDetailScreen}
           options={{ title: 'Session Detail' }}
@@ -94,6 +101,10 @@ export default function AppNavigator() {
           name="AddPackage"
           component={AddPackageScreen}
           options={{ title: 'Add Package' }}
+        />
+        <Stack.Screen
+          name="ManagerPaymentDetail"
+          component={ManagerPaymentDetailScreen}
         />
         <Stack.Screen
           name="AddSession"

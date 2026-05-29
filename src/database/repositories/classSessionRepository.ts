@@ -4,7 +4,7 @@ import { ClassSession, EnrichedSession, LocationType, SessionStatus, SourceType 
 const ENRICHED_SELECT = `
   SELECT
     cs.id, cs.series_id, cs.session_date, cs.class_time, cs.status,
-    cs.student_count, cs.notes, cs.created_at,
+    cs.student_count, cs.notes, cs.guest_name, cs.center_id, cs.created_at,
     ser.title AS series_title,
     ct.name AS class_type_name,
     ct.color AS class_type_color,
@@ -15,7 +15,17 @@ const ENRICHED_SELECT = `
     COALESCE(m.currency, 'INR') AS currency,
     ser.duration_minutes,
     ser.location_type,
-    ser.location
+    ser.location,
+    COALESCE(
+      (SELECT GROUP_CONCAT(t.name, ', ')
+       FROM series_trainees st2
+       JOIN trainees t ON st2.trainee_id = t.id
+       WHERE st2.series_id = ser.id),
+      (SELECT GROUP_CONCAT(t.name, ', ')
+       FROM session_trainees st3
+       JOIN trainees t ON st3.trainee_id = t.id
+       WHERE st3.session_id = cs.id)
+    ) AS trainee_names
   FROM class_sessions cs
   JOIN class_series ser ON cs.series_id = ser.id
   JOIN class_types ct ON ser.class_type_id = ct.id
@@ -76,6 +86,15 @@ export async function deleteUpcomingSessionsForSeries(seriesId: number): Promise
     'DELETE FROM class_sessions WHERE series_id = ? AND status = "upcoming"',
     [seriesId]
   );
+}
+
+export async function deleteAdHocSession(sessionId: number, seriesId: number): Promise<void> {
+  const db = await getDatabase();
+  await db.withTransactionAsync(async () => {
+    await db.runAsync('DELETE FROM session_trainees WHERE session_id = ?', [sessionId]);
+    await db.runAsync('DELETE FROM class_sessions WHERE id = ?', [sessionId]);
+    await db.runAsync('DELETE FROM class_series WHERE id = ?', [seriesId]);
+  });
 }
 
 export async function updateSessionStatus(
@@ -201,6 +220,9 @@ export interface AdHocSessionInput {
   location?: string;
   studentCount?: number;
   notes?: string;
+  guestName?: string;
+  centerId?: number;
+  traineeIds?: number[];
 }
 
 export async function createAdHocSession(input: AdHocSessionInput): Promise<number> {
@@ -211,8 +233,8 @@ export async function createAdHocSession(input: AdHocSessionInput): Promise<numb
     const seriesResult = await db.runAsync(
       `INSERT INTO class_series (title, class_type_id, source_type, manager_id, recurrence_type,
         recurrence_days, start_date, end_date, class_time, duration_minutes, location_type,
-        location, notes, is_active, created_at)
-       VALUES (?, ?, ?, ?, 'daily', NULL, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
+        location, notes, is_active, center_id, created_at)
+       VALUES (?, ?, ?, ?, 'daily', NULL, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)`,
       [
         input.title,
         input.classTypeId,
@@ -225,16 +247,53 @@ export async function createAdHocSession(input: AdHocSessionInput): Promise<numb
         input.locationType,
         input.location ?? null,
         input.notes ?? null,
+        input.centerId ?? null,
         now,
       ]
     );
     const seriesId = seriesResult.lastInsertRowId;
     const sessionResult = await db.runAsync(
-      `INSERT INTO class_sessions (series_id, session_date, class_time, status, student_count, notes, created_at)
-       VALUES (?, ?, ?, 'upcoming', ?, ?, ?)`,
-      [seriesId, input.sessionDate, input.classTime, input.studentCount ?? 0, input.notes ?? null, now]
+      `INSERT INTO class_sessions (series_id, session_date, class_time, status, student_count, notes, guest_name, center_id, created_at)
+       VALUES (?, ?, ?, 'upcoming', ?, ?, ?, ?, ?)`,
+      [seriesId, input.sessionDate, input.classTime, input.studentCount ?? 0, input.notes ?? null, input.guestName ?? null, input.centerId ?? null, now]
     );
     sessionId = sessionResult.lastInsertRowId;
+    if (input.traineeIds && input.traineeIds.length > 0) {
+      for (const tid of input.traineeIds) {
+        await db.runAsync(
+          'INSERT OR IGNORE INTO session_trainees (session_id, trainee_id) VALUES (?, ?)',
+          [sessionId, tid]
+        );
+      }
+    }
   });
   return sessionId;
+}
+
+export async function getSessionNumberForTrainee(
+  sessionId: number,
+  traineeId: number
+): Promise<{ session_number: number; total_sessions: number } | null> {
+  const db = await getDatabase();
+  return (
+    (await db.getFirstAsync<{ session_number: number; total_sessions: number }>(
+      `SELECT session_number, total_sessions FROM (
+        SELECT
+          cs.id,
+          ROW_NUMBER() OVER (
+            PARTITION BY st.trainee_id, tp.month
+            ORDER BY cs.session_date ASC
+          ) AS session_number,
+          tp.total_sessions
+        FROM class_sessions cs
+        JOIN session_trainees st ON cs.id = st.session_id
+        JOIN trainee_packages tp
+          ON tp.trainee_id = st.trainee_id
+          AND strftime('%Y-%m', cs.session_date) = tp.month
+        WHERE cs.status = 'completed'
+          AND st.trainee_id = ?
+      ) WHERE id = ?`,
+      [traineeId, sessionId]
+    )) ?? null
+  );
 }
