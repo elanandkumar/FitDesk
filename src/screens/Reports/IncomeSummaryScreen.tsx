@@ -159,12 +159,12 @@ const styles = StyleSheet.create({
   heroLeft: { flex: 1, gap: Spacing.xs },
   heroLabel: {
     ...Typography.labelMd,
-    fontFamily: 'Outfit_400Regular',
+    fontFamily: 'Outfit_400Regular', // override: softer weight for hero label context
     color: Brand.textSecondary,
   },
   heroAmount: {
     ...Typography.h1,
-    fontSize: 32,
+    fontSize: 32, // between h1(24) and heroNum(52) — income hero figure
     lineHeight: 40,
     color: Brand.textPrimary,
   },

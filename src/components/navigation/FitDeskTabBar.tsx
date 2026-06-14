@@ -12,6 +12,7 @@ import {
 } from 'phosphor-react-native';
 import { Brand, Gradients, Radius } from '../../theme/brandColors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useBackup } from '../../context/BackupContext';
 
 const TABS = [
   { name: 'Dashboard', label: 'Home', Icon: House },
@@ -27,10 +28,12 @@ function TabItem({
   tab,
   isActive,
   onPress,
+  showDot,
 }: {
   tab: (typeof TABS)[number];
   isActive: boolean;
   onPress: () => void;
+  showDot?: boolean;
 }) {
   return (
     <TouchableOpacity
@@ -53,6 +56,7 @@ function TabItem({
             color={isActive ? Brand.textAccent : Brand.textMuted}
             weight={isActive ? 'duotone' : 'regular'}
           />
+          {showDot && <View style={styles.dot} />}
         </View>
         <Text
           style={[styles.label, { color: isActive ? Brand.textAccent : Brand.textMuted }]}
@@ -67,6 +71,7 @@ function TabItem({
 
 export default function FitDeskTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
+  const { isBackupOverdue } = useBackup();
 
   return (
     <View style={[styles.wrapper, { paddingBottom: insets.bottom + 8 }]}>
@@ -82,6 +87,7 @@ export default function FitDeskTabBar({ state, navigation }: BottomTabBarProps) 
               key={route.key}
               tab={tab}
               isActive={isActive}
+              showDot={tab.name === 'Settings' && isBackupOverdue}
               onPress={() => {
                 if (!isActive) navigation.navigate(route.name);
               }}
@@ -153,5 +159,16 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontFamily: 'Montserrat_600SemiBold',
     letterSpacing: 0.2,
+  },
+  dot: {
+    position: 'absolute',
+    top: 1,
+    right: 6,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Brand.orange,
+    borderWidth: 1.5,
+    borderColor: Brand.surfaceDark,
   },
 });

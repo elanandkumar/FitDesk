@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
     backgroundColor: `${Brand.textMuted}26`,
     borderRadius: Radius.full,
     paddingHorizontal: Spacing.sm,
-    paddingVertical: 3,
+    paddingVertical: 3, // micro: below xs(4) — badge pill tight fit
   },
   cancelledText: { ...Typography.microLabel, color: Brand.textMuted },
   fab: {

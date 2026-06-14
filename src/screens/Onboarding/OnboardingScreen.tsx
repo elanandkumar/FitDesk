@@ -256,13 +256,13 @@ const styles = StyleSheet.create({
   },
   title: {
     ...Typography.h1,
-    fontSize: 26,
+    fontSize: 26, // between h1(24) and heroNum(52) — onboarding hero title
     color: Brand.textPrimary,
     textAlign: "center",
   },
   body: {
     ...Typography.bodyLg,
-    fontSize: 15,
+    fontSize: 15, // between body(14) and bodyLg(16) — onboarding subtitle
     color: Brand.textSecondary,
     textAlign: "center",
   },
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
     width: "100%",
     backgroundColor: Brand.surfaceElevated,
     borderRadius: Radius.lg,
-    paddingHorizontal: 18,
+    paddingHorizontal: 18, // between lg(16) and xl(20) — tuned for input feel
     paddingVertical: Spacing.lg,
     color: Brand.textPrimary,
     ...Typography.bodyLg,
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
   },
   brandName: {
     ...Typography.h1,
-    fontSize: 36,
+    fontSize: 36, // between h1(24) and heroNum(52) — brand display name
     color: Brand.purple,
     textAlign: "center",
     letterSpacing: 2,

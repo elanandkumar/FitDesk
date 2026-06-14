@@ -2,7 +2,11 @@ import React from 'react';
 import { SegmentedButtons, SegmentedButtonsProps } from 'react-native-paper';
 import { Brand } from '../../theme/brandColors';
 
-type Props = Omit<SegmentedButtonsProps, 'theme'>;
+type Props = Omit<SegmentedButtonsProps, 'theme' | 'value' | 'onValueChange' | 'multiSelect'> & {
+  value: string;
+  onValueChange: (value: string) => void;
+  multiSelect?: false;
+};
 
 export default function ThemedSegmentedButtons(props: Props) {
   return (
@@ -13,7 +17,7 @@ export default function ThemedSegmentedButtons(props: Props) {
           secondaryContainer: Brand.purple + '99',
           onSecondaryContainer: Brand.textPrimary,
         },
-      }}
+      } as any}
     />
   );
 }

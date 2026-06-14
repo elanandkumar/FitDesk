@@ -9,12 +9,14 @@ import { useFonts, Poppins_700Bold } from '@expo-google-fonts/poppins';
 import { Montserrat_600SemiBold } from '@expo-google-fonts/montserrat';
 import { Outfit_400Regular } from '@expo-google-fonts/outfit';
 import { ThemeProvider, useAppTheme } from './src/theme';
+import { BackupProvider } from './src/context/BackupContext';
+import { purgeOldNotifications } from './src/database/repositories/appNotificationRepository';
 import AppNavigator from './src/navigation/AppNavigator';
 import ErrorBoundary from './src/components/common/ErrorBoundary';
 import AppSplashScreen from './src/screens/Splash/AppSplashScreen';
 import { getDatabase } from './src/database/db';
 import { extendActiveSeriesSessions } from './src/database/repositories/classSeriesRepository';
-import { scheduleUpcomingNotifications, schedulePendingPaymentNotification } from './src/notifications/scheduler';
+import { scheduleUpcomingNotifications, schedulePendingPaymentNotification, scheduleBackupReminderNotification } from './src/notifications/scheduler';
 import { requestNotificationPermission } from './src/notifications/permissions';
 
 SplashScreen.preventAutoHideAsync();
@@ -48,6 +50,8 @@ export default function App() {
     async function init() {
       const db = await getDatabase();
 
+      await purgeOldNotifications().catch(() => {});
+
       const today = new Date().toISOString().slice(0, 10);
       const lastExtend = await db.getFirstAsync<{ value: string }>(
         "SELECT value FROM settings WHERE key = 'last_session_extend_date'"
@@ -65,6 +69,7 @@ export default function App() {
           await requestNotificationPermission();
           await scheduleUpcomingNotifications();
           await schedulePendingPaymentNotification();
+          await scheduleBackupReminderNotification();
         } catch {
           // notifications unavailable — skip silently
         }
@@ -95,7 +100,9 @@ export default function App() {
     <GestureHandlerRootView style={styles.root}>
       <ErrorBoundary>
         <ThemeProvider>
-          <Root />
+          <BackupProvider>
+            <Root />
+          </BackupProvider>
         </ThemeProvider>
       </ErrorBoundary>
       {phase === 'splash' && <AppSplashScreen onDone={onSplashDone} />}

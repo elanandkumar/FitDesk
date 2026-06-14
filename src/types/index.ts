@@ -116,6 +116,17 @@ export interface Setting {
   value: string;
 }
 
+export type AppNotificationType = 'backup_overdue' | 'payment_pending' | 'payment_reminder' | 'payment_overdue' | 'payment_urgent';
+
+export interface AppNotification {
+  id: number;
+  type: AppNotificationType;
+  title: string;
+  body: string;
+  created_at: string;
+  read_at: string | null;
+}
+
 export interface EnrichedManagerPayment {
   id: number;
   session_id: number;

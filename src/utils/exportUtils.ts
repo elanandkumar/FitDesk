@@ -82,6 +82,11 @@ export async function exportData(): Promise<void> {
   if (!canShare) throw new Error('Sharing not available on this device');
 
   await Sharing.shareAsync(file.uri, { mimeType: 'application/json', dialogTitle: 'Export FitDesk Backup' });
+
+  await db.runAsync(
+    "INSERT OR REPLACE INTO settings (key, value) VALUES ('last_backup_at', ?)",
+    [new Date().toISOString()]
+  );
 }
 
 export async function pickAndImportData(): Promise<void> {

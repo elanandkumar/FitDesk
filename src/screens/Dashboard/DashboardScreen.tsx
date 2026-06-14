@@ -1,5 +1,5 @@
-import React, { useCallback, useLayoutEffect, useState } from 'react';
-import { SectionList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useLayoutEffect, useState } from 'react';
+import { Pressable, SectionList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { IconButton, Text } from 'react-native-paper';
 import GradientFAB from '../../components/common/GradientFAB';
@@ -15,10 +15,12 @@ import {
 import { extendActiveSeriesSessions } from '../../database/repositories/classSeriesRepository';
 import { getWeekEarningsSplit } from '../../database/repositories/paymentRepository';
 import { getDatabase } from '../../database/db';
+import { getUnreadCount } from '../../database/repositories/appNotificationRepository';
 import { formatDisplayTime, todayISO, addDays } from '../../utils/dateUtils';
 import { withAlpha } from '../../utils/colorUtils';
 import { RootStackParamList } from '../../navigation/types';
 import StatusBadge, { getDisplayStatus } from '../../components/common/StatusBadge';
+import { useBackup } from '../../context/BackupContext';
 import EmptyState from '../../components/common/EmptyState';
 import HelpSheet from '../../components/common/HelpSheet';
 import HeroCard from '../../components/common/HeroCard';
@@ -47,22 +49,36 @@ export default function DashboardScreen() {
   const { theme } = useAppTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
+  const { isBackupOverdue } = useBackup();
   const [sections, setSections] = useState<Section[]>([]);
   const [loading, setLoading] = useState(true);
   const [helpVisible, setHelpVisible] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [weekEarnings, setWeekEarnings] = useState<{ pending: number; paid: number }>({ pending: 0, paid: 0 });
   const [trainerName, setTrainerName] = useState<string | undefined>(undefined);
 
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <View style={{ flexDirection: 'row' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <IconButton icon="chart-bar" iconColor={Brand.textAccent} onPress={() => navigation.navigate('IncomeSummary')} />
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Notifications')}
+            style={styles.bellWrap}
+            hitSlop={8}
+          >
+            <IconButton icon="bell-outline" iconColor={Brand.textAccent} style={{ margin: 0 }} />
+            {unreadCount > 0 && (
+              <View style={styles.bellBadge}>
+                <Text style={styles.bellBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
           <IconButton icon="help-circle-outline" iconColor={Brand.textAccent} onPress={() => setHelpVisible(true)} />
         </View>
       ),
     });
-  }, [navigation]);
+  }, [navigation, unreadCount]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -101,7 +117,17 @@ export default function DashboardScreen() {
     }
   }, []);
 
-  useFocusEffect(useCallback(() => { load(); }, [load]));
+  const refreshUnread = useCallback(async () => {
+    setUnreadCount(await getUnreadCount());
+  }, []);
+
+  useFocusEffect(useCallback(() => {
+    load();
+    refreshUnread();
+  }, [load, refreshUnread]));
+
+  // Re-fetch after BackupContext finishes inserting its notification
+  useEffect(() => { refreshUnread(); }, [isBackupOverdue, refreshUnread]);
 
   const todayCount = sections[0]?.title === 'Today'
     ? sections[0].data.filter(s => s.status !== 'skipped').length
@@ -118,6 +144,19 @@ export default function DashboardScreen() {
         ListHeaderComponent={
           <>
             <HeroCard todayCount={todayCount} weekTotal={weekTotal} trainerName={trainerName} />
+            {isBackupOverdue && (
+              <Pressable
+                style={styles.backupBanner}
+                onPress={() => navigation.navigate('DataScreen')}
+              >
+                <Text variant="bodySmall" style={styles.backupBannerText}>
+                  ⚠ Data not backed up in 7+ days
+                </Text>
+                <View style={styles.backupBannerBtn}>
+                  <Text style={styles.backupBannerBtnText}>Backup Now</Text>
+                </View>
+              </Pressable>
+            )}
             <EarningsCard pending={weekEarnings.pending} paid={weekEarnings.paid} />
           </>
         }
@@ -230,6 +269,59 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
+  },
+  bellWrap: {
+    position: 'relative',
+  },
+  bellBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: Brand.orange,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+    borderWidth: 1.5,
+    borderColor: Brand.backgroundDark,
+  },
+  bellBadgeText: {
+    color: Brand.backgroundDark,
+    fontSize: 9,
+    fontFamily: 'Montserrat_600SemiBold',
+    lineHeight: 12,
+  },
+  backupBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: Spacing.lg,
+    marginBottom: Spacing.sm,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    backgroundColor: Brand.orange + '18',
+    borderRadius: Radius.item,
+    borderWidth: 1,
+    borderColor: Brand.orange + '60',
+    gap: Spacing.sm,
+  },
+  backupBannerText: {
+    flex: 1,
+    color: Brand.orange,
+  },
+  backupBannerBtn: {
+    borderWidth: 1,
+    borderColor: Brand.orange,
+    borderRadius: Radius.full,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    flexShrink: 0,
+  },
+  backupBannerBtnText: {
+    color: Brand.orange,
+    fontSize: 11,
+    fontFamily: 'Montserrat_600SemiBold',
   },
   sessionInfo: { flex: 1, gap: 0 },
   fab: {

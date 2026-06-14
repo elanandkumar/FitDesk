@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
   paidAmount: { ...Typography.labelLg, color: Brand.orange },
   pendingAmount: { color: Brand.pink },
   amounts: { alignItems: 'flex-end', gap: Spacing.xs },
-  statusPill: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: Radius.full },
+  statusPill: { paddingHorizontal: Spacing.sm, paddingVertical: 2, borderRadius: Radius.full }, // paddingVertical: micro below xs(4)
   totalCard: {
     flexDirection: 'row',
     justifyContent: 'space-between',

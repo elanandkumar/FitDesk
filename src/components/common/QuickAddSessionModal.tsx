@@ -6,7 +6,7 @@ import { List, Modal, Portal, Surface, Text, TextInput } from 'react-native-pape
 import ThemedSegmentedButtons from './ThemedSegmentedButtons';
 import AppButton from './AppButton';
 import { useAppTheme } from '../../theme';
-import { Radius } from '../../theme/brandColors';
+import { Radius, Spacing } from '../../theme/brandColors';
 import { ClassType, LocationType, Manager, SourceType } from '../../types';
 import { getAllClassTypes } from '../../database/repositories/classTypeRepository';
 import { getAllManagers } from '../../database/repositories/managerRepository';
@@ -163,7 +163,7 @@ export default function QuickAddSessionModal({ visible, initialDate, onDismiss, 
           </Text>
           <ThemedSegmentedButtons
             value={form.sourceType}
-            onValueChange={(v) =>
+            onValueChange={(v: string) =>
               setForm((f) => ({ ...f, sourceType: v as SourceType, managerId: null }))
             }
             buttons={[
@@ -353,17 +353,17 @@ export default function QuickAddSessionModal({ visible, initialDate, onDismiss, 
 }
 
 const styles = StyleSheet.create({
-  modal: { margin: 16, borderRadius: Radius.lg, padding: 20, maxHeight: '90%' },
-  label: { marginBottom: 6, marginTop: 4 },
-  input: { marginBottom: 8 },
-  actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 8 },
+  modal: { margin: Spacing.lg, borderRadius: Radius.lg, padding: Spacing.xxl, maxHeight: '90%' },
+  label: { marginBottom: Spacing.xs, marginTop: Spacing.xs },
+  input: { marginBottom: Spacing.sm },
+  actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: Spacing.sm, marginTop: Spacing.sm },
   pickerButton: {
     borderWidth: 1,
     borderRadius: Radius.sm,
-    padding: 14,
+    padding: 14, // between md(12) and lg(16) — tuned for touch target feel
     minHeight: 52,
     justifyContent: 'center',
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   pickerSelected: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   colorDot: { width: 16, height: 16, borderRadius: Radius.full },
@@ -377,8 +377,8 @@ const styles = StyleSheet.create({
   modalSheet: {
     borderTopLeftRadius: Radius.card,
     borderTopRightRadius: Radius.card,
-    paddingBottom: 32,
+    paddingBottom: Spacing.section,
     maxHeight: '60%',
   },
-  modalTitle: { padding: 16, paddingBottom: 8 },
+  modalTitle: { padding: Spacing.lg, paddingBottom: Spacing.sm },
 });

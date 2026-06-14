@@ -44,7 +44,7 @@ export default function PaymentsTabScreen() {
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ThemedSegmentedButtons
         value={segment}
-        onValueChange={(v) => setSegment(v as 'managers' | 'trainees')}
+        onValueChange={(v: string) => setSegment(v as 'managers' | 'trainees')}
         buttons={[
           { value: 'managers', label: 'Managers' },
           { value: 'trainees', label: 'Trainees' },

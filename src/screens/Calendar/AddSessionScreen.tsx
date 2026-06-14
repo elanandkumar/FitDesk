@@ -179,7 +179,7 @@ export default function AddSessionScreen() {
           <Text variant="labelMedium" style={styles.fieldLabel}>Source *</Text>
           <ThemedSegmentedButtons
             value={sourceType}
-            onValueChange={(v) => {
+            onValueChange={(v: string) => {
               setSourceType(v as SourceType);
               setManagerId(null);
               setSelectedCenterId(null);
@@ -220,7 +220,7 @@ export default function AddSessionScreen() {
               <Text variant="labelMedium" style={styles.fieldLabel}>Client</Text>
               <ThemedSegmentedButtons
                 value={guestMode ? 'guest' : 'trainee'}
-                onValueChange={(v) => {
+                onValueChange={(v: string) => {
                   setGuestMode(v === 'guest');
                   setSelectedTraineeIds([]);
                   setGuestName('');

@@ -18,6 +18,8 @@ export type RootStackParamList = {
   IncomeSummary: undefined;
   IncomeMonthDetail: { month: string };
   ManagerPaymentDetail: { managerId: number; managerName: string };
+  Notifications: undefined;
+  PaymentThresholds: undefined;
 };
 
 export type TabParamList = {

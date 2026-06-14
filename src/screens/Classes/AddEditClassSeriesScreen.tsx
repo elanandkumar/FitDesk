@@ -390,7 +390,7 @@ export default function AddEditClassSeriesScreen() {
             <Text variant="labelMedium" style={styles.fieldLabel}>Source</Text>
             <ThemedSegmentedButtons
               value={sourceType}
-              onValueChange={(v) => setSourceType(v as SourceType)}
+              onValueChange={(v: string) => setSourceType(v as SourceType)}
               buttons={[
                 { value: 'manager', label: 'Manager' },
                 { value: 'personal', label: 'Personal' },
@@ -442,7 +442,7 @@ export default function AddEditClassSeriesScreen() {
             <Text variant="labelMedium" style={styles.fieldLabel}>Recurrence</Text>
             <ThemedSegmentedButtons
               value={recurrenceType}
-              onValueChange={(v) => setRecurrenceType(v as RecurrenceType)}
+              onValueChange={(v: string) => setRecurrenceType(v as RecurrenceType)}
               buttons={[
                 { value: 'daily', label: 'Daily' },
                 { value: 'weekly', label: 'Weekly' },

@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
-    padding: 4,
+    padding: Spacing.xs,
     marginTop: Spacing.lg,
     marginBottom: Spacing.sm,
   },

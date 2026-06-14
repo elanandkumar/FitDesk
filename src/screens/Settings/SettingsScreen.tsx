@@ -1,4 +1,5 @@
 import React, { useCallback, useLayoutEffect, useState } from 'react';
+import { useBackup } from '../../context/BackupContext';
 import { Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { IconButton, Text } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
@@ -51,16 +52,22 @@ interface NavRowProps {
   onPress: () => void;
   iconColor?: string;
   isLast?: boolean;
+  showDot?: boolean;
+  subtitle?: string;
 }
 
-function NavRow({ icon, label, onPress, iconColor = Brand.purple, isLast }: NavRowProps) {
+function NavRow({ icon, label, onPress, iconColor = Brand.purple, isLast, showDot, subtitle }: NavRowProps) {
   return (
     <>
       <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.7}>
         <View style={styles.rowIcon}>
           <MaterialCommunityIcons name={icon as never} size={18} color={iconColor} />
         </View>
-        <Text style={styles.rowLabel}>{label}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.rowLabel}>{label}</Text>
+          {subtitle ? <Text style={styles.rowSubtitle}>{subtitle}</Text> : null}
+        </View>
+        {showDot && <View style={styles.rowDot} />}
         <MaterialCommunityIcons name="chevron-right" size={20} color={Brand.textMuted} />
       </TouchableOpacity>
       {!isLast && <View style={styles.divider} />}
@@ -71,10 +78,14 @@ function NavRow({ icon, label, onPress, iconColor = Brand.purple, isLast }: NavR
 export default function SettingsScreen() {
   const { theme } = useAppTheme();
   const navigation = useNavigation<Nav>();
+  const { isBackupOverdue } = useBackup();
   const [notifEnabled, setNotifEnabled] = useState(true);
   const [minutesBefore, setMinutesBefore] = useState('60');
   const [paymentNotifEnabled, setPaymentNotifEnabled] = useState(true);
   const [paymentNotifTime, setPaymentNotifTime] = useState('09:00');
+  const [thresholdReminder, setThresholdReminder] = useState('3');
+  const [thresholdHigh, setThresholdHigh] = useState('10');
+  const [thresholdUrgent, setThresholdUrgent] = useState('15');
   const [timePickerVisible, setTimePickerVisible] = useState(false);
   const [helpVisible, setHelpVisible] = useState(false);
 
@@ -93,10 +104,16 @@ export default function SettingsScreen() {
         const mins = await getSetting('notification_minutes_before');
         const paymentEnabled = await getSetting('payment_notification_enabled');
         const paymentTime = await getSetting('payment_notification_time');
+        const tReminder = await getSetting('payment_threshold_reminder');
+        const tHigh = await getSetting('payment_threshold_high');
+        const tUrgent = await getSetting('payment_threshold_urgent');
         setNotifEnabled(enabled !== 'false');
         setMinutesBefore(mins ?? '60');
         setPaymentNotifEnabled(paymentEnabled !== 'false');
         setPaymentNotifTime(paymentTime ?? '09:00');
+        setThresholdReminder(tReminder || '3');
+        setThresholdHigh(tHigh || '10');
+        setThresholdUrgent(tUrgent || '15');
       }
       loadSettings();
     }, [])
@@ -161,7 +178,7 @@ export default function SettingsScreen() {
           <View style={styles.rowIcon}>
             <MaterialCommunityIcons name="bell-outline" size={18} color={Brand.purple} />
           </View>
-          <Text style={[styles.rowLabel, { flex: 1 }]}>Enable Reminders</Text>
+          <Text style={[styles.rowLabel, { flex: 1 }]}>Class Reminders</Text>
           <GradientSwitch
             value={notifEnabled}
             onValueChange={handleToggleNotifications}
@@ -202,6 +219,15 @@ export default function SettingsScreen() {
               <Text style={styles.timeValue}>{formatDisplayTime(paymentNotifTime)}</Text>
               <MaterialCommunityIcons name="chevron-right" size={20} color={Brand.textMuted} />
             </TouchableOpacity>
+            <View style={styles.divider} />
+            <NavRow
+              icon="tune-vertical"
+              label="Payment Overdue Alerts"
+              subtitle={`Notify after ${thresholdReminder}, ${thresholdHigh} & ${thresholdUrgent} days`}
+              iconColor={Brand.pink}
+              onPress={() => navigation.navigate('PaymentThresholds')}
+              isLast
+            />
           </>
         )}
       </SettingsCard>
@@ -232,6 +258,7 @@ export default function SettingsScreen() {
           label="Export / Import"
           iconColor={Brand.orange}
           onPress={() => navigation.navigate('DataScreen')}
+          showDot={isBackupOverdue}
           isLast
         />
       </SettingsCard>
@@ -275,7 +302,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  rowLabel: { ...Typography.h4, color: Brand.textPrimary, flex: 1 },
+  rowLabel: { ...Typography.h4, color: Brand.textPrimary },
+  rowSubtitle: { ...Typography.bodySm, color: Brand.textMuted, marginTop: 1 },
+  rowDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Brand.orange,
+    marginRight: Spacing.xs,
+  },
   divider: { height: 1, backgroundColor: Brand.borderSubtle, marginHorizontal: Spacing.lg },
   minutesRow: { padding: Spacing.lg, gap: Spacing.sm },
   timeValue: { ...Typography.body, color: Brand.textAccent, marginRight: Spacing.xs },

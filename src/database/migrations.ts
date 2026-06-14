@@ -53,6 +53,33 @@ const MIGRATIONS: Migration[] = [
       `ALTER TABLE class_types ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1`,
     ],
   },
+  {
+    version: 7,
+    statements: [
+      `INSERT OR IGNORE INTO settings (key, value) VALUES ('last_backup_at', '')`,
+    ],
+  },
+  {
+    version: 8,
+    statements: [
+      `CREATE TABLE IF NOT EXISTS app_notifications (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        type TEXT NOT NULL,
+        title TEXT NOT NULL,
+        body TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        read_at TEXT
+      )`,
+    ],
+  },
+  {
+    version: 9,
+    statements: [
+      `INSERT OR IGNORE INTO settings (key, value) VALUES ('payment_threshold_reminder', '3')`,
+      `INSERT OR IGNORE INTO settings (key, value) VALUES ('payment_threshold_high', '10')`,
+      `INSERT OR IGNORE INTO settings (key, value) VALUES ('payment_threshold_urgent', '15')`,
+    ],
+  },
 ];
 
 async function runStatement(db: SQLite.SQLiteDatabase, sql: string): Promise<void> {

@@ -20,6 +20,8 @@ import DataScreen from '../screens/Settings/DataScreen';
 import AddPackageScreen from '../screens/Payments/AddPackageScreen';
 import ManagerPaymentDetailScreen from '../screens/Payments/ManagerPaymentDetailScreen';
 import AddSessionScreen from '../screens/Calendar/AddSessionScreen';
+import NotificationsScreen from '../screens/Notifications/NotificationsScreen';
+import PaymentThresholdsScreen from '../screens/Settings/PaymentThresholdsScreen';
 import { getDatabase } from '../database/db';
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -110,6 +112,16 @@ export default function AppNavigator() {
           name="AddSession"
           component={AddSessionScreen}
           options={{ title: 'Add Session' }}
+        />
+        <Stack.Screen
+          name="Notifications"
+          component={NotificationsScreen}
+          options={{ title: 'Notifications' }}
+        />
+        <Stack.Screen
+          name="PaymentThresholds"
+          component={PaymentThresholdsScreen}
+          options={{ title: 'Payment Overdue Alerts' }}
         />
       </Stack.Navigator>
     </NavigationContainer>

@@ -12,8 +12,9 @@ android/build/
 android/.gradle/
 android/app/build/
 android/local.properties
-android/*.keystore
+android/**/*.keystore
 !android/app/debug.keystore
+android/gradle.properties
 
 # iOS (not used but just in case)
 ios/build/
@@ -60,6 +61,7 @@ yarn-error.log*
 coverage/
 
 # Internal docs (local only)
+.claude
 CLAUDE.md
 PLAN.md
 PLAN_TRAINEE_SESSIONS.md

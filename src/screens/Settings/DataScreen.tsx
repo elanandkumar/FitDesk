@@ -5,15 +5,18 @@ import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
 import GradientButton from '../../components/common/GradientButton';
 import AppButton from '../../components/common/AppButton';
 import { exportData, pickAndImportData } from '../../utils/exportUtils';
+import { useBackup } from '../../context/BackupContext';
 
 export default function DataScreen() {
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
+  const { refresh: refreshBackup } = useBackup();
 
   async function handleExport() {
     setExporting(true);
     try {
       await exportData();
+      await refreshBackup();
     } catch (err) {
       Alert.alert('Export failed', err instanceof Error ? err.message : 'Unknown error');
     } finally {
