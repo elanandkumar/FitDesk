@@ -163,12 +163,10 @@ const styles = StyleSheet.create({
   dot: {
     position: 'absolute',
     top: 1,
-    right: 6,
+    right: 1,
     width: 8,
     height: 8,
     borderRadius: 4,
     backgroundColor: Brand.orange,
-    borderWidth: 1.5,
-    borderColor: Brand.surfaceDark,
   },
 });
