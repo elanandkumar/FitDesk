@@ -1,6 +1,6 @@
 {
   "name": "fitdesktemp",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "main": "index.ts",
   "dependencies": {
     "@expo-google-fonts/montserrat": "^0.4.2",

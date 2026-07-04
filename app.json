@@ -2,7 +2,7 @@
   "expo": {
     "name": "FitDesk",
     "slug": "fitdesk",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -13,7 +13,7 @@
     },
     "android": {
       "package": "com.elanandkumar.fitdesk",
-      "versionCode": 4,
+      "versionCode": 5,
       "permissions": [
         "INTERNET",
         "POST_NOTIFICATIONS",
