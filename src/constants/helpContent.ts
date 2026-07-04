@@ -1,37 +1,37 @@
 export const HELP = {
   dashboard:
-    'Sessions for the next 7 days. Tap a session to mark complete or skip. Use + to add a one-off session. Personal sessions show linked trainee names.',
+    'Shows today, the next 7 days of sessions, recent earnings, notifications, and backup reminders. Tap a session to open details. Use + to add a one-off session.',
 
   calendar:
-    'Swipe left/right to change week/month. Tap a date to see sessions. Coloured dots show class types. Personal sessions show linked trainee names. Use the calendar icon to toggle week/month view.',
+    'Use week or month view to browse sessions by date. Dots mark scheduled class types. Tap a date to list sessions, tap a session for details, or use + to add a session on the selected date.',
 
   classSeriesList:
-    'A series defines a recurring class schedule. Sessions are auto-generated 90 days ahead. Personal series can have trainees linked — their names appear on each session card. Tap + to create a new one.',
+    'Manage recurring class schedules. Active shows current series; All includes ended or cancelled series. Search by title, tap a series to edit it, or use + to create a new recurring schedule.',
 
   classSessionDetail:
-    'Mark Complete to record attendance. For personal sessions, linked trainee names and session count (e.g. Session 3 / 12) are shown. Skip marks this session as skipped without affecting the series. Notes are saved separately.',
+    'Review session date, time, location, people, and notes. Upcoming sessions can be edited, skipped, deleted if one-off, or marked complete. Completing manager sessions creates payments; completing personal sessions updates package usage.',
 
   contactsManagers:
-    'Add managers who assign you classes. Outstanding balance (in orange) shows total unpaid sessions. Tap a manager to see their payment history.',
+    'Managers are organizations or people who assign classes. Search the list, add new managers, and open a manager to view contact details, rates, upcoming work, and payment history.',
 
   contactsTrainees:
-    'Add your personal training clients. Tap a trainee to view their session packages and full session history with session numbering.',
+    'Trainees are personal training clients. Search the list, add new trainees, and open a trainee to view contact details, packages, session history, and notes.',
 
   managerDetail:
-    'Shows payment history per class. Mark individual sessions paid after receiving payment from this manager.',
+    'Shows manager contact info, per-class rate, outstanding balance, and payment history. Use the edit button to update details. Removing a manager archives them while keeping history and payments.',
 
   traineeDetail:
-    'Packages tab shows monthly packages and payment status. Sessions tab shows all sessions with "Session N / M" numbering for completed ones.',
+    'Packages shows monthly package usage and payment status. Sessions shows the trainee history with completed session numbering. Use the edit button to update details; removing a trainee archives them while keeping history.',
 
   paymentsManagers:
-    'Manager payments are grouped by manager. Tap "View →" to see individual sessions and mark them paid. Payments are auto-created when sessions are marked complete.',
+    'Manager payments are created when manager sessions are marked complete. Use Pending or All to filter, review totals, and open a manager to mark individual sessions paid.',
 
   paymentsTrainees:
-    'Monthly packages per trainee. Session count increments automatically when a personal session is marked complete. Mark the package paid after receiving payment.',
+    'Trainee packages are grouped by trainee. Use Pending or All to filter, add packages with +, and mark packages paid after receiving payment. Usage increases when personal sessions are completed.',
 
   settings:
-    'Configure notification reminders, manage class types, centers, and export/import your data. Export regularly to keep a backup — data is stored locally only.',
+    'Configure class reminders, payment reminders, overdue alert thresholds, class types, centers, and backups. Export regularly because FitDesk stores data locally on this device.',
 
   incomeSummary:
-    'Shows total earned vs pending per month. Breakdown covers manager classes, trainee packages, and centers/venues. Only completed sessions and existing packages are counted.',
+    'Shows paid and pending income by month. Manager income comes from completed manager sessions. Trainee income comes from created packages. Tap a month to see its detailed breakdown.',
 } as const;

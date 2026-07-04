@@ -1,0 +1,6 @@
+# Copy this file to android/signing.properties for local Play Store release builds.
+# CI can set the same keys as environment variables instead.
+FITDESK_UPLOAD_STORE_FILE=fitdesk-release.keystore
+FITDESK_UPLOAD_KEY_ALIAS=fitdesk
+FITDESK_UPLOAD_STORE_PASSWORD=replace-with-keystore-password
+FITDESK_UPLOAD_KEY_PASSWORD=replace-with-key-password

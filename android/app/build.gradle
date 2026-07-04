@@ -3,6 +3,14 @@ apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 
 def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
+def signingProperties = new Properties()
+def signingPropertiesFile = rootProject.file('signing.properties')
+if (signingPropertiesFile.exists()) {
+    signingPropertiesFile.withInputStream { signingProperties.load(it) }
+}
+def signingProperty = { name ->
+    signingProperties.getProperty(name) ?: findProperty(name) ?: System.getenv(name)
+}
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -92,8 +100,8 @@ android {
         applicationId 'com.elanandkumar.fitdesk'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 2
-        versionName "1.1.0"
+        versionCode 4
+        versionName "1.2.1"
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
     }
@@ -104,15 +112,28 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        release {
+            def uploadStoreFile = signingProperty('FITDESK_UPLOAD_STORE_FILE')
+            def uploadKeyAlias = signingProperty('FITDESK_UPLOAD_KEY_ALIAS')
+            def uploadStorePassword = signingProperty('FITDESK_UPLOAD_STORE_PASSWORD')
+            def uploadKeyPassword = signingProperty('FITDESK_UPLOAD_KEY_PASSWORD')
+
+            if (uploadStoreFile && uploadKeyAlias && uploadStorePassword && uploadKeyPassword) {
+                storeFile file(uploadStoreFile)
+                keyAlias uploadKeyAlias
+                storePassword uploadStorePassword
+                keyPassword uploadKeyPassword
+            }
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            if (signingConfigs.release.storeFile != null) {
+                signingConfig signingConfigs.release
+            }
             def enableShrinkResources = findProperty('android.enableShrinkResourcesInReleaseBuilds') ?: 'false'
             shrinkResources enableShrinkResources.toBoolean()
             minifyEnabled enableMinifyInReleaseBuilds
@@ -129,6 +150,14 @@ android {
     }
     androidResources {
         ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:!CVS:!thumbs.db:!picasa.ini:!*~'
+    }
+}
+
+gradle.taskGraph.whenReady { taskGraph ->
+    if (taskGraph.hasTask(':app:bundleRelease') || taskGraph.hasTask(':app:assembleRelease')) {
+        if (android.signingConfigs.release.storeFile == null) {
+            throw new GradleException("Release signing is not configured. Add FITDESK_UPLOAD_* values to android/signing.properties or environment variables.")
+        }
     }
 }
 

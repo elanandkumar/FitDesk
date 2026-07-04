@@ -32,7 +32,7 @@ So I built FitDesk — a simple, local-first Android app that puts everything in
 - **Contacts** — track managers (with per-class rate) and trainees (with monthly session packages); searchable pickers everywhere with inline add for class types and centers
 - **Payments** — manager payments grouped by manager with drill-down per session; trainee packages tracked by month with sessions-used count; Reports accessible directly from the Payments screen
 - **Notifications** — class reminders (15 min / 30 min / 1 hr before), payment reminders
-- **Export / Import** — JSON backup so data is never lost
+- **Export / Import** — backup files so data is never lost
 
 <p align="center">
   <img src="assets/screenshots/calendar.png" width="220" alt="Calendar" />
@@ -90,6 +90,34 @@ npx expo run:android
 ```
 
 > Android only. iOS not supported in this release.
+
+---
+
+## Release Workflow
+
+FitDesk includes a release helper that builds the Android app, creates release notes from git commits, and tags the release.
+
+For Play Store uploads, use the default Android App Bundle (`.aab`) format:
+
+```bash
+npm run release -- --version 1.2.2 --version-code 5 --update-version --commit-version --github-release
+```
+
+This updates the app version files, commits the version bump, builds `bundleRelease`, generates notes in `dist/releases/`, creates an annotated tag like `v1.2.2`, and publishes a GitHub release when the `gh` CLI is available.
+
+For a local APK build instead:
+
+```bash
+npm run release -- --format apk --github-release
+```
+
+Preview release notes without building, tagging, or publishing:
+
+```bash
+npm run release -- --version 1.2.2 --dry-run --allow-dirty
+```
+
+Release signing must be configured before building release artifacts. Copy `android/signing.properties.example` to `android/signing.properties` for local builds, or set the `FITDESK_UPLOAD_*` values as environment variables in CI.
 
 ---
 

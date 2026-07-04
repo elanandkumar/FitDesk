@@ -57,7 +57,7 @@ export default function DataScreen() {
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Export</Text>
         <Text variant="bodySmall" style={styles.sectionDesc}>
-          Save all your FitDesk data as a JSON file. Share it to cloud storage or another device.
+          Save all your FitDesk data as a backup file. Share it to cloud storage or another device.
         </Text>
         {exporting ? (
           <ActivityIndicator animating color={Brand.orange} />
@@ -69,7 +69,7 @@ export default function DataScreen() {
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Import</Text>
         <Text variant="bodySmall" style={styles.sectionDesc}>
-          Restore from a FitDesk JSON backup. All existing data will be replaced.
+          Restore from a FitDesk backup. Older backups are still supported. All existing data will be replaced.
         </Text>
         <View style={styles.warningBox}>
           <Text variant="bodySmall" style={{ color: Brand.pink }}>

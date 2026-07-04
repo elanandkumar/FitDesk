@@ -1,6 +1,8 @@
 import { File, Paths } from 'expo-file-system';
+import * as SQLite from 'expo-sqlite';
 import * as Sharing from 'expo-sharing';
 import { getDatabase } from '../database/db';
+import { runMigrations } from '../database/migrations';
 import { getAllClassTypes } from '../database/repositories/classTypeRepository';
 import { getAllManagers } from '../database/repositories/managerRepository';
 import { getAllTrainees } from '../database/repositories/traineeRepository';
@@ -11,6 +13,25 @@ import {
 } from '../types';
 
 const BACKUP_VERSION = 2;
+const SQLITE_BACKUP_MIME_TYPES = [
+  'application/vnd.sqlite3',
+  'application/x-sqlite3',
+  'application/octet-stream',
+  'application/json',
+];
+const REQUIRED_SQLITE_TABLES = [
+  'centers',
+  'class_types',
+  'managers',
+  'trainees',
+  'class_series',
+  'series_trainees',
+  'class_sessions',
+  'session_trainees',
+  'manager_payments',
+  'trainee_packages',
+  'settings',
+];
 
 export interface FitDeskBackup {
   version: number;
@@ -29,6 +50,30 @@ export interface FitDeskBackup {
 }
 
 export async function exportData(): Promise<void> {
+  const db = await getDatabase();
+  await db.execAsync('PRAGMA wal_checkpoint(TRUNCATE);');
+  const bytes = await db.serializeAsync();
+
+  const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const filename = `fitdesk_backup_${date}.fitdeskbackup`;
+  const file = new File(Paths.cache, filename);
+  file.write(bytes);
+
+  const canShare = await Sharing.isAvailableAsync();
+  if (!canShare) throw new Error('Sharing not available on this device');
+
+  await Sharing.shareAsync(file.uri, {
+    mimeType: 'application/octet-stream',
+    dialogTitle: 'Export FitDesk Backup',
+  });
+
+  await db.runAsync(
+    "INSERT OR REPLACE INTO settings (key, value) VALUES ('last_backup_at', ?)",
+    [new Date().toISOString()]
+  );
+}
+
+export async function exportJsonData(): Promise<void> {
   const db = await getDatabase();
 
   const [
@@ -90,10 +135,53 @@ export async function exportData(): Promise<void> {
 }
 
 export async function pickAndImportData(): Promise<void> {
-  const result = await File.pickFileAsync({ mimeTypes: ['application/json'] });
+  const result = await File.pickFileAsync({ mimeTypes: SQLITE_BACKUP_MIME_TYPES });
   if (result.canceled) return;
 
   const pickedFile = result.result as File;
+  if (pickedFile.name.toLowerCase().endsWith('.json')) {
+    await importJsonFile(pickedFile);
+    return;
+  }
+
+  await importSqliteFile(pickedFile);
+}
+
+async function importSqliteFile(file: File): Promise<void> {
+  const sourceDb = await SQLite.deserializeDatabaseAsync(await file.bytes());
+  try {
+    await validateSqliteBackup(sourceDb);
+
+    const db = await getDatabase();
+    await SQLite.backupDatabaseAsync({
+      sourceDatabase: sourceDb,
+      destDatabase: db,
+    });
+    await db.execAsync('PRAGMA foreign_keys = ON;');
+    await db.execAsync('PRAGMA journal_mode = WAL;');
+    await runMigrations(db);
+  } finally {
+    await sourceDb.closeAsync();
+  }
+}
+
+async function validateSqliteBackup(db: SQLite.SQLiteDatabase): Promise<void> {
+  const integrity = await db.getFirstAsync<{ integrity_check: string }>('PRAGMA integrity_check');
+  if (integrity?.integrity_check !== 'ok') {
+    throw new Error('Invalid backup: the file appears to be damaged');
+  }
+
+  const rows = await db.getAllAsync<{ name: string }>(
+    "SELECT name FROM sqlite_master WHERE type = 'table'"
+  );
+  const tableNames = new Set(rows.map((row) => row.name));
+  const missingTables = REQUIRED_SQLITE_TABLES.filter((table) => !tableNames.has(table));
+  if (missingTables.length > 0) {
+    throw new Error('Invalid backup: not a FitDesk backup file');
+  }
+}
+
+async function importJsonFile(pickedFile: File): Promise<void> {
   const raw = await pickedFile.text();
 
   let backup: FitDeskBackup;
