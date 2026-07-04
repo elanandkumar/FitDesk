@@ -28,7 +28,7 @@ function to24h(display: number, period: 'AM' | 'PM'): number {
 }
 
 export default function ThemedTimePickerModal({ visible, value, onConfirm, onDismiss }: Props) {
-  const { theme } = useAppTheme();
+  const { accentPalette, theme } = useAppTheme();
   const [hour24, setHour24] = useState(0);
   const [minute, setMinute] = useState(0);
 
@@ -95,7 +95,7 @@ export default function ThemedTimePickerModal({ visible, value, onConfirm, onDis
           <View style={styles.periodPill}>
             <Pressable
               onPress={period === 'PM' ? togglePeriod : undefined}
-              style={[styles.periodSegment, period === 'AM' && styles.periodActive]}
+              style={[styles.periodSegment, period === 'AM' && { backgroundColor: accentPalette.main }]}
             >
               <RNText style={[styles.periodLabel, { color: period === 'AM' ? '#FFFFFF' : Brand.textSecondary }]}>
                 AM
@@ -103,7 +103,7 @@ export default function ThemedTimePickerModal({ visible, value, onConfirm, onDis
             </Pressable>
             <Pressable
               onPress={period === 'AM' ? togglePeriod : undefined}
-              style={[styles.periodSegment, period === 'PM' && styles.periodActive]}
+              style={[styles.periodSegment, period === 'PM' && { backgroundColor: accentPalette.main }]}
             >
               <RNText style={[styles.periodLabel, { color: period === 'PM' ? '#FFFFFF' : Brand.textSecondary }]}>
                 PM
@@ -146,9 +146,6 @@ const styles = StyleSheet.create({
     height: 36,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  periodActive: {
-    backgroundColor: Brand.purple,
   },
   periodLabel: {
     fontWeight: '600',

@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Calendar, CalendarProvider, WeekCalendar } from 'react-native-calendars';
 import type { DateData } from 'react-native-calendars';
-import { useAppTheme, Brand, Radius, Spacing } from '../../theme';
+import { AccentPalette, useAppTheme, Brand, Radius, Spacing } from '../../theme';
 import { Layout, Typography } from '../../theme/brandColors';
 import { EnrichedSession } from '../../types';
 import { getEnrichedSessionsByDateRange } from '../../database/repositories/classSessionRepository';
@@ -54,23 +54,26 @@ function monthRange(dateStr: string): { start: string; end: string } {
   return { start: localISO(start), end: localISO(end) };
 }
 
-const CALENDAR_THEME = (theme: ReturnType<typeof useAppTheme>['theme']) => ({
+const CALENDAR_THEME = (
+  theme: ReturnType<typeof useAppTheme>['theme'],
+  accentPalette: AccentPalette,
+) => ({
   backgroundColor: theme.colors.surface,
   calendarBackground: theme.colors.surface,
   textSectionTitleColor: theme.colors.onSurfaceVariant,
-  selectedDayBackgroundColor: Brand.purple,
+  selectedDayBackgroundColor: accentPalette.main,
   selectedDayTextColor: Brand.textPrimary,
-  todayTextColor: Brand.orange,
+  todayTextColor: accentPalette.warm,
   dayTextColor: theme.colors.onSurface,
   textDisabledColor: theme.colors.onSurfaceVariant,
-  arrowColor: Brand.purple,
+  arrowColor: accentPalette.main,
   monthTextColor: Brand.textPrimary,
-  dotColor: Brand.purple,
+  dotColor: accentPalette.main,
   selectedDotColor: Brand.textPrimary,
 });
 
 export default function CalendarScreen() {
-  const { theme } = useAppTheme();
+  const { accentPalette, theme } = useAppTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const today = todayISO();
@@ -89,7 +92,7 @@ export default function CalendarScreen() {
 
   const isFocused = useIsFocused();
 
-  const calTheme = useMemo(() => CALENDAR_THEME(theme), [theme]);
+  const calTheme = useMemo(() => CALENDAR_THEME(theme, accentPalette), [accentPalette, theme]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -97,12 +100,12 @@ export default function CalendarScreen() {
         <View style={{ flexDirection: 'row' }}>
           <IconButton
             icon="table-edit"
-            iconColor={Brand.textAccent}
+            iconColor={accentPalette.textAccent}
             onPress={() => navigation.navigate('ClassSeriesList')}
           />
           <IconButton
             icon={viewMode === 'week' ? 'calendar-month' : 'calendar-week'}
-            iconColor={Brand.textAccent}
+            iconColor={accentPalette.textAccent}
             onPress={() =>
               setViewMode((prev) => {
                 const next = prev === 'week' ? 'month' : 'week';
@@ -114,13 +117,13 @@ export default function CalendarScreen() {
           />
           <IconButton
             icon="help-circle-outline"
-            iconColor={Brand.textAccent}
+            iconColor={accentPalette.textAccent}
             onPress={() => setHelpVisible(true)}
           />
         </View>
       ),
     });
-  }, [navigation, viewMode, selectedDate]);
+  }, [accentPalette.textAccent, navigation, viewMode, selectedDate]);
 
   const loadRange = useCallback(async (start: string, end: string) => {
     const data = await getEnrichedSessionsByDateRange(start, end);
@@ -165,7 +168,7 @@ export default function CalendarScreen() {
     marked[selectedDate] = {
       ...(marked[selectedDate] ?? { dots: [] }),
       selected: true,
-      selectedColor: Brand.purple,
+      selectedColor: accentPalette.main,
     };
   }
 
@@ -177,7 +180,7 @@ export default function CalendarScreen() {
             date={selectedDate}
             onDateChanged={handleDateChanged}
             style={{ flex: 0 }}
-            theme={{ todayButtonTextColor: Brand.orange }}
+            theme={{ todayButtonTextColor: accentPalette.warm }}
           >
             <WeekCalendar
               markingType="multi-dot"
@@ -223,7 +226,10 @@ export default function CalendarScreen() {
         renderItem={({ item }) => (
           <TouchableOpacity
             onPress={() => navigation.navigate('ClassSessionDetail', { sessionId: item.id })}
-            style={[styles.sessionCard, { borderLeftColor: withAlpha(item.class_type_color, 0.7) }]}
+            style={[
+              styles.sessionCard,
+              { borderLeftColor: withAlpha(item.class_type_color, 0.7), shadowColor: accentPalette.main },
+            ]}
             activeOpacity={0.75}
           >
             <View style={styles.sessionInfo}>
@@ -234,7 +240,7 @@ export default function CalendarScreen() {
                 {formatDisplayTime(item.class_time)} · {item.class_type_name} · {item.duration_minutes} min
               </Text>
               {item.source_type === 'personal' && traineeLabel(item.trainee_names) && (
-                <Text variant="bodySmall" style={{ color: Brand.textAccent }}>
+                <Text variant="bodySmall" style={{ color: accentPalette.textAccent }}>
                   {traineeLabel(item.trainee_names)}
                 </Text>
               )}
@@ -285,7 +291,6 @@ const styles = StyleSheet.create({
     borderColor: Brand.borderSubtle,
     borderLeftWidth: 4,
     elevation: 4,
-    shadowColor: Brand.purple,
     shadowOpacity: 0.2,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },

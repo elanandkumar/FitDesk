@@ -33,6 +33,15 @@ const REQUIRED_SQLITE_TABLES = [
   'settings',
 ];
 
+function sqliteTempFile(prefix: string): { name: string; file: File; directory: string } {
+  const name = `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2)}.db`;
+  return {
+    name,
+    file: new File(Paths.cache, name),
+    directory: Paths.cache.uri,
+  };
+}
+
 export interface FitDeskBackup {
   version: number;
   exported_at: string;
@@ -52,12 +61,19 @@ export interface FitDeskBackup {
 export async function exportData(): Promise<void> {
   const db = await getDatabase();
   await db.execAsync('PRAGMA wal_checkpoint(TRUNCATE);');
-  const bytes = await db.serializeAsync();
 
   const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
   const filename = `fitdesk_backup_${date}.fitdeskbackup`;
   const file = new File(Paths.cache, filename);
-  file.write(bytes);
+  const temp = await SQLite.openDatabaseAsync(filename, { useNewConnection: true }, Paths.cache.uri);
+  try {
+    await SQLite.backupDatabaseAsync({
+      sourceDatabase: db,
+      destDatabase: temp,
+    });
+  } finally {
+    await temp.closeAsync();
+  }
 
   const canShare = await Sharing.isAvailableAsync();
   if (!canShare) throw new Error('Sharing not available on this device');
@@ -148,7 +164,10 @@ export async function pickAndImportData(): Promise<void> {
 }
 
 async function importSqliteFile(file: File): Promise<void> {
-  const sourceDb = await SQLite.deserializeDatabaseAsync(await file.bytes());
+  const temp = sqliteTempFile('fitdesk_import');
+  temp.file.write(await file.bytes());
+
+  const sourceDb = await SQLite.openDatabaseAsync(temp.name, { useNewConnection: true }, temp.directory);
   try {
     await validateSqliteBackup(sourceDb);
 
@@ -162,6 +181,9 @@ async function importSqliteFile(file: File): Promise<void> {
     await runMigrations(db);
   } finally {
     await sourceDb.closeAsync();
+    if (temp.file.exists) {
+      temp.file.delete();
+    }
   }
 }
 

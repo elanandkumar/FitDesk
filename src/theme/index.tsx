@@ -1,19 +1,27 @@
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
 import { MD3DarkTheme } from 'react-native-paper';
-import { Brand } from './brandColors';
+import { getDatabase } from '../database/db';
+import { AccentKey, AccentPalette, AccentPalettes, Brand } from './brandColors';
 
-export { Brand, Gradients, Radius, Layout, Spacing, Typography, Elevation } from './brandColors';
+export { AccentPalettes, Brand, Gradients, Radius, Layout, Spacing, Typography, Elevation } from './brandColors';
+export type { AccentKey, AccentPalette } from './brandColors';
 
-const FitDeskTheme = {
+function isAccentKey(value: string | null): value is AccentKey {
+  return !!value && value in AccentPalettes;
+}
+
+function createFitDeskTheme(accentKey: AccentKey) {
+  const accent = AccentPalettes[accentKey];
+  return {
   ...MD3DarkTheme,
   roundness: 6,
   colors: {
     ...MD3DarkTheme.colors,
-    primary:              Brand.purple,
+    primary:              accent.main,
     onPrimary:            Brand.textPrimary,
     primaryContainer:     Brand.surfaceElevated,
     onPrimaryContainer:   Brand.textPrimary,
-    secondary:            Brand.orange,
+    secondary:            accent.accent,
     onSecondary:          Brand.textPrimary,
     background:           Brand.surfaceDark,
     surface:              Brand.surfaceDark,
@@ -41,19 +49,66 @@ const FitDeskTheme = {
     labelMedium:   { ...MD3DarkTheme.fonts.labelMedium,   fontFamily: 'Outfit_400Regular' },
     labelSmall:    { ...MD3DarkTheme.fonts.labelSmall,    fontFamily: 'Outfit_400Regular' },
   },
-};
+  };
+}
 
-type AppTheme = typeof FitDeskTheme;
+type AppTheme = ReturnType<typeof createFitDeskTheme>;
 
 interface ThemeContextValue {
   theme: AppTheme;
+  accentKey: AccentKey;
+  accentPalette: AccentPalette;
+  setAccentKey: (accentKey: AccentKey) => Promise<void>;
 }
 
-const ThemeContext = createContext<ThemeContextValue>({ theme: FitDeskTheme });
+const DEFAULT_ACCENT: AccentKey = 'purple';
+
+const ThemeContext = createContext<ThemeContextValue>({
+  theme: createFitDeskTheme(DEFAULT_ACCENT),
+  accentKey: DEFAULT_ACCENT,
+  accentPalette: AccentPalettes[DEFAULT_ACCENT],
+  setAccentKey: async () => {},
+});
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
+  const [accentKey, setAccentKeyState] = useState<AccentKey>(DEFAULT_ACCENT);
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadAccent() {
+      const db = await getDatabase();
+      const row = await db.getFirstAsync<{ value: string }>(
+        "SELECT value FROM settings WHERE key = 'accent_color'"
+      );
+      if (mounted && isAccentKey(row?.value ?? null)) {
+        setAccentKeyState(row.value);
+      }
+    }
+    loadAccent().catch(() => {});
+    return () => { mounted = false; };
+  }, []);
+
+  const setAccentKey = useCallback(async (nextAccentKey: AccentKey) => {
+    setAccentKeyState(nextAccentKey);
+    const db = await getDatabase();
+    await db.runAsync(
+      "INSERT OR REPLACE INTO settings (key, value) VALUES ('accent_color', ?)",
+      [nextAccentKey]
+    );
+  }, []);
+
+  const value = useMemo(
+    () => ({
+      theme: createFitDeskTheme(accentKey),
+      accentKey,
+      accentPalette: AccentPalettes[accentKey],
+      setAccentKey,
+    }),
+    [accentKey, setAccentKey],
+  );
+
   return (
-    <ThemeContext.Provider value={{ theme: FitDeskTheme }}>
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   );

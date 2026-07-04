@@ -46,7 +46,7 @@ function sectionTitle(isoDate: string, todayStr: string): string {
 }
 
 export default function DashboardScreen() {
-  const { theme } = useAppTheme();
+  const { accentPalette, theme } = useAppTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const { isBackupOverdue } = useBackup();
@@ -61,24 +61,24 @@ export default function DashboardScreen() {
     navigation.setOptions({
       headerRight: () => (
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <IconButton icon="chart-bar" iconColor={Brand.textAccent} onPress={() => navigation.navigate('IncomeSummary')} />
+          <IconButton icon="chart-bar" iconColor={accentPalette.textAccent} onPress={() => navigation.navigate('IncomeSummary')} />
           <TouchableOpacity
             onPress={() => navigation.navigate('Notifications')}
             style={styles.bellWrap}
             hitSlop={8}
           >
-            <IconButton icon="bell-outline" iconColor={Brand.textAccent} style={{ margin: 0 }} />
+            <IconButton icon="bell-outline" iconColor={accentPalette.textAccent} style={{ margin: 0 }} />
             {unreadCount > 0 && (
               <View style={styles.bellBadge}>
                 <Text style={styles.bellBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
               </View>
             )}
           </TouchableOpacity>
-          <IconButton icon="help-circle-outline" iconColor={Brand.textAccent} onPress={() => setHelpVisible(true)} />
+          <IconButton icon="help-circle-outline" iconColor={accentPalette.textAccent} onPress={() => setHelpVisible(true)} />
         </View>
       ),
     });
-  }, [navigation, unreadCount]);
+  }, [accentPalette.textAccent, navigation, unreadCount]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -187,7 +187,10 @@ export default function DashboardScreen() {
           <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 55).duration(350)}>
           <TouchableOpacity
             onPress={() => navigation.navigate('ClassSessionDetail', { sessionId: item.id })}
-            style={[styles.sessionCard, { borderLeftColor: withAlpha(item.class_type_color, 0.7) }]}
+            style={[
+              styles.sessionCard,
+              { borderLeftColor: withAlpha(item.class_type_color, 0.7), shadowColor: accentPalette.main },
+            ]}
             activeOpacity={0.75}
           >
             <View style={styles.sessionInfo}>
@@ -198,7 +201,7 @@ export default function DashboardScreen() {
                 {formatDisplayTime(item.class_time)} · {item.class_type_name} · {item.duration_minutes} min
               </Text>
               {item.source_type === 'personal' && traineeLabel(item.trainee_names) && (
-                <Text variant="bodySmall" style={{ color: Brand.textAccent }}>
+                <Text variant="bodySmall" style={{ color: accentPalette.textAccent }}>
                   {traineeLabel(item.trainee_names)}
                 </Text>
               )}
@@ -265,7 +268,6 @@ const styles = StyleSheet.create({
     borderColor: Brand.borderSubtle,
     borderLeftWidth: 4,
     elevation: 4,
-    shadowColor: Brand.purple,
     shadowOpacity: 0.3,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },

@@ -2,6 +2,7 @@ import React from 'react';
 import { ViewStyle } from 'react-native';
 import { Button } from 'react-native-paper';
 import GradientButton from './GradientButton';
+import { useAppTheme } from '../../theme';
 import { Brand, Radius } from '../../theme/brandColors';
 
 interface AppButtonProps {
@@ -25,6 +26,8 @@ export default function AppButton({
   fullWidth,
   color,
 }: AppButtonProps) {
+  const { accentPalette } = useAppTheme();
+
   if (variant === 'primary') {
     const wrapStyle: ViewStyle = fullWidth === false ? { alignSelf: 'flex-start' } : {};
     return (
@@ -47,7 +50,7 @@ export default function AppButton({
         disabled={disabled}
         style={[{ borderRadius: Radius.lg }, style]}
         contentStyle={{ height: 48 }}
-        buttonColor={Brand.purple}
+        buttonColor={accentPalette.main}
         textColor={Brand.textPrimary}
       >
         {label}
@@ -56,7 +59,7 @@ export default function AppButton({
   }
 
   if (variant === 'secondary') {
-    const c = color ?? Brand.purple;
+    const c = color ?? accentPalette.main;
     return (
       <Button
         mode="outlined"

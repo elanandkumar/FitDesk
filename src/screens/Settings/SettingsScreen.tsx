@@ -1,13 +1,14 @@
 import React, { useCallback, useLayoutEffect, useState } from 'react';
 import { useBackup } from '../../context/BackupContext';
 import { Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { IconButton, Text } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
-import { useAppTheme } from '../../theme';
+import { AccentKey, AccentPalettes, useAppTheme } from '../../theme';
 import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { getDatabase } from '../../database/db';
@@ -31,6 +32,11 @@ const MINUTES_OPTIONS = [
   { value: '60', label: '1 hr' },
 ];
 
+const ACCENT_OPTIONS = Object.entries(AccentPalettes).map(([key, palette]) => ({
+  key: key as AccentKey,
+  palette,
+}));
+
 async function getSetting(key: string): Promise<string | null> {
   const db = await getDatabase();
   const row = await db.getFirstAsync<{ value: string }>('SELECT value FROM settings WHERE key = ?', [key]);
@@ -39,7 +45,7 @@ async function getSetting(key: string): Promise<string | null> {
 
 async function setSetting(key: string, value: string): Promise<void> {
   const db = await getDatabase();
-  await db.runAsync('UPDATE settings SET value = ? WHERE key = ?', [value, key]);
+  await db.runAsync('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', [key, value]);
 }
 
 function SettingsCard({ children }: { children: React.ReactNode }) {
@@ -56,12 +62,15 @@ interface NavRowProps {
   subtitle?: string;
 }
 
-function NavRow({ icon, label, onPress, iconColor = Brand.purple, isLast, showDot, subtitle }: NavRowProps) {
+function NavRow({ icon, label, onPress, iconColor, isLast, showDot, subtitle }: NavRowProps) {
+  const { accentPalette } = useAppTheme();
+  const resolvedIconColor = iconColor ?? accentPalette.main;
+
   return (
     <>
       <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.7}>
         <View style={styles.rowIcon}>
-          <MaterialCommunityIcons name={icon as never} size={18} color={iconColor} />
+          <MaterialCommunityIcons name={icon as never} size={18} color={resolvedIconColor} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.rowLabel}>{label}</Text>
@@ -76,7 +85,7 @@ function NavRow({ icon, label, onPress, iconColor = Brand.purple, isLast, showDo
 }
 
 export default function SettingsScreen() {
-  const { theme } = useAppTheme();
+  const { accentKey, accentPalette, setAccentKey, theme } = useAppTheme();
   const navigation = useNavigation<Nav>();
   const { isBackupOverdue } = useBackup();
   const [notifEnabled, setNotifEnabled] = useState(true);
@@ -92,10 +101,10 @@ export default function SettingsScreen() {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <IconButton icon="help-circle-outline" iconColor={Brand.textAccent} onPress={() => setHelpVisible(true)} />
+        <IconButton icon="help-circle-outline" iconColor={accentPalette.textAccent} onPress={() => setHelpVisible(true)} />
       ),
     });
-  }, [navigation, theme.colors.primary]);
+  }, [accentPalette.textAccent, navigation, theme.colors.primary]);
 
   useFocusEffect(
     useCallback(() => {
@@ -172,11 +181,46 @@ export default function SettingsScreen() {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       contentContainerStyle={styles.content}
     >
+      <SectionHeader label="Appearance" />
+      <SettingsCard>
+        <View style={styles.appearanceRow}>
+          <View style={styles.appearanceCopy}>
+            <Text style={styles.rowLabel}>Accent Color</Text>
+            <Text style={styles.rowSubtitle}>Applies to buttons, selected tabs, and highlights</Text>
+          </View>
+          <View style={styles.swatchRow}>
+            {ACCENT_OPTIONS.map(({ key, palette }) => {
+              const selected = accentKey === key;
+              return (
+                <TouchableOpacity
+                  key={key}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${palette.label} accent`}
+                  accessibilityState={{ selected }}
+                  onPress={() => setAccentKey(key)}
+                  style={[styles.swatchButton, selected && { borderColor: palette.textAccent }]}
+                  activeOpacity={0.75}
+                >
+                  <LinearGradient
+                    colors={[palette.main, palette.accent]}
+                    start={{ x: 0, y: 1 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.swatch}
+                  >
+                    {selected && <MaterialCommunityIcons name="check" size={15} color={Brand.textPrimary} />}
+                  </LinearGradient>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+      </SettingsCard>
+
       <SectionHeader label="Notifications" />
       <SettingsCard>
         <View style={styles.row}>
           <View style={styles.rowIcon}>
-            <MaterialCommunityIcons name="bell-outline" size={18} color={Brand.purple} />
+            <MaterialCommunityIcons name="bell-outline" size={18} color={accentPalette.main} />
           </View>
           <Text style={[styles.rowLabel, { flex: 1 }]}>Class Reminders</Text>
           <GradientSwitch
@@ -216,7 +260,9 @@ export default function SettingsScreen() {
                 <MaterialCommunityIcons name="clock-outline" size={18} color={Brand.orange} />
               </View>
               <Text style={[styles.rowLabel, { flex: 1 }]}>Reminder Time</Text>
-              <Text style={styles.timeValue}>{formatDisplayTime(paymentNotifTime)}</Text>
+              <Text style={[styles.timeValue, { color: accentPalette.textAccent }]}>
+                {formatDisplayTime(paymentNotifTime)}
+              </Text>
               <MaterialCommunityIcons name="chevron-right" size={20} color={Brand.textMuted} />
             </TouchableOpacity>
             <View style={styles.divider} />
@@ -244,7 +290,7 @@ export default function SettingsScreen() {
         <NavRow
           icon="tag-multiple"
           label="Class Types"
-          iconColor={Brand.purple}
+          iconColor={accentPalette.main}
           onPress={() => navigation.navigate('ClassTypes')}
         />
         <NavRow
@@ -288,6 +334,37 @@ const styles = StyleSheet.create({
     borderColor: Brand.borderSubtle,
     overflow: 'hidden',
   },
+  appearanceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.lg,
+    gap: Spacing.md,
+  },
+  appearanceCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  swatchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  swatchButton: {
+    width: 36,
+    height: 36,
+    borderRadius: Radius.full,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  swatch: {
+    width: 28,
+    height: 28,
+    borderRadius: Radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -313,7 +390,7 @@ const styles = StyleSheet.create({
   },
   divider: { height: 1, backgroundColor: Brand.borderSubtle, marginHorizontal: Spacing.lg },
   minutesRow: { padding: Spacing.lg, gap: Spacing.sm },
-  timeValue: { ...Typography.body, color: Brand.textAccent, marginRight: Spacing.xs },
+  timeValue: { ...Typography.body, marginRight: Spacing.xs },
   minutesLabel: { ...Typography.labelMd, fontFamily: 'Outfit_400Regular', color: Brand.textSecondary },
   about: { alignItems: 'center', paddingTop: Spacing.section, paddingBottom: Spacing.lg, gap: Spacing.xs },
   logoImage: {

@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Brand, Radius } from '../../theme/brandColors';
+import { useAppTheme } from '../../theme';
 
 const TRACK_W = 50;
 const TRACK_H = 28;
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export default function GradientSwitch({ value, onValueChange, disabled }: Props) {
+  const { accentPalette } = useAppTheme();
   const anim = useRef(new Animated.Value(value ? 1 : 0)).current;
 
   useEffect(() => {
@@ -40,7 +42,7 @@ export default function GradientSwitch({ value, onValueChange, disabled }: Props
       <View style={styles.track}>
         {value ? (
           <LinearGradient
-            colors={[Brand.purple + '4D', Brand.pink + '26', Brand.orange + '33']}
+            colors={[accentPalette.main + '4D', accentPalette.accent + '26', accentPalette.warm + '33']}
             start={{ x: 0, y: 1 }}
             end={{ x: 1, y: 0 }}
             style={StyleSheet.absoluteFill}
@@ -48,7 +50,7 @@ export default function GradientSwitch({ value, onValueChange, disabled }: Props
         ) : (
           <View style={[StyleSheet.absoluteFill, styles.trackOff]} />
         )}
-        <Animated.View style={[styles.thumb, { transform: [{ translateX }] }]} />
+        <Animated.View style={[styles.thumb, { backgroundColor: accentPalette.main, transform: [{ translateX }] }]} />
       </View>
     </Pressable>
   );
@@ -69,7 +71,6 @@ const styles = StyleSheet.create({
     width: THUMB,
     height: THUMB,
     borderRadius: Radius.full,
-    backgroundColor: Brand.purple,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },

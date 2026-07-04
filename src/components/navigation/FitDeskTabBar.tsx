@@ -10,7 +10,8 @@ import {
   CurrencyInr,
   Gear,
 } from 'phosphor-react-native';
-import { Brand, Gradients, Radius } from '../../theme/brandColors';
+import { Brand, Radius } from '../../theme/brandColors';
+import { useAppTheme } from '../../theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBackup } from '../../context/BackupContext';
 
@@ -35,6 +36,8 @@ function TabItem({
   onPress: () => void;
   showDot?: boolean;
 }) {
+  const { accentPalette } = useAppTheme();
+
   return (
     <TouchableOpacity
       style={styles.tabItem}
@@ -45,21 +48,21 @@ function TabItem({
         <View style={styles.iconWrap}>
           {isActive && (
             <LinearGradient
-              colors={[Brand.purple + '4D', Brand.pink + '26', Brand.orange + '33']}
+              colors={[accentPalette.main + '4D', accentPalette.accent + '26', accentPalette.warm + '33']}
               start={{ x: 0, y: 1 }}
               end={{ x: 1, y: 0 }}
-              style={styles.iconPill}
+              style={[styles.iconPill, { borderColor: accentPalette.warm + '40' }]}
             />
           )}
           <tab.Icon
             size={22}
-            color={isActive ? Brand.textAccent : Brand.textMuted}
+            color={isActive ? accentPalette.textAccent : Brand.textMuted}
             weight={isActive ? 'duotone' : 'regular'}
           />
           {showDot && <View style={styles.dot} />}
         </View>
         <Text
-          style={[styles.label, { color: isActive ? Brand.textAccent : Brand.textMuted }]}
+          style={[styles.label, { color: isActive ? accentPalette.textAccent : Brand.textMuted }]}
           numberOfLines={1}
         >
           {tab.label}
@@ -72,10 +75,11 @@ function TabItem({
 export default function FitDeskTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const { isBackupOverdue } = useBackup();
+  const { accentPalette } = useAppTheme();
 
   return (
     <View style={[styles.wrapper, { paddingBottom: insets.bottom + 8 }]}>
-      <View style={styles.container}>
+      <View style={[styles.container, { shadowColor: accentPalette.main }]}>
         <BlurView intensity={60} tint="dark" style={StyleSheet.absoluteFill as any} />
         <View style={styles.innerBorder} />
         {state.routes.map((route, index) => {
@@ -114,7 +118,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: Brand.surfaceDark + 'CC',
     elevation: 12,
-    shadowColor: Brand.purple,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 12,
@@ -153,7 +156,6 @@ const styles = StyleSheet.create({
     height: 30,
     borderRadius: Radius.full,
     borderWidth: 1,
-    borderColor: Brand.orange + '40',
   },
   label: {
     fontSize: 10,

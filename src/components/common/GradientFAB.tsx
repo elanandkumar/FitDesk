@@ -2,7 +2,8 @@ import React from 'react';
 import { Pressable, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Gradients, Brand, Radius } from '../../theme/brandColors';
+import { Brand, Radius } from '../../theme/brandColors';
+import { useAppTheme } from '../../theme';
 
 interface Props {
   icon: string;
@@ -12,15 +13,17 @@ interface Props {
 }
 
 export default function GradientFAB({ icon, onPress, style, color = Brand.textPrimary }: Props) {
+  const { accentPalette } = useAppTheme();
+
   return (
-    <View style={[styles.shadow, style]}>
+    <View style={[styles.shadow, { shadowColor: accentPalette.main }, style]}>
       <Pressable
         onPress={onPress}
         android_ripple={{ color: 'rgba(255,255,255,0.2)', borderless: false }}
         style={styles.pressable}
       >
         <LinearGradient
-          colors={Gradients.button}
+          colors={accentPalette.gradient}
           start={{ x: 0, y: 1 }}
           end={{ x: 1, y: 0 }}
           style={styles.gradient}
@@ -36,7 +39,6 @@ const styles = StyleSheet.create({
   shadow: {
     borderRadius: Radius.card,
     elevation: 8,
-    shadowColor: Brand.purple,
     shadowOpacity: 0.5,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },

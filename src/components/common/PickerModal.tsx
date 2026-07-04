@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAppTheme } from '../../theme';
 import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
 
 export interface PickerItem {
@@ -54,6 +55,7 @@ export default function PickerModal({
   addNewLabel = 'Add New',
   showAvatar = false,
 }: Props) {
+  const { accentPalette } = useAppTheme();
   const insets = useSafeAreaInsets();
   const [activeIds, setActiveIds] = useState<number[]>([]);
 
@@ -82,7 +84,7 @@ export default function PickerModal({
     const selected = activeIds.includes(item.id);
     return (
       <TouchableOpacity
-        style={[styles.row, selected && styles.rowSelected]}
+        style={[styles.row, selected && { backgroundColor: `${accentPalette.main}22` }]}
         onPress={() => toggleId(item.id)}
         activeOpacity={0.7}
       >
@@ -102,7 +104,12 @@ export default function PickerModal({
           ) : null}
         </View>
         {multiSelect && (
-          <View style={[styles.checkbox, selected && styles.checkboxSelected]}>
+          <View
+            style={[
+              styles.checkbox,
+              selected && { backgroundColor: accentPalette.main, borderColor: accentPalette.main },
+            ]}
+          >
             {selected && <MaterialCommunityIcons name="check" size={13} color={Brand.textPrimary} />}
           </View>
         )}
@@ -128,7 +135,7 @@ export default function PickerModal({
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 style={styles.headerBtn}
               >
-                <MaterialCommunityIcons name="plus" size={20} color={Brand.textAccent} />
+                <MaterialCommunityIcons name="plus" size={20} color={accentPalette.textAccent} />
               </TouchableOpacity>
             )}
           </View>
@@ -195,9 +202,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     borderRadius: Radius.md,
   },
-  rowSelected: {
-    backgroundColor: `${Brand.purple}22`,
-  },
   rowLeft: {
     flex: 1,
     flexDirection: 'row',
@@ -243,10 +247,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: Spacing.sm,
-  },
-  checkboxSelected: {
-    backgroundColor: Brand.purple,
-    borderColor: Brand.purple,
   },
   emptyText: {
     ...Typography.body,

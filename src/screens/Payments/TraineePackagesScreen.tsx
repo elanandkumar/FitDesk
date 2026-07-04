@@ -49,7 +49,7 @@ function formatMonth(ym: string): string {
 }
 
 export default function TraineePackagesScreen() {
-  const { theme } = useAppTheme();
+  const { accentPalette, theme } = useAppTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const [sections, setSections] = useState<Section[]>([]);
@@ -96,8 +96,8 @@ export default function TraineePackagesScreen() {
       <View style={styles.itemRight}>
         <Text style={styles.amount}>{formatCurrency(item.amount)}</Text>
         {item.status === 'pending' ? (
-          <TouchableOpacity style={styles.markPaidBtn} onPress={() => setConfirmPkg(item)}>
-            <Text style={styles.markPaidText}>Mark Paid</Text>
+          <TouchableOpacity style={[styles.markPaidBtn, { backgroundColor: `${accentPalette.main}33` }]} onPress={() => setConfirmPkg(item)}>
+            <Text style={[styles.markPaidText, { color: accentPalette.main }]}>Mark Paid</Text>
           </TouchableOpacity>
         ) : (
           <View style={styles.paidBadge}>
@@ -126,7 +126,7 @@ export default function TraineePackagesScreen() {
         <Chip
           selected={pendingOnly}
           onPress={() => setPendingOnly(true)}
-          style={[styles.filterChip, pendingOnly && styles.filterChipActive]}
+          style={[styles.filterChip, pendingOnly && { backgroundColor: accentPalette.main }]}
           textStyle={{ color: pendingOnly ? Brand.textPrimary : Brand.textSecondary }}
         >
           Pending
@@ -134,7 +134,7 @@ export default function TraineePackagesScreen() {
         <Chip
           selected={!pendingOnly}
           onPress={() => setPendingOnly(false)}
-          style={[styles.filterChip, !pendingOnly && styles.filterChipActive]}
+          style={[styles.filterChip, !pendingOnly && { backgroundColor: accentPalette.main }]}
           textStyle={{ color: !pendingOnly ? Brand.textPrimary : Brand.textSecondary }}
         >
           All
@@ -142,7 +142,7 @@ export default function TraineePackagesScreen() {
       </View>
 
       {allPackages.length > 0 && (
-        <View style={styles.summaryCard}>
+        <View style={[styles.summaryCard, { shadowColor: accentPalette.main }]}>
           <View style={styles.summaryItem}>
             <Text style={styles.summaryLabel}>Pending</Text>
             <Text style={[styles.summaryAmount, { color: Brand.orange }]}>{formatCurrency(totalPending)}</Text>
@@ -203,7 +203,6 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   filterRow: { flexDirection: 'row', gap: Spacing.sm, padding: Spacing.md },
   filterChip: { backgroundColor: Brand.surfaceDark, borderColor: Brand.borderSubtle },
-  filterChipActive: { backgroundColor: Brand.purple },
   summaryCard: {
     flexDirection: 'row',
     backgroundColor: Brand.surfaceDark,
@@ -215,7 +214,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg,
     paddingHorizontal: Spacing.xl,
     elevation: 4,
-    shadowColor: Brand.purple,
     shadowOpacity: 0.12,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
@@ -264,12 +262,11 @@ const styles = StyleSheet.create({
   itemRight: { alignItems: 'flex-end', gap: Spacing.xs, marginLeft: Spacing.sm },
   amount: { ...Typography.h4, fontWeight: '700', color: Brand.orange },
   markPaidBtn: {
-    backgroundColor: `${Brand.purple}33`,
     borderRadius: Radius.full,
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.xs,
   },
-  markPaidText: { ...Typography.labelSm, color: Brand.purple },
+  markPaidText: { ...Typography.labelSm },
   paidBadge: {
     flexDirection: 'row',
     alignItems: 'center',
