@@ -16,7 +16,7 @@ Options:
   --format <aab|apk>      Android artifact format. Defaults to aab for Play Store uploads.
   --previous-tag <tag>    Compare commits after this tag. Defaults to latest semver tag before current tag.
   --target <ref>          Commit/ref to tag. Defaults to HEAD.
-  --github-release        Create a GitHub release with gh after build/tag.
+  --github-release        Push the tag and create a GitHub release with gh after build/tag.
   --draft                 Create the GitHub release as a draft.
   --prerelease            Mark the GitHub release as a prerelease.
   --skip-build            Generate notes/tag/release without building.
@@ -316,6 +316,7 @@ fi
 
 if [[ "$github_release" == true && "$dry_run" == false ]]; then
   command -v gh >/dev/null 2>&1 || die "gh is required for --github-release"
+  run git push origin "$tag"
   args=(release create "$tag" --title "FitDesk $tag" --notes-file "$notes_file")
   [[ "$draft" == true ]] && args+=(--draft)
   [[ "$prerelease" == true ]] && args+=(--prerelease)
@@ -333,7 +334,7 @@ echo "Notes: $notes_file"
 if [[ -n "$artifact" ]]; then
   echo "Artifact: $artifact"
 fi
-if [[ "$dry_run" == false ]]; then
+if [[ "$dry_run" == false && "$github_release" == false ]]; then
   echo "Next: git push origin $tag"
 fi
 if [[ "$github_release" == false && "$dry_run" == false ]]; then
