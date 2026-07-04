@@ -39,7 +39,7 @@ function formatMonth(ym: string): string {
 }
 
 export default function AddPackageScreen() {
-  const { theme } = useAppTheme();
+  const { accentPalette, theme } = useAppTheme();
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const insets = useSafeAreaInsets();
@@ -107,7 +107,7 @@ export default function AddPackageScreen() {
             onPress={() => setTraineePickerVisible(true)}
             style={styles.pickerRow}
           >
-            <MaterialCommunityIcons name="account" size={20} color={Brand.purple} />
+            <MaterialCommunityIcons name="account" size={20} color={accentPalette.main} />
             <Text style={[styles.pickerText, !selectedTrainee && styles.pickerPlaceholder]}>
               {selectedTrainee
                 ? selectedTrainee.name

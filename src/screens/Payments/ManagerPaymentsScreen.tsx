@@ -47,7 +47,7 @@ function buildSummaries(payments: EnrichedManagerPayment[]): ManagerSummary[] {
 }
 
 export default function ManagerPaymentsScreen() {
-  const { theme } = useAppTheme();
+  const { accentPalette, theme } = useAppTheme();
   const navigation = useNavigation<Nav>();
   const [summaries, setSummaries] = useState<ManagerSummary[]>([]);
   const [allPayments, setAllPayments] = useState<EnrichedManagerPayment[]>([]);
@@ -80,8 +80,8 @@ export default function ManagerPaymentsScreen() {
       <View style={styles.cardTop}>
         <Text style={styles.managerName}>{item.managerName}</Text>
         <View style={styles.viewBtn}>
-          <Text style={styles.viewBtnText}>View</Text>
-          <MaterialCommunityIcons name="chevron-right" size={14} color={Brand.purple} />
+          <Text style={[styles.viewBtnText, { color: accentPalette.main }]}>View</Text>
+          <MaterialCommunityIcons name="chevron-right" size={14} color={accentPalette.main} />
         </View>
       </View>
       <Text style={styles.sessionCount}>
@@ -115,7 +115,7 @@ export default function ManagerPaymentsScreen() {
         <Chip
           selected={pendingOnly}
           onPress={() => setPendingOnly(true)}
-          style={[styles.filterChip, pendingOnly && styles.filterChipActive]}
+          style={[styles.filterChip, pendingOnly && { backgroundColor: accentPalette.main }]}
           textStyle={{ color: pendingOnly ? Brand.textPrimary : Brand.textSecondary }}
         >
           Pending
@@ -123,7 +123,7 @@ export default function ManagerPaymentsScreen() {
         <Chip
           selected={!pendingOnly}
           onPress={() => setPendingOnly(false)}
-          style={[styles.filterChip, !pendingOnly && styles.filterChipActive]}
+          style={[styles.filterChip, !pendingOnly && { backgroundColor: accentPalette.main }]}
           textStyle={{ color: !pendingOnly ? Brand.textPrimary : Brand.textSecondary }}
         >
           All
@@ -131,7 +131,7 @@ export default function ManagerPaymentsScreen() {
       </View>
 
       {allPayments.length > 0 && (
-        <View style={styles.summaryCard}>
+        <View style={[styles.summaryCard, { shadowColor: accentPalette.main }]}>
           <View style={styles.summaryItem}>
             <Text style={styles.summaryLabel}>Pending</Text>
             <Text style={[styles.summaryAmount, { color: Brand.orange }]}>{formatCurrency(totalPending)}</Text>
@@ -169,7 +169,6 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   filterRow: { flexDirection: 'row', gap: Spacing.sm, padding: Spacing.md },
   filterChip: { backgroundColor: Brand.surfaceDark, borderColor: Brand.borderSubtle },
-  filterChipActive: { backgroundColor: Brand.purple },
   summaryCard: {
     flexDirection: 'row',
     backgroundColor: Brand.surfaceDark,
@@ -181,7 +180,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg,
     paddingHorizontal: Spacing.xl,
     elevation: 4,
-    shadowColor: Brand.purple,
     shadowOpacity: 0.12,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
@@ -213,7 +211,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 2,
   },
-  viewBtnText: { ...Typography.labelSm, color: Brand.purple },
+  viewBtnText: { ...Typography.labelSm },
   sessionCount: { ...Typography.bodySm, color: Brand.textSecondary, marginBottom: Spacing.sm },
   amountRow: { flexDirection: 'row', gap: Spacing.sm, flexWrap: 'wrap' },
   paidBadge: {

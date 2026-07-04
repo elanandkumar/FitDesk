@@ -151,7 +151,7 @@ export const ALL_TABLES = [
 ];
 
 export const DEFAULT_SETTINGS = [
-  { key: 'theme', value: 'light' },
+  { key: 'theme', value: 'dark' },
   { key: 'notification_enabled', value: 'true' },
   { key: 'notification_minutes_before', value: '60' },
   { key: 'payment_notification_enabled', value: 'true' },

@@ -2,7 +2,8 @@ import React from 'react';
 import { ActivityIndicator, Pressable, StyleProp, StyleSheet, Text, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
-import { Brand, Gradients, Radius } from '../../theme/brandColors';
+import { Brand, Radius } from '../../theme/brandColors';
+import { useAppTheme } from '../../theme';
 
 interface Props {
   label: string;
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export default function GradientButton({ label, onPress, loading, disabled, style }: Props) {
+  const { accentPalette } = useAppTheme();
   const isDisabled = disabled || loading;
   const scale = useSharedValue(1);
   const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
@@ -27,7 +29,7 @@ export default function GradientButton({ label, onPress, loading, disabled, styl
         style={styles.pressable}
       >
         <LinearGradient
-          colors={isDisabled ? ['#3a3a4a', '#2a2a3a'] : Gradients.button}
+          colors={isDisabled ? ['#3a3a4a', '#2a2a3a'] : accentPalette.gradient}
           start={{ x: 0.2, y: 0 }}
           end={{ x: 0.8, y: 1 }}
           locations={[0, 0.55, 1]}

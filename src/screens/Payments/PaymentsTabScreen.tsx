@@ -5,7 +5,7 @@ import ThemedSegmentedButtons from '../../components/common/ThemedSegmentedButto
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAppTheme } from '../../theme';
-import { Brand, Spacing } from '../../theme/brandColors';
+import { Spacing } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import ManagerPaymentsScreen from './ManagerPaymentsScreen';
 import TraineePackagesScreen from './TraineePackagesScreen';
@@ -15,7 +15,7 @@ import { HELP } from '../../constants/helpContent';
 type Nav = StackNavigationProp<RootStackParamList>;
 
 export default function PaymentsTabScreen() {
-  const { theme } = useAppTheme();
+  const { accentPalette, theme } = useAppTheme();
   const navigation = useNavigation<Nav>();
   const [segment, setSegment] = useState<'managers' | 'trainees'>('managers');
   const [helpVisible, setHelpVisible] = useState(false);
@@ -26,19 +26,19 @@ export default function PaymentsTabScreen() {
         <View style={styles.headerActions}>
           <IconButton
             icon="chart-bar"
-            iconColor={Brand.textAccent}
+            iconColor={accentPalette.textAccent}
             size={22}
             onPress={() => navigation.navigate('IncomeSummary')}
           />
           <IconButton
             icon="help-circle-outline"
-            iconColor={Brand.textAccent}
+            iconColor={accentPalette.textAccent}
             onPress={() => setHelpVisible(true)}
           />
         </View>
       ),
     });
-  }, [navigation, theme.colors.primary]);
+  }, [accentPalette.textAccent, navigation, theme.colors.primary]);
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>

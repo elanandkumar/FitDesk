@@ -25,7 +25,7 @@ type Nav = StackNavigationProp<RootStackParamList, 'ManagerPaymentDetail'>;
 type Route = RouteProp<RootStackParamList, 'ManagerPaymentDetail'>;
 
 export default function ManagerPaymentDetailScreen() {
-  const { theme } = useAppTheme();
+  const { accentPalette, theme } = useAppTheme();
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const { managerId, managerName } = route.params;
@@ -76,8 +76,8 @@ export default function ManagerPaymentDetailScreen() {
       <View style={styles.itemRight}>
         <Text style={styles.amount}>{formatCurrency(item.amount)}</Text>
         {item.status === 'pending' ? (
-          <TouchableOpacity style={styles.markPaidBtn} onPress={() => setConfirmPayment(item)}>
-            <Text style={styles.markPaidText}>Mark Paid</Text>
+          <TouchableOpacity style={[styles.markPaidBtn, { backgroundColor: `${accentPalette.main}33` }]} onPress={() => setConfirmPayment(item)}>
+            <Text style={[styles.markPaidText, { color: accentPalette.main }]}>Mark Paid</Text>
           </TouchableOpacity>
         ) : (
           <View style={styles.paidBadge}>
@@ -168,12 +168,11 @@ const styles = StyleSheet.create({
   itemRight: { alignItems: 'flex-end', gap: Spacing.xs },
   amount: { ...Typography.h4, fontWeight: '700', color: Brand.orange },
   markPaidBtn: {
-    backgroundColor: `${Brand.purple}33`,
     borderRadius: Radius.full,
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.xs,
   },
-  markPaidText: { ...Typography.labelSm, color: Brand.purple },
+  markPaidText: { ...Typography.labelSm },
   paidBadge: {
     flexDirection: 'row',
     alignItems: 'center',

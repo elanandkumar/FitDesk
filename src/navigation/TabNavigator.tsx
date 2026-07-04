@@ -8,7 +8,6 @@ import ContactsScreen from '../screens/Contacts/ContactsScreen';
 import PaymentsTabScreen from '../screens/Payments/PaymentsTabScreen';
 import SettingsScreen from '../screens/Settings/SettingsScreen';
 import FitDeskTabBar from '../components/navigation/FitDeskTabBar';
-import { Brand } from '../theme/brandColors';
 
 const Tab = createBottomTabNavigator<TabParamList>();
 

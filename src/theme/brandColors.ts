@@ -33,6 +33,44 @@ export const Gradients = {
   orangePink:   ['#FF7A00', '#FF3D81'] as const,
 } as const;
 
+export const AccentPalettes = {
+  purple: {
+    label: 'Violet',
+    main: Brand.purple,
+    accent: Brand.pink,
+    warm: Brand.orange,
+    textAccent: Brand.textAccent,
+    gradient: [Brand.purple, Brand.pink, Brand.orange] as const,
+  },
+  ocean: {
+    label: 'Ocean',
+    main: '#00A7B5',
+    accent: '#20D6A3',
+    warm: Brand.orange,
+    textAccent: '#77E5DC',
+    gradient: ['#00A7B5', '#20D6A3', '#FF7A00'] as const,
+  },
+  rose: {
+    label: 'Rose',
+    main: '#FF3D81',
+    accent: '#FF7A00',
+    warm: '#7B35FF',
+    textAccent: '#FF9ABD',
+    gradient: ['#FF3D81', '#FF7A00', '#7B35FF'] as const,
+  },
+  ember: {
+    label: 'Ember',
+    main: '#FF7A00',
+    accent: '#FF3D81',
+    warm: '#7B35FF',
+    textAccent: '#FFB15F',
+    gradient: ['#FF7A00', '#FF3D81', '#7B35FF'] as const,
+  },
+} as const;
+
+export type AccentKey = keyof typeof AccentPalettes;
+export type AccentPalette = (typeof AccentPalettes)[AccentKey];
+
 export const Radius = {
   xs:   2,   // accent lines, tiny indicators
   sm:   6,   // chips, segment items

@@ -14,6 +14,7 @@ import { ClassSeries, ClassType } from '../../types';
 import { getAllClassSeries } from '../../database/repositories/classSeriesRepository';
 import { getAllClassTypes } from '../../database/repositories/classTypeRepository';
 import { formatDisplayTime, formatRecurrenceSummary, todayISO } from '../../utils/dateUtils';
+import { withAlpha } from '../../utils/colorUtils';
 import { Chip } from 'react-native-paper';
 import EmptyState from '../../components/common/EmptyState';
 import { RootStackParamList } from '../../navigation/types';
@@ -23,7 +24,7 @@ import { HELP } from '../../constants/helpContent';
 type Nav = StackNavigationProp<RootStackParamList>;
 
 export default function ClassSeriesListScreen() {
-  const { theme } = useAppTheme();
+  const { accentPalette, theme } = useAppTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const [series, setSeries] = useState<ClassSeries[]>([]);
@@ -36,10 +37,10 @@ export default function ClassSeriesListScreen() {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <IconButton icon="help-circle-outline" iconColor={Brand.textAccent} onPress={() => setHelpVisible(true)} />
+        <IconButton icon="help-circle-outline" iconColor={accentPalette.textAccent} onPress={() => setHelpVisible(true)} />
       ),
     });
-  }, [navigation, theme.colors.primary]);
+  }, [accentPalette.textAccent, navigation, theme.colors.primary]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -77,7 +78,7 @@ export default function ClassSeriesListScreen() {
         <Chip
           selected={!showInactive}
           onPress={() => setShowInactive(false)}
-          style={[styles.filterChip, !showInactive && styles.filterChipActive]}
+          style={[styles.filterChip, !showInactive && { backgroundColor: accentPalette.main }]}
           textStyle={{ color: !showInactive ? Brand.textPrimary : Brand.textSecondary }}
         >
           Active
@@ -85,7 +86,7 @@ export default function ClassSeriesListScreen() {
         <Chip
           selected={showInactive}
           onPress={() => setShowInactive(true)}
-          style={[styles.filterChip, showInactive && styles.filterChipActive]}
+          style={[styles.filterChip, showInactive && { backgroundColor: accentPalette.main }]}
           textStyle={{ color: showInactive ? Brand.textPrimary : Brand.textSecondary }}
         >
           All
@@ -110,11 +111,17 @@ export default function ClassSeriesListScreen() {
           return (
             <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 60).duration(350)}>
             <TouchableOpacity
-              style={[styles.card, !item.is_active && styles.cardInactive]}
+              style={[
+                styles.card,
+                {
+                  borderLeftColor: withAlpha(accentColor, item.is_active ? 0.7 : 0.28),
+                  shadowColor: accentPalette.main,
+                },
+                !item.is_active && styles.cardInactive,
+              ]}
               onPress={() => navigation.navigate('AddEditClassSeries', { seriesId: item.id })}
               activeOpacity={0.75}
             >
-              <View style={[styles.colorBar, { backgroundColor: accentColor, opacity: item.is_active ? 1 : 0.4 }]} />
               <View style={styles.cardContent}>
                 <Text style={[styles.cardTitle, !item.is_active && styles.textInactive]}>
                   {item.title}
@@ -152,7 +159,6 @@ const styles = StyleSheet.create({
   searchbar: { margin: Spacing.md, marginBottom: 0, borderRadius: Radius.lg, elevation: 0, borderWidth: 1, borderColor: Brand.borderSubtle },
   filterRow: { flexDirection: 'row', gap: Spacing.sm, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm },
   filterChip: { backgroundColor: Brand.surfaceDark, borderColor: Brand.borderSubtle },
-  filterChipActive: { backgroundColor: Brand.purple },
   listContent: { paddingHorizontal: Spacing.md, paddingBottom: Layout.LIST_PAD_NO_FAB },
   card: {
     flexDirection: 'row',
@@ -161,19 +167,18 @@ const styles = StyleSheet.create({
     borderRadius: Radius.item,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
+    borderLeftWidth: 4,
     paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.lg,
+    paddingLeft: Spacing.md,
+    paddingRight: Spacing.lg,
     marginBottom: Spacing.sm,
     elevation: 4,
-    shadowColor: Brand.purple,
     shadowOpacity: 0.15,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 6,
     gap: Spacing.md,
-    overflow: 'hidden',
   },
   cardInactive: { opacity: 0.6 },
-  colorBar: { width: 4, height: 40, borderRadius: Radius.xs },
   cardContent: { flex: 1 },
   cardTitle: { ...Typography.h4, color: Brand.textPrimary },
   textInactive: { color: Brand.textSecondary },
