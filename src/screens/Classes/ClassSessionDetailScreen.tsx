@@ -1,5 +1,5 @@
 import React, { useCallback, useLayoutEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ActivityIndicator,
@@ -31,7 +31,7 @@ import ThemedDatePickerModal from '../../components/common/ThemedDatePickerModal
 import ThemedTimePickerModal from '../../components/common/ThemedTimePickerModal';
 import { getTraineesForSeries, getClassSeriesById } from '../../database/repositories/classSeriesRepository';
 import { getTraineesForSession } from '../../database/repositories/sessionTraineeRepository';
-import { formatDisplayDate, formatDisplayTime } from '../../utils/dateUtils';
+import { formatDisplayDate, formatDisplayTime, isSessionInFuture } from '../../utils/dateUtils';
 import { formatCurrency } from '../../utils/currencyUtils';
 import { withAlpha } from '../../utils/colorUtils';
 import { RootStackParamList } from '../../navigation/types';
@@ -140,6 +140,13 @@ export default function ClassSessionDetailScreen() {
 
   function openCompleteDialog() {
     if (!session) return;
+    if (isSessionInFuture(session.session_date, session.class_time)) {
+      Alert.alert(
+        'Cannot complete future session',
+        `This session is scheduled for ${formatDisplayDate(session.session_date)} at ${formatDisplayTime(session.class_time)}. You can mark it complete after the class time.`
+      );
+      return;
+    }
     setCompleteNotes(notes);
     setStudentCount('0');
     setShowCompleteDialog(true);
@@ -147,6 +154,13 @@ export default function ClassSessionDetailScreen() {
 
   async function handleComplete() {
     if (!session) return;
+    if (isSessionInFuture(session.session_date, session.class_time)) {
+      Alert.alert(
+        'Cannot complete future session',
+        `This session is scheduled for ${formatDisplayDate(session.session_date)} at ${formatDisplayTime(session.class_time)}. You can mark it complete after the class time.`
+      );
+      return;
+    }
     setSaving(true);
     try {
       if (session.source_type === 'manager' && session.manager_id) {
@@ -170,6 +184,11 @@ export default function ClassSessionDetailScreen() {
       if (session.source_type === 'manager' && !isExpoGo) {
         schedulePendingPaymentNotification().catch(() => {});
       }
+    } catch (err) {
+      Alert.alert(
+        'Could not complete session',
+        err instanceof Error ? err.message : 'Please try again.'
+      );
     } finally {
       setSaving(false);
     }
@@ -238,6 +257,8 @@ export default function ClassSessionDetailScreen() {
 
   const isUpcoming = session.status === 'upcoming';
   const isManager = session.source_type === 'manager';
+  const sessionInFuture = isSessionInFuture(session.session_date, session.class_time);
+  const futureCompletionMessage = `Available after ${formatDisplayDate(session.session_date)} at ${formatDisplayTime(session.class_time)}.`;
 
   return (
     <KeyboardAvoidingView
@@ -480,6 +501,9 @@ export default function ClassSessionDetailScreen() {
 
     {isUpcoming && (
       <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
+        {sessionInFuture && (
+          <Text style={styles.footerHint}>{futureCompletionMessage}</Text>
+        )}
         {isAdhoc ? (
           <>
             <AppButton
@@ -494,7 +518,7 @@ export default function ClassSessionDetailScreen() {
               onPress={openCompleteDialog}
               variant="primary"
               loading={saving}
-              disabled={saving}
+              disabled={saving || sessionInFuture}
               style={{ flex: 1 }}
             />
           </>
@@ -512,7 +536,7 @@ export default function ClassSessionDetailScreen() {
               onPress={openCompleteDialog}
               variant="primary"
               loading={saving}
-              disabled={saving}
+              disabled={saving || sessionInFuture}
               style={{ flex: 1 }}
             />
           </>
@@ -577,12 +601,19 @@ const styles = StyleSheet.create({
   traineeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   footer: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
     gap: Spacing.md,
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.md,
     backgroundColor: Brand.backgroundDark,
     borderTopWidth: 1,
     borderTopColor: Brand.borderSubtle,
+  },
+  footerHint: {
+    ...Typography.caption,
+    color: Brand.textMuted,
+    width: '100%',
   },
   skipBtn: { borderRadius: Radius.lg },
   editTwoCol: { flexDirection: 'row', gap: Spacing.md },

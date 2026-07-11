@@ -7,7 +7,7 @@ import PickerField from '../../components/common/PickerField';
 import SectionHeader from '../../components/common/SectionHeader';
 import ThemedSegmentedButtons from '../../components/common/ThemedSegmentedButtons';
 import { Text, TextInput } from 'react-native-paper';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Brand, Layout, Radius, Spacing } from '../../theme/brandColors';
@@ -116,8 +116,11 @@ export default function AddSessionScreen() {
 
   useEffect(() => {
     navigation.setOptions({ title: 'Add Session' });
+  }, [navigation]);
+
+  useFocusEffect(useCallback(() => {
     load();
-  }, [navigation, load]);
+  }, [load]));
 
   const isValid =
     classTypeId !== null &&

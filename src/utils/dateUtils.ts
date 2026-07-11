@@ -27,6 +27,17 @@ export function formatDisplayTime(time24: string | null | undefined): string {
   return `${hour}:${m.toString().padStart(2, '0')} ${period}`;
 }
 
+export function sessionDateTime(sessionDate: string, classTime: string): Date {
+  const [h, m] = classTime.split(':').map(Number);
+  const date = new Date(sessionDate + 'T00:00:00');
+  date.setHours(h || 0, m || 0, 0, 0);
+  return date;
+}
+
+export function isSessionInFuture(sessionDate: string, classTime: string, now = new Date()): boolean {
+  return sessionDateTime(sessionDate, classTime) > now;
+}
+
 function localISO(date: Date): string {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
