@@ -83,6 +83,7 @@ export default function AppButton({
         loading={loading}
         disabled={disabled}
         style={style}
+        contentStyle={{ height: 48 }}
         textColor="#FF5252"
       >
         {label}

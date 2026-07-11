@@ -33,6 +33,8 @@ const REQUIRED_SQLITE_TABLES = [
   'settings',
 ];
 
+const SQLITE_MAIN_DATABASE = 'main';
+
 function sqliteTempFile(prefix: string): { name: string; file: File; directory: string } {
   const name = `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2)}.db`;
   return {
@@ -65,11 +67,17 @@ export async function exportData(): Promise<void> {
   const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
   const filename = `fitdesk_backup_${date}.fitdeskbackup`;
   const file = new File(Paths.cache, filename);
+  if (file.exists) {
+    file.delete();
+  }
+
   const temp = await SQLite.openDatabaseAsync(filename, { useNewConnection: true }, Paths.cache.uri);
   try {
     await SQLite.backupDatabaseAsync({
       sourceDatabase: db,
+      sourceDatabaseName: SQLITE_MAIN_DATABASE,
       destDatabase: temp,
+      destDatabaseName: SQLITE_MAIN_DATABASE,
     });
   } finally {
     await temp.closeAsync();
@@ -164,9 +172,7 @@ export async function pickAndImportData(): Promise<void> {
 }
 
 async function importSqliteFile(file: File): Promise<void> {
-  const temp = sqliteTempFile('fitdesk_import');
-  temp.file.write(await file.bytes());
-
+  const temp = await copyPickedFileToCache(file);
   const sourceDb = await SQLite.openDatabaseAsync(temp.name, { useNewConnection: true }, temp.directory);
   try {
     await validateSqliteBackup(sourceDb);
@@ -174,7 +180,9 @@ async function importSqliteFile(file: File): Promise<void> {
     const db = await getDatabase();
     await SQLite.backupDatabaseAsync({
       sourceDatabase: sourceDb,
+      sourceDatabaseName: SQLITE_MAIN_DATABASE,
       destDatabase: db,
+      destDatabaseName: SQLITE_MAIN_DATABASE,
     });
     await db.execAsync('PRAGMA foreign_keys = ON;');
     await db.execAsync('PRAGMA journal_mode = WAL;');
@@ -182,9 +190,25 @@ async function importSqliteFile(file: File): Promise<void> {
   } finally {
     await sourceDb.closeAsync();
     if (temp.file.exists) {
-      temp.file.delete();
+      try {
+        temp.file.delete();
+      } catch {
+        // Best-effort cleanup only; import already completed or failed with the original error.
+      }
     }
   }
+}
+
+async function copyPickedFileToCache(file: File): Promise<{ name: string; file: File; directory: string }> {
+  const temp = sqliteTempFile('fitdesk_import');
+
+  try {
+    await file.copy(temp.file, { overwrite: true });
+  } catch {
+    temp.file.write(await file.bytes());
+  }
+
+  return temp;
 }
 
 async function validateSqliteBackup(db: SQLite.SQLiteDatabase): Promise<void> {

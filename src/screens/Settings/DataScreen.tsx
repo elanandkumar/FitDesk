@@ -37,6 +37,7 @@ export default function DataScreen() {
             setImporting(true);
             try {
               await pickAndImportData();
+              await refreshBackup();
               Alert.alert('Import complete', 'All data restored from backup.');
             } catch (err) {
               Alert.alert('Import failed', err instanceof Error ? err.message : 'Unknown error');

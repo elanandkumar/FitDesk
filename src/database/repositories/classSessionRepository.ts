@@ -1,5 +1,6 @@
 import { getDatabase } from '../db';
 import { ClassSession, EnrichedSession, LocationType, SessionStatus, SourceType } from '../../types';
+import { isSessionInFuture } from '../../utils/dateUtils';
 
 const ENRICHED_SELECT = `
   SELECT
@@ -148,6 +149,15 @@ export async function completeManagerSession(
   const db = await getDatabase();
   const now = new Date().toISOString();
   await db.withTransactionAsync(async () => {
+    const session = await db.getFirstAsync<ClassSession>(
+      'SELECT * FROM class_sessions WHERE id = ?',
+      [sessionId]
+    );
+    if (!session) throw new Error('Session not found.');
+    if (isSessionInFuture(session.session_date, session.class_time)) {
+      throw new Error('Future sessions cannot be marked complete.');
+    }
+
     await db.runAsync(
       'UPDATE class_sessions SET status=?, student_count=?, notes=? WHERE id=?',
       ['completed', studentCount, notes ?? null, sessionId]
@@ -167,6 +177,15 @@ export async function completePersonalSession(
 ): Promise<void> {
   const db = await getDatabase();
   await db.withTransactionAsync(async () => {
+    const session = await db.getFirstAsync<ClassSession>(
+      'SELECT * FROM class_sessions WHERE id = ?',
+      [sessionId]
+    );
+    if (!session) throw new Error('Session not found.');
+    if (isSessionInFuture(session.session_date, session.class_time)) {
+      throw new Error('Future sessions cannot be marked complete.');
+    }
+
     await db.runAsync(
       'UPDATE class_sessions SET status=?, student_count=?, notes=? WHERE id=?',
       ['completed', traineeIds.length, notes ?? null, sessionId]
