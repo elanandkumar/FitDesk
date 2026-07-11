@@ -30,8 +30,6 @@ import {
   deactivateClassSeries,
   getTraineesForSeries,
   setTraineesForSeries,
-  hasSeriesHistory,
-  hardDeleteClassSeries,
 } from '../../database/repositories/classSeriesRepository';
 import {
   createSessionsBatch,
@@ -92,9 +90,7 @@ export default function AddEditClassSeriesScreen() {
   const [notes, setNotes] = useState('');
 
   const [saving, setSaving] = useState(false);
-  const [cancelVisible, setCancelVisible] = useState(false);
-  const [deleteVisible, setDeleteVisible] = useState(false);
-  const [deleteHasHistory, setDeleteHasHistory] = useState(false);
+  const [endSeriesVisible, setEndSeriesVisible] = useState(false);
   const [classTypePickerVisible, setClassTypePickerVisible] = useState(false);
   const [managerPickerVisible, setManagerPickerVisible] = useState(false);
   const [traineePickerVisible, setTraineePickerVisible] = useState(false);
@@ -297,34 +293,13 @@ export default function AddEditClassSeriesScreen() {
     }
   }
 
-  async function handleCancelSeries() {
+  async function handleEndSeries() {
     if (!seriesId) return;
     try {
       await deactivateClassSeries(seriesId);
       navigation.goBack();
     } catch {
-      Alert.alert('Error', 'Could not cancel series. Please try again.');
-    }
-  }
-
-  async function openDeleteSeries() {
-    if (!seriesId) return;
-    const history = await hasSeriesHistory(seriesId);
-    setDeleteHasHistory(history);
-    setDeleteVisible(true);
-  }
-
-  async function handleDeleteSeries() {
-    if (!seriesId) return;
-    try {
-      if (deleteHasHistory) {
-        await deactivateClassSeries(seriesId);
-      } else {
-        await hardDeleteClassSeries(seriesId);
-      }
-      navigation.goBack();
-    } catch {
-      Alert.alert('Error', 'Could not delete series. Please try again.');
+      Alert.alert('Error', 'Could not end series. Please try again.');
     }
   }
 
@@ -575,19 +550,14 @@ export default function AddEditClassSeriesScreen() {
           </View>
 
           {isEdit && (
-            <View style={{ gap: Spacing.sm, marginTop: Spacing.sm }}>
+            <View style={styles.seriesStatusActions}>
               <AppButton
-                variant="danger"
-                label="Cancel This Series"
-                onPress={() => setCancelVisible(true)}
+                variant="secondary"
+                label="End Series"
+                onPress={() => setEndSeriesVisible(true)}
                 fullWidth={false}
-              />
-              <AppButton
-                variant="ghost"
-                label="Delete Series"
-                onPress={openDeleteSeries}
-                fullWidth={false}
-                style={{ borderColor: Brand.pink }}
+                color={Brand.textSecondary}
+                style={styles.endSeriesButton}
               />
             </View>
           )}
@@ -694,25 +664,12 @@ export default function AddEditClassSeriesScreen() {
       <LoadingOverlay visible={saving} />
 
       <ConfirmDialog
-        visible={cancelVisible}
-        title="Cancel Series"
-        message="Mark this series as cancelled? Existing sessions will remain but no new ones will be generated."
-        confirmLabel="Cancel Series"
-        onConfirm={handleCancelSeries}
-        onDismiss={() => setCancelVisible(false)}
-      />
-
-      <ConfirmDialog
-        visible={deleteVisible}
-        title={deleteHasHistory ? 'Cancel Series' : 'Delete Series'}
-        message={
-          deleteHasHistory
-            ? 'This series has completed sessions. It will be cancelled (deactivated) rather than deleted.'
-            : 'Delete this series permanently? All upcoming sessions will be removed.'
-        }
-        confirmLabel={deleteHasHistory ? 'Cancel Series' : 'Delete'}
-        onConfirm={handleDeleteSeries}
-        onDismiss={() => setDeleteVisible(false)}
+        visible={endSeriesVisible}
+        title="End Series"
+        message="This will stop future sessions for this series. Existing sessions and payment history will remain."
+        confirmLabel="End Series"
+        onConfirm={handleEndSeries}
+        onDismiss={() => setEndSeriesVisible(false)}
       />
     </>
   );
@@ -763,6 +720,12 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Brand.borderSubtle,
   },
-  cancelBtn: { flex: 0, width: 100, borderColor: Brand.borderSubtle, justifyContent: 'center', borderRadius: Radius.lg },
+  seriesStatusActions: {
+    marginTop: Spacing.lg,
+  },
+  endSeriesButton: {
+    borderColor: Brand.borderSubtle,
+  },
+  cancelBtn: { flex: 0, width: 100, justifyContent: 'center' },
   saveBtn: { flex: 1 },
 });

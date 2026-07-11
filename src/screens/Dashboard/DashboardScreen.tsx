@@ -17,27 +17,19 @@ import { extendActiveSeriesSessions } from '../../database/repositories/classSer
 import { getWeekEarningsSplit } from '../../database/repositories/paymentRepository';
 import { getDatabase } from '../../database/db';
 import { getUnreadCount } from '../../database/repositories/appNotificationRepository';
-import { formatDisplayTime, todayISO, addDays } from '../../utils/dateUtils';
-import { withAlpha } from '../../utils/colorUtils';
+import { todayISO, addDays } from '../../utils/dateUtils';
 import { RootStackParamList } from '../../navigation/types';
-import StatusBadge, { getDisplayStatus } from '../../components/common/StatusBadge';
 import { useBackup } from '../../context/BackupContext';
 import EmptyState from '../../components/common/EmptyState';
 import HelpSheet from '../../components/common/HelpSheet';
 import HeroCard from '../../components/common/HeroCard';
 import EarningsCard from '../../components/common/EarningsCard';
+import SessionCard from '../../components/common/SessionCard';
 import { HELP } from '../../constants/helpContent';
 
 type Nav = StackNavigationProp<RootStackParamList>;
 
 type Section = { title: string; data: EnrichedSession[] };
-
-function traineeLabel(names?: string): string | null {
-  if (!names) return null;
-  const parts = names.split(', ');
-  if (parts.length === 1) return parts[0];
-  return `${parts[0]} +${parts.length - 1}`;
-}
 
 function sectionTitle(isoDate: string, todayStr: string): string {
   if (isoDate === todayStr) return 'Today';
@@ -70,7 +62,7 @@ export default function DashboardScreen() {
           >
             <AppIconButton icon="bell" iconColor={accentPalette.textAccent} onPress={() => navigation.navigate('Notifications')} />
             {unreadCount > 0 && (
-              <View style={[styles.bellBadge, { backgroundColor: accentPalette.warm }]}>
+              <View style={styles.bellBadge}>
                 <Text style={styles.bellBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
               </View>
             )}
@@ -158,7 +150,18 @@ export default function DashboardScreen() {
                 </View>
               </Pressable>
             )}
-            <EarningsCard pending={weekEarnings.pending} paid={weekEarnings.paid} />
+            <EarningsCard
+              pending={weekEarnings.pending}
+              paid={weekEarnings.paid}
+              onPress={() => navigation.navigate('MainTabs', {
+                screen: 'Payments',
+                params: {
+                  initialSegment: 'managers',
+                  pendingOnly: true,
+                  focusKey: Date.now(),
+                },
+              })}
+            />
           </>
         }
         ListEmptyComponent={
@@ -186,38 +189,11 @@ export default function DashboardScreen() {
         )}
         renderItem={({ item, index }) => (
           <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 55).duration(350)}>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('ClassSessionDetail', { sessionId: item.id })}
-            style={[
-              styles.sessionCard,
-              {
-                borderColor: withAlpha(item.class_type_color, 0.28),
-                borderLeftColor: withAlpha(item.class_type_color, 0.75),
-                shadowColor: '#000000',
-              },
-            ]}
-            activeOpacity={0.75}
-          >
-            <View style={styles.sessionInfo}>
-              <Text variant="titleSmall" style={{ color: Brand.textPrimary }}>
-                {item.series_title}
-              </Text>
-              <Text variant="bodySmall" style={{ color: Brand.textSecondary }}>
-                {formatDisplayTime(item.class_time)} · {item.class_type_name} · {item.duration_minutes} min
-              </Text>
-              {item.source_type === 'personal' && traineeLabel(item.trainee_names) && (
-                <Text variant="bodySmall" style={{ color: accentPalette.textAccent }}>
-                  {traineeLabel(item.trainee_names)}
-                </Text>
-              )}
-              {item.location && (
-                <Text variant="bodySmall" style={{ color: Brand.textMuted }}>
-                  {item.location}
-                </Text>
-              )}
-            </View>
-            <StatusBadge status={getDisplayStatus(item.status, item.session_date, item.class_time)} />
-          </TouchableOpacity>
+            <SessionCard
+              session={item}
+              onPress={() => navigation.navigate('ClassSessionDetail', { sessionId: item.id })}
+              style={styles.sessionCard}
+            />
           </Animated.View>
         )}
         ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
@@ -259,44 +235,30 @@ const styles = StyleSheet.create({
     color: Brand.textMuted,
   },
   sessionCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
     marginHorizontal: Spacing.lg,
-    paddingVertical: Spacing.lg,
-    paddingLeft: Spacing.md,
-    paddingRight: Spacing.md,
-    gap: Spacing.md,
-    backgroundColor: Brand.surfaceDark,
-    borderRadius: Radius.item,
-    borderWidth: 1,
-    borderColor: Brand.borderSubtle,
-    borderLeftWidth: 4,
-    elevation: 4,
-    shadowOpacity: 0.18,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
   },
   bellWrap: {
     position: 'relative',
   },
   bellBadge: {
     position: 'absolute',
-    top: 6,
-    right: 6,
-    minWidth: 16,
-    height: 16,
-    borderRadius: 8,
+    top: 4,
+    right: 4,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 3,
+    paddingHorizontal: 4,
+    backgroundColor: Brand.orange,
     borderWidth: 1.5,
     borderColor: Brand.backgroundDark,
   },
   bellBadgeText: {
     color: Brand.backgroundDark,
-    fontSize: 9,
+    fontSize: 10,
     fontFamily: 'Montserrat_600SemiBold',
-    lineHeight: 12,
+    lineHeight: 13,
   },
   backupBanner: {
     flexDirection: 'row',
@@ -328,7 +290,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: 'Montserrat_600SemiBold',
   },
-  sessionInfo: { flex: 1, gap: 0 },
   fab: {
     position: 'absolute',
     right: Spacing.lg,

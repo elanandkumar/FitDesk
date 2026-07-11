@@ -71,6 +71,35 @@ export const AccentPalettes = {
 export type AccentKey = keyof typeof AccentPalettes;
 export type AccentPalette = (typeof AccentPalettes)[AccentKey];
 
+export const BadgeTones = {
+  neutral: {
+    text: Brand.textSecondary,
+    background: Brand.surfaceElevated,
+  },
+  upcoming: {
+    text: '#C4B5FD',
+    background: '#332B63',
+  },
+  completed: {
+    text: '#FF9ABD',
+    background: '#5A243D',
+  },
+  cancelled: {
+    text: '#D6D2E8',
+    background: '#343041',
+  },
+  skipped: {
+    text: '#FFB86B',
+    background: '#4A2F1F',
+  },
+  missed: {
+    text: '#FCA5A5',
+    background: '#4A252A',
+  },
+} as const;
+
+export type BadgeTone = keyof typeof BadgeTones;
+
 export const Radius = {
   xs:   2,   // accent lines, tiny indicators
   sm:   6,   // chips, segment items

@@ -34,6 +34,7 @@ export default function ManagerPaymentDetailScreen() {
   const [confirmPayment, setConfirmPayment] = useState<EnrichedManagerPayment | null>(null);
 
   const pendingTotal = payments.filter(p => p.status === 'pending').reduce((s, p) => s + p.amount, 0);
+  const paidTotal = payments.filter(p => p.status === 'paid').reduce((s, p) => s + p.amount, 0);
   const sessionCount = payments.length;
 
   useLayoutEffect(() => {
@@ -66,41 +67,61 @@ export default function ManagerPaymentDetailScreen() {
 
   const renderItem = ({ item }: { item: EnrichedManagerPayment }) => (
     <View style={styles.item}>
-      <View style={[styles.dot, { backgroundColor: item.class_type_color }]} />
-      <View style={styles.itemText}>
-        <Text style={styles.itemTitle}>{item.series_title}</Text>
-        <Text style={styles.itemSub}>
-          {formatDisplayDate(item.session_date)} · {formatDisplayTime(item.class_time)}
-        </Text>
+      <View style={styles.itemMainRow}>
+        <View style={[styles.dot, { backgroundColor: item.class_type_color }]} />
+        <View style={styles.itemText}>
+          <Text style={styles.itemTitle}>{item.series_title}</Text>
+          <Text style={styles.itemSub}>
+            {formatDisplayDate(item.session_date)} · {formatDisplayTime(item.class_time)}
+          </Text>
+        </View>
+        <View style={styles.itemStatus}>
+          <Text style={styles.amountLabel}>{item.status === 'paid' ? 'Paid' : 'Pending'}</Text>
+          <Text style={[styles.amount, item.status === 'paid' ? styles.paidAmount : styles.pendingAmount]}>
+            {formatCurrency(item.amount)}
+          </Text>
+        </View>
       </View>
-      <View style={styles.itemRight}>
-        <Text style={styles.amount}>{formatCurrency(item.amount)}</Text>
-        {item.status === 'pending' ? (
-          <TouchableOpacity style={[styles.markPaidBtn, { backgroundColor: `${accentPalette.main}33` }]} onPress={() => setConfirmPayment(item)}>
+      {item.status === 'pending' ? (
+        <View style={styles.itemActionRow}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={`Mark ${formatCurrency(item.amount)} as paid`}
+            activeOpacity={0.72}
+            hitSlop={6}
+            style={[styles.markPaidBtn, { borderColor: accentPalette.main }]}
+            onPress={() => setConfirmPayment(item)}
+          >
+            <AppIcon name="check" size={14} color={accentPalette.main} weight="bold" />
             <Text style={[styles.markPaidText, { color: accentPalette.main }]}>Mark Paid</Text>
           </TouchableOpacity>
-        ) : (
-          <View style={styles.paidBadge}>
-            <AppIcon name="check" size={11} color={Brand.pink} weight="bold" />
-            <Text style={styles.paidText}>Paid</Text>
-          </View>
-        )}
-      </View>
+        </View>
+      ) : null}
     </View>
   );
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {payments.length > 0 && (
-        <View style={styles.summaryBar}>
-          <Text style={styles.summaryText}>
-            {sessionCount} session{sessionCount !== 1 ? 's' : ''}
-          </Text>
-          {pendingTotal > 0 && (
-            <Text style={[styles.summaryText, { color: Brand.orange }]}>
-              {formatCurrency(pendingTotal)} pending
+        <View style={styles.summaryCard}>
+          <View style={styles.summaryCountItem}>
+            <Text style={styles.summaryLabel}>Sessions</Text>
+            <Text style={styles.summaryValue}>{sessionCount}</Text>
+          </View>
+          <View style={styles.summarySep} />
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryLabel}>Paid</Text>
+            <Text style={[styles.summaryValue, styles.paidAmount]}>
+              {formatCurrency(paidTotal)}
             </Text>
-          )}
+          </View>
+          <View style={styles.summarySep} />
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryLabel}>Pending</Text>
+            <Text style={[styles.summaryValue, styles.pendingAmount]}>
+              {formatCurrency(pendingTotal)}
+            </Text>
+          </View>
         </View>
       )}
 
@@ -137,21 +158,26 @@ export default function ManagerPaymentDetailScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  summaryBar: {
+  summaryCard: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Brand.borderSubtle,
+    backgroundColor: Brand.surfaceElevated,
+    borderRadius: Radius.card,
+    borderWidth: 1,
+    borderColor: Brand.borderSubtle,
+    marginHorizontal: Spacing.md,
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.sm,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.md,
   },
-  summaryText: { ...Typography.bodySm, color: Brand.textSecondary },
+  summaryItem: { flex: 1, alignItems: 'center' },
+  summaryCountItem: { flex: 0.75, alignItems: 'center' },
+  summaryLabel: { ...Typography.bodySm, fontWeight: '500', color: Brand.textSecondary, marginBottom: Spacing.xs },
+  summaryValue: { ...Typography.h3, color: Brand.textPrimary },
+  summarySep: { width: 1, backgroundColor: Brand.borderSubtle, marginVertical: 2 },
   listContent: { paddingHorizontal: Spacing.md, paddingTop: Spacing.sm, paddingBottom: Layout.LIST_PAD_NO_FAB },
   emptyContainer: { flex: 1 },
   item: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: Brand.surfaceDark,
     borderRadius: Radius.card,
     borderWidth: 1,
@@ -159,28 +185,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     marginBottom: Spacing.xs,
+  },
+  itemMainRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: Spacing.sm,
   },
   dot: { width: 10, height: 10, borderRadius: Radius.full, flexShrink: 0 },
   itemText: { flex: 1 },
   itemTitle: { ...Typography.body, fontWeight: '500', color: Brand.textPrimary },
   itemSub: { ...Typography.bodySm, color: Brand.textSecondary, marginTop: 0 },
-  itemRight: { alignItems: 'flex-end', gap: Spacing.xs },
-  amount: { ...Typography.h4, fontWeight: '700', color: Brand.orange },
+  itemStatus: { alignItems: 'center', minWidth: 86 },
+  amountLabel: { ...Typography.caption, color: Brand.textSecondary },
+  amount: { ...Typography.h4, fontWeight: '700' },
+  paidAmount: { color: Brand.pink },
+  pendingAmount: { color: Brand.orange },
+  itemActionRow: { alignItems: 'flex-end', marginTop: Spacing.xs },
   markPaidBtn: {
-    borderRadius: Radius.full,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-  },
-  markPaidText: { ...Typography.labelSm },
-  paidBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.xs,
-    backgroundColor: `${Brand.pink}1A`,
-    borderRadius: Radius.full,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 3, // micro: below xs(4) — badge pill tight fit
+    minHeight: 34,
+    borderRadius: Radius.md,
+    borderWidth: 1.5,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
   },
-  paidText: { ...Typography.microLabel, color: Brand.pink },
+  markPaidText: { ...Typography.labelSm },
 });

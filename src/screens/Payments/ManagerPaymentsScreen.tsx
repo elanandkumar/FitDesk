@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Chip, Text } from 'react-native-paper';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -21,6 +21,11 @@ type ManagerSummary = {
   paidTotal: number;
   pendingTotal: number;
 };
+
+interface ManagerPaymentsScreenProps {
+  initialPendingOnly?: boolean;
+  focusKey?: number;
+}
 
 function buildSummaries(payments: EnrichedManagerPayment[]): ManagerSummary[] {
   const map = new Map<number, ManagerSummary>();
@@ -46,12 +51,18 @@ function buildSummaries(payments: EnrichedManagerPayment[]): ManagerSummary[] {
   );
 }
 
-export default function ManagerPaymentsScreen() {
+export default function ManagerPaymentsScreen({ initialPendingOnly, focusKey }: ManagerPaymentsScreenProps) {
   const { accentPalette, theme } = useAppTheme();
   const navigation = useNavigation<Nav>();
   const [summaries, setSummaries] = useState<ManagerSummary[]>([]);
   const [allPayments, setAllPayments] = useState<EnrichedManagerPayment[]>([]);
   const [pendingOnly, setPendingOnly] = useState(true);
+
+  useEffect(() => {
+    if (initialPendingOnly !== undefined) {
+      setPendingOnly(initialPendingOnly);
+    }
+  }, [focusKey, initialPendingOnly]);
 
   const load = useCallback(async () => {
     try {
@@ -78,33 +89,29 @@ export default function ManagerPaymentsScreen() {
       activeOpacity={0.75}
     >
       <View style={styles.cardTop}>
-        <Text style={styles.managerName}>{item.managerName}</Text>
-        <View style={styles.viewBtn}>
-          <Text style={[styles.viewBtnText, { color: accentPalette.main }]}>View</Text>
-          <AppIcon name="caretRight" size={14} color={accentPalette.main} />
+        <View style={styles.cardTitleBlock}>
+          <Text style={styles.managerName}>{item.managerName}</Text>
+          <Text style={styles.sessionCount}>
+            {item.sessionCount} session{item.sessionCount !== 1 ? 's' : ''}
+          </Text>
+        </View>
+        <View style={styles.amountRow}>
+          {item.paidTotal > 0 && (
+            <View style={styles.amountStatus}>
+              <Text style={styles.amountLabel}>Paid</Text>
+              <Text style={[styles.cardAmount, styles.paidAmount]}>{formatCurrency(item.paidTotal)}</Text>
+            </View>
+          )}
+          {item.pendingTotal > 0 && (
+            <View style={styles.amountStatus}>
+              <Text style={styles.amountLabel}>Pending</Text>
+              <Text style={[styles.cardAmount, styles.pendingAmount]}>{formatCurrency(item.pendingTotal)}</Text>
+            </View>
+          )}
         </View>
       </View>
-      <Text style={styles.sessionCount}>
-        {item.sessionCount} session{item.sessionCount !== 1 ? 's' : ''}
-      </Text>
-      <View style={styles.amountRow}>
-        {item.paidTotal > 0 && (
-          <View style={styles.paidBadge}>
-            <AppIcon name="check" size={11} color={Brand.pink} weight="bold" />
-            <Text style={styles.paidText}>{formatCurrency(item.paidTotal)} paid</Text>
-          </View>
-        )}
-        {item.pendingTotal > 0 && (
-          <View style={styles.pendingBadge}>
-            <Text style={styles.pendingText}>{formatCurrency(item.pendingTotal)} pending</Text>
-          </View>
-        )}
-        {item.paidTotal > 0 && item.pendingTotal === 0 && (
-          <View style={styles.allPaidBadge}>
-            <AppIcon name="checks" size={13} color={Brand.pink} weight="bold" />
-            <Text style={styles.allPaidText}>All Paid</Text>
-          </View>
-        )}
+      <View style={styles.cardActionRow}>
+        <AppIcon name="caretRight" size={16} color={Brand.textMuted} />
       </View>
     </TouchableOpacity>
   );
@@ -118,7 +125,7 @@ export default function ManagerPaymentsScreen() {
           style={[styles.filterChip, pendingOnly && { backgroundColor: accentPalette.main }]}
           textStyle={{ color: pendingOnly ? Brand.textPrimary : Brand.textSecondary }}
         >
-          Pending
+          Pending only
         </Chip>
         <Chip
           selected={!pendingOnly}
@@ -126,21 +133,30 @@ export default function ManagerPaymentsScreen() {
           style={[styles.filterChip, !pendingOnly && { backgroundColor: accentPalette.main }]}
           textStyle={{ color: !pendingOnly ? Brand.textPrimary : Brand.textSecondary }}
         >
-          All
+          All payments
         </Chip>
       </View>
 
       {allPayments.length > 0 && (
-        <View style={styles.summaryCard}>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Pending</Text>
-            <Text style={[styles.summaryAmount, { color: Brand.orange }]}>{formatCurrency(totalPending)}</Text>
-          </View>
-          <View style={styles.summarySep} />
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Paid</Text>
-            <Text style={[styles.summaryAmount, { color: Brand.pink }]}>{formatCurrency(totalPaid)}</Text>
-          </View>
+        <View style={[styles.summaryCard, pendingOnly && styles.summaryCardSingle]}>
+          {pendingOnly ? (
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>Pending</Text>
+              <Text style={[styles.summaryAmount, { color: Brand.orange }]}>{formatCurrency(totalPending)}</Text>
+            </View>
+          ) : (
+            <>
+              <View style={styles.summaryItem}>
+                <Text style={styles.summaryLabel}>Paid</Text>
+                <Text style={[styles.summaryAmount, { color: Brand.pink }]}>{formatCurrency(totalPaid)}</Text>
+              </View>
+              <View style={styles.summarySep} />
+              <View style={styles.summaryItem}>
+                <Text style={styles.summaryLabel}>Pending</Text>
+                <Text style={[styles.summaryAmount, { color: Brand.orange }]}>{formatCurrency(totalPending)}</Text>
+              </View>
+            </>
+          )}
         </View>
       )}
 
@@ -171,7 +187,7 @@ const styles = StyleSheet.create({
   filterChip: { backgroundColor: Brand.surfaceDark, borderColor: Brand.borderSubtle },
   summaryCard: {
     flexDirection: 'row',
-    backgroundColor: Brand.surfaceDark,
+    backgroundColor: Brand.surfaceElevated,
     borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
@@ -185,6 +201,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
   },
+  summaryCardSingle: { justifyContent: 'center' },
   summaryItem: { flex: 1, alignItems: 'center' },
   summaryLabel: { ...Typography.bodySm, fontWeight: '500', color: Brand.textSecondary, marginBottom: Spacing.xs },
   summaryAmount: { ...Typography.h2 },
@@ -202,44 +219,22 @@ const styles = StyleSheet.create({
   },
   cardTop: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
-    marginBottom: Spacing.xs,
+    gap: Spacing.md,
   },
-  managerName: { ...Typography.h4, color: Brand.textPrimary, flex: 1 },
-  viewBtn: {
+  cardTitleBlock: { flex: 1 },
+  managerName: { ...Typography.h4, color: Brand.textPrimary },
+  sessionCount: { ...Typography.bodySm, color: Brand.textSecondary, marginTop: Spacing.xs },
+  amountRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
+    justifyContent: 'flex-end',
+    gap: Spacing.sm,
   },
-  viewBtnText: { ...Typography.labelSm },
-  sessionCount: { ...Typography.bodySm, color: Brand.textSecondary, marginBottom: Spacing.sm },
-  amountRow: { flexDirection: 'row', gap: Spacing.sm, flexWrap: 'wrap' },
-  paidBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    backgroundColor: `${Brand.pink}1A`,
-    borderRadius: Radius.full,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 3, // micro: below xs(4) — badge pill tight fit
-  },
-  paidText: { ...Typography.microLabel, color: Brand.pink },
-  pendingBadge: {
-    backgroundColor: `${Brand.orange}22`,
-    borderRadius: Radius.full,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 3, // micro: below xs(4) — badge pill tight fit
-  },
-  pendingText: { ...Typography.microLabel, color: Brand.orange },
-  allPaidBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    backgroundColor: `${Brand.pink}1A`,
-    borderRadius: Radius.full,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 3, // micro: below xs(4) — badge pill tight fit
-  },
-  allPaidText: { ...Typography.microLabel, color: Brand.pink },
+  amountStatus: { alignItems: 'center', minWidth: 86 },
+  amountLabel: { ...Typography.caption, color: Brand.textSecondary },
+  cardAmount: { ...Typography.h4, fontWeight: '700' },
+  cardActionRow: { alignItems: 'flex-end', marginTop: Spacing.md },
+  paidAmount: { color: Brand.pink },
+  pendingAmount: { color: Brand.orange },
 });

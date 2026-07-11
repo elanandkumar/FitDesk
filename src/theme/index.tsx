@@ -3,8 +3,8 @@ import { MD3DarkTheme } from 'react-native-paper';
 import { getDatabase } from '../database/db';
 import { AccentKey, AccentPalette, AccentPalettes, Brand } from './brandColors';
 
-export { AccentPalettes, Brand, Gradients, Radius, Layout, Spacing, Typography, Elevation } from './brandColors';
-export type { AccentKey, AccentPalette } from './brandColors';
+export { AccentPalettes, BadgeTones, Brand, Gradients, Radius, Layout, Spacing, Typography, Elevation } from './brandColors';
+export type { AccentKey, AccentPalette, BadgeTone } from './brandColors';
 
 function isAccentKey(value: string | null): value is AccentKey {
   return !!value && value in AccentPalettes;

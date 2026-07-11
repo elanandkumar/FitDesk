@@ -18,12 +18,11 @@ import {
 import { getPackagesByTrainee } from '../../database/repositories/paymentRepository';
 import { getEnrichedSessionsForTrainee, getSessionNumberForTrainee } from '../../database/repositories/classSessionRepository';
 import { formatCurrency } from '../../utils/currencyUtils';
-import { formatDisplayDate, formatDisplayTime } from '../../utils/dateUtils';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import AppButton from '../../components/common/AppButton';
-import StatusBadge, { getDisplayStatus } from '../../components/common/StatusBadge';
 import HelpSheet from '../../components/common/HelpSheet';
 import AppIconButton from '../../components/common/AppIconButton';
+import SessionCard from '../../components/common/SessionCard';
 import { HELP } from '../../constants/helpContent';
 
 type Nav = StackNavigationProp<RootStackParamList, 'TraineeDetail'>;
@@ -202,38 +201,26 @@ export default function TraineeDetailScreen() {
 
         {/* Sessions Tab */}
         {activeTab === 'sessions' && (
-          <View style={styles.card}>
+          <>
             {sessions.length === 0 ? (
-              <Text variant="bodyMedium" style={{ color: Brand.textMuted }}>No sessions yet</Text>
+              <View style={styles.card}>
+                <Text variant="bodyMedium" style={{ color: Brand.textMuted }}>No sessions yet</Text>
+              </View>
             ) : (
-              sessions.map((s, i) => {
-                const numInfo = sessionNumbers.get(s.id);
-                const displayStatus = getDisplayStatus(s.status, s.session_date, s.class_time);
-                return (
-                  <View key={s.id}>
-                    {i > 0 && <Divider style={{ backgroundColor: Brand.borderSubtle, marginVertical: Spacing.xs }} />}
-                    <View style={styles.sessionRow}>
-                      <View style={[styles.colorBar, { backgroundColor: s.class_type_color }]} />
-                      <View style={{ flex: 1, gap: 2 }}>
-                        <Text variant="bodyMedium" style={{ color: Brand.textPrimary }}>
-                          {s.series_title}
-                        </Text>
-                        <Text variant="bodySmall" style={{ color: Brand.textSecondary }}>
-                          {formatDisplayDate(s.session_date)} · {formatDisplayTime(s.class_time)}
-                        </Text>
-                        {numInfo && (
-                          <Text variant="bodySmall" style={{ color: Brand.orange }}>
-                            Session {numInfo.session_number} / {numInfo.total_sessions}
-                          </Text>
-                        )}
-                      </View>
-                      <StatusBadge status={displayStatus} />
-                    </View>
-                  </View>
-                );
-              })
+              <View style={styles.sessionList}>
+                {sessions.map((s) => (
+                  <SessionCard
+                    key={s.id}
+                    session={s}
+                    showDate
+                    showTraineeLabel={false}
+                    sessionNumber={sessionNumbers.get(s.id)}
+                    onPress={() => navigation.navigate('ClassSessionDetail', { sessionId: s.id })}
+                  />
+                ))}
+              </View>
             )}
-          </View>
+          </>
         )}
 
         {/* Notes */}
@@ -346,8 +333,7 @@ const styles = StyleSheet.create({
     color: Brand.orange,
   },
   statusPill: { paddingHorizontal: Spacing.sm, paddingVertical: 3, borderRadius: Radius.full },
-  sessionRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, paddingVertical: Spacing.xs },
-  colorBar: { width: 3, alignSelf: 'stretch', borderRadius: Radius.xs },
+  sessionList: { gap: Spacing.sm },
   fab: {
     position: 'absolute',
     right: Spacing.lg,

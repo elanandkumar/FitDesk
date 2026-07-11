@@ -26,6 +26,6 @@ export type TabParamList = {
   Dashboard: undefined;
   Calendar: undefined;
   Contacts: undefined;
-  Payments: undefined;
+  Payments: { initialSegment?: 'managers' | 'trainees'; pendingOnly?: boolean; focusKey?: number } | undefined;
   Settings: undefined;
 };

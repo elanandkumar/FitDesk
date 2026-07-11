@@ -44,6 +44,8 @@ import AppIconButton from '../../components/common/AppIconButton';
 import { schedulePendingPaymentNotification } from '../../notifications/scheduler';
 import Constants from 'expo-constants';
 import { HELP } from '../../constants/helpContent';
+import AppBadge from '../../components/common/AppBadge';
+import SectionHeader from '../../components/common/SectionHeader';
 
 const isExpoGo = Constants.appOwnership === 'expo';
 
@@ -276,9 +278,7 @@ export default function ClassSessionDetailScreen() {
       <View style={[styles.heroStrip, { borderLeftColor: withAlpha(session.class_type_color, 0.7) }]}>
         <Text style={styles.heroTitle}>{session.series_title}</Text>
         <View style={styles.badgeRow}>
-          <View style={{ backgroundColor: session.class_type_color + '33', borderRadius: Radius.full, paddingHorizontal: 10, paddingVertical: Spacing.xs }}>
-            <Text style={{ ...Typography.labelSm, color: session.class_type_color }}>{session.class_type_name}</Text>
-          </View>
+          <AppBadge label={session.class_type_name} accentColor={session.class_type_color} />
           <StatusBadge status={session.status} />
         </View>
       </View>
@@ -350,37 +350,39 @@ export default function ClassSessionDetailScreen() {
 
       {/* Notes card */}
       {(isUpcoming || session.notes) && (
-        <View style={styles.detailCard}>
-          <Text variant="labelLarge" style={styles.cardLabel}>Notes</Text>
-          {isUpcoming ? (
-            <>
-              <TextInput
-                mode="outlined"
-                value={notes}
-                onChangeText={(t) => { setNotes(t); setNotesChanged(true); }}
-                multiline
-                numberOfLines={3}
-                placeholder="Add notes..."
-                contentStyle={{ textAlignVertical: 'top', paddingTop: 8 }}
-              />
-              {notesChanged && (
-                <AppButton
-                  label="Save Notes"
-                  onPress={handleSaveNotes}
-                  variant="ghost"
-                  loading={saving}
-                  disabled={saving}
-                  style={{ alignSelf: 'flex-end' }}
-                  fullWidth={false}
+        <>
+          <SectionHeader label="Notes" />
+          <View style={styles.detailCard}>
+            {isUpcoming ? (
+              <>
+                <TextInput
+                  mode="outlined"
+                  value={notes}
+                  onChangeText={(t) => { setNotes(t); setNotesChanged(true); }}
+                  multiline
+                  numberOfLines={3}
+                  placeholder="Add notes..."
+                  contentStyle={{ textAlignVertical: 'top', paddingTop: 8 }}
                 />
-              )}
-            </>
-          ) : (
-            <Text variant="bodyMedium" style={{ color: Brand.textSecondary }}>
-              {session.notes}
-            </Text>
-          )}
-        </View>
+                {notesChanged && (
+                  <AppButton
+                    label="Save Notes"
+                    onPress={handleSaveNotes}
+                    variant="ghost"
+                    loading={saving}
+                    disabled={saving}
+                    style={{ alignSelf: 'flex-end' }}
+                    fullWidth={false}
+                  />
+                )}
+              </>
+            ) : (
+              <Text variant="bodyMedium" style={{ color: Brand.textSecondary }}>
+                {session.notes}
+              </Text>
+            )}
+          </View>
+        </>
       )}
 
       {/* Complete dialog */}
