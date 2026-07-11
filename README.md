@@ -32,7 +32,8 @@ So I built FitDesk — a simple, local-first Android app that puts everything in
 - **Contacts** — track managers (with per-class rate) and trainees (with monthly session packages); searchable pickers everywhere with inline add for class types and centers
 - **Payments** — manager payments grouped by manager with drill-down per session; trainee packages tracked by month with sessions-used count; Reports accessible directly from the Payments screen
 - **Notifications** — class reminders (15 min / 30 min / 1 hr before), payment reminders
-- **Export / Import** — backup files so data is never lost
+- **Appearance** — choose an accent palette from Settings; buttons, tabs, pickers, and highlights update across the app
+- **Export / Import** — SQLite backup files so data is never lost; imports refresh backup reminder state after restore
 
 <p align="center">
   <img src="assets/screenshots/calendar.png" width="220" alt="Calendar" />
@@ -60,12 +61,12 @@ No login. No analytics. No backend server. Everything is stored locally using SQ
 
 | Layer | Tech |
 |---|---|
-| Framework | Expo (managed) SDK 51+ |
+| Framework | Expo (managed) SDK 56 |
 | Language | TypeScript (strict) |
 | UI | React Native Paper |
 | Storage | expo-sqlite (local only) |
 | Notifications | expo-notifications (local only) |
-| Navigation | React Navigation v6 |
+| Navigation | React Navigation v7 |
 | Calendar | react-native-calendars |
 
 ---
@@ -91,6 +92,8 @@ npx expo run:android
 
 > Android only. iOS not supported in this release.
 
+Backups are exported from Settings → Data as `.fitdeskbackup` SQLite database files. Importing a backup replaces the local database, runs migrations, and refreshes the backup reminder timestamp.
+
 ---
 
 ## Release Workflow
@@ -100,10 +103,10 @@ FitDesk includes a release helper that builds the Android app, creates release n
 For Play Store uploads, use the default Android App Bundle (`.aab`) format:
 
 ```bash
-npm run release -- --version 1.2.2 --version-code 5 --update-version --commit-version --github-release
+npm run release -- --version 1.2.3 --version-code 6 --update-version --commit-version --github-release
 ```
 
-This updates the app version files, commits the version bump, builds `bundleRelease`, generates notes in `dist/releases/`, creates an annotated tag like `v1.2.2`, and publishes a GitHub release when the `gh` CLI is available.
+This updates the app version files, commits the version bump, builds `bundleRelease`, generates notes in `dist/releases/`, creates an annotated tag like `v1.2.3`, and publishes a GitHub release when the `gh` CLI is available.
 
 For a local APK build instead:
 
@@ -114,7 +117,7 @@ npm run release -- --format apk --github-release
 Preview release notes without building, tagging, or publishing:
 
 ```bash
-npm run release -- --version 1.2.2 --dry-run --allow-dirty
+npm run release -- --version 1.2.3 --dry-run --allow-dirty
 ```
 
 Release signing must be configured before building release artifacts. Copy `android/signing.properties.example` to `android/signing.properties` for local builds, or set the `FITDESK_UPLOAD_*` values as environment variables in CI.
