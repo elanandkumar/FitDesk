@@ -32,7 +32,7 @@ So I built FitDesk — a simple, local-first Android app that puts everything in
 - **Contacts** — track managers (with per-class rate) and trainees (with monthly session packages); searchable pickers everywhere with inline add for class types and centers
 - **Payments** — manager payments grouped by manager with drill-down per session; trainee packages tracked by month with sessions-used count; Reports accessible directly from the Payments screen
 - **Notifications** — class reminders (15 min / 30 min / 1 hr before), payment reminders
-- **Appearance** — choose an accent palette from Settings; buttons, tabs, pickers, and highlights update across the app
+- **Appearance** — choose an accent palette from Settings; buttons, tabs, pickers, highlights, and Phosphor icons stay consistent across the app
 - **Export / Import** — SQLite backup files so data is never lost; imports refresh backup reminder state after restore
 
 <p align="center">
@@ -64,6 +64,7 @@ No login. No analytics. No backend server. Everything is stored locally using SQ
 | Framework | Expo (managed) SDK 56 |
 | Language | TypeScript (strict) |
 | UI | React Native Paper |
+| Icons | phosphor-react-native |
 | Storage | expo-sqlite (local only) |
 | Notifications | expo-notifications (local only) |
 | Navigation | React Navigation v7 |

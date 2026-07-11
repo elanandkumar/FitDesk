@@ -23,7 +23,7 @@ function createFitDeskTheme(accentKey: AccentKey) {
     onPrimaryContainer:   Brand.textPrimary,
     secondary:            accent.accent,
     onSecondary:          Brand.textPrimary,
-    background:           Brand.surfaceDark,
+    background:           Brand.backgroundDark,
     surface:              Brand.surfaceDark,
     onSurface:            Brand.textPrimary,
     onSurfaceVariant:     Brand.textMuted,
@@ -80,8 +80,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       const row = await db.getFirstAsync<{ value: string }>(
         "SELECT value FROM settings WHERE key = 'accent_color'"
       );
-      if (mounted && isAccentKey(row?.value ?? null)) {
-        setAccentKeyState(row.value);
+      const storedAccent = row?.value ?? null;
+      if (mounted && isAccentKey(storedAccent)) {
+        setAccentKeyState(storedAccent);
       }
     }
     loadAccent().catch(() => {});

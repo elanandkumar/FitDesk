@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text as RNText, View } from 'react-native';
-import { IconButton, Text } from 'react-native-paper';
+import { Text } from 'react-native-paper';
 import { useAppTheme, Radius } from '../../theme';
 import { Brand } from '../../theme/brandColors';
 import AppModal from './AppModal';
+import AppIconButton from './AppIconButton';
 
 interface Props {
   visible: boolean;
@@ -66,13 +67,13 @@ export default function ThemedTimePickerModal({ visible, value, onConfirm, onDis
       <View style={styles.row}>
         {/* Hour */}
         <View style={styles.col}>
-          <IconButton icon="chevron-up" size={32} onPress={() => changeHour(1)} iconColor={col.primary} />
+          <AppIconButton icon="caretUp" size={32} onPress={() => changeHour(1)} iconColor={col.primary} />
           <View style={[styles.timeBox, { backgroundColor: col.surfaceVariant, borderColor: col.primary }]}>
             <Text variant="displaySmall" style={{ color: col.onSurface, fontVariant: ['tabular-nums'] }}>
               {pad(displayHour)}
             </Text>
           </View>
-          <IconButton icon="chevron-down" size={32} onPress={() => changeHour(-1)} iconColor={col.primary} />
+          <AppIconButton icon="caretDown" size={32} onPress={() => changeHour(-1)} iconColor={col.primary} />
         </View>
 
         <Text variant="displaySmall" style={{ color: col.onSurface, alignSelf: 'center', marginHorizontal: 4 }}>
@@ -81,13 +82,13 @@ export default function ThemedTimePickerModal({ visible, value, onConfirm, onDis
 
         {/* Minute */}
         <View style={styles.col}>
-          <IconButton icon="chevron-up" size={32} onPress={() => changeMinute(5)} iconColor={col.primary} />
+          <AppIconButton icon="caretUp" size={32} onPress={() => changeMinute(5)} iconColor={col.primary} />
           <View style={[styles.timeBox, { backgroundColor: col.surfaceVariant, borderColor: col.primary }]}>
             <Text variant="displaySmall" style={{ color: col.onSurface, fontVariant: ['tabular-nums'] }}>
               {pad(minute)}
             </Text>
           </View>
-          <IconButton icon="chevron-down" size={32} onPress={() => changeMinute(-5)} iconColor={col.primary} />
+          <AppIconButton icon="caretDown" size={32} onPress={() => changeMinute(-5)} iconColor={col.primary} />
         </View>
 
         {/* AM/PM pill — vertical, right of time */}

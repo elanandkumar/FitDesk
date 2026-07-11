@@ -1,17 +1,20 @@
 import React, { useCallback, useLayoutEffect, useState } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { IconButton, Text } from 'react-native-paper';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { Text } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Brand, Gradients, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { useAppTheme } from '../../theme';
+import { Brand, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { MonthlyIncomeSummary } from '../../types';
 import { getMonthlyIncomeSummary } from '../../database/repositories/paymentRepository';
 import { formatCurrency } from '../../utils/currencyUtils';
 import EmptyState from '../../components/common/EmptyState';
 import HelpSheet from '../../components/common/HelpSheet';
+import AppIcon from '../../components/common/AppIcon';
+import AppIconButton from '../../components/common/AppIconButton';
+import { withAlpha } from '../../utils/colorUtils';
 
 type Nav = StackNavigationProp<RootStackParamList>;
 
@@ -27,16 +30,17 @@ function formatMonth(ym: string): string {
 
 export default function IncomeSummaryScreen() {
   const navigation = useNavigation<Nav>();
+  const { accentPalette } = useAppTheme();
   const [rows, setRows] = useState<MonthlyIncomeSummary[]>([]);
   const [helpVisible, setHelpVisible] = useState(false);
 
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <IconButton icon="help-circle-outline" iconColor={Brand.textAccent} onPress={() => setHelpVisible(true)} />
+        <AppIconButton icon="question" iconColor={accentPalette.textAccent} onPress={() => setHelpVisible(true)} />
       ),
     });
-  }, [navigation]);
+  }, [accentPalette.textAccent, navigation]);
 
   useFocusEffect(
     useCallback(() => {
@@ -46,6 +50,7 @@ export default function IncomeSummaryScreen() {
 
   const totalEarned = rows.reduce((s, r) => s + r.total_paid, 0);
   const totalPending = rows.reduce((s, r) => s + r.total_pending, 0);
+  const heroColors = [withAlpha(accentPalette.main, 0.5), Brand.surfaceElevated, Brand.surfaceDark] as const;
 
   const renderItem = ({ item }: { item: MonthlyIncomeSummary }) => (
     <TouchableOpacity
@@ -55,7 +60,7 @@ export default function IncomeSummaryScreen() {
     >
       <View style={styles.monthCardTop}>
         <Text style={styles.monthTitle}>{formatMonth(item.month)}</Text>
-        <MaterialCommunityIcons name="chevron-right" size={20} color={Brand.textSecondary} />
+        <AppIcon name="caretRight" size={20} color={Brand.textSecondary} />
       </View>
 
       {(item.manager_paid > 0 || item.manager_pending > 0) && (
@@ -100,9 +105,10 @@ export default function IncomeSummaryScreen() {
     <View style={styles.container}>
       {rows.length > 0 && (
         <LinearGradient
-          colors={Gradients.hero}
+          colors={heroColors}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
+          locations={[0, 0.34, 1]}
           style={styles.heroCard}
         >
           <View style={styles.heroLeft}>
@@ -132,7 +138,7 @@ export default function IncomeSummaryScreen() {
         contentContainerStyle={rows.length === 0 ? styles.emptyContainer : styles.listContent}
         ListEmptyComponent={
           <EmptyState
-            icon="chart-bar"
+            icon="chartBar"
             title="No income data yet"
             subtitle="Income appears here when sessions are completed or packages are created."
           />
@@ -199,7 +205,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
     elevation: 4,
-    shadowColor: Brand.purple,
+    shadowColor: '#000000',
     shadowOpacity: 0.2,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },

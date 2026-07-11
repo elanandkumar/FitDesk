@@ -2,11 +2,10 @@ import React, { useCallback, useLayoutEffect, useState } from 'react';
 import { useBackup } from '../../context/BackupContext';
 import { Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { IconButton, Text } from 'react-native-paper';
+import { Text } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { AccentKey, AccentPalettes, useAppTheme } from '../../theme';
 import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
@@ -19,10 +18,14 @@ import SectionHeader from '../../components/common/SectionHeader';
 import GradientSwitch from '../../components/common/GradientSwitch';
 import ThemedSegmentedButtons from '../../components/common/ThemedSegmentedButtons';
 import ThemedTimePickerModal from '../../components/common/ThemedTimePickerModal';
+import AppIcon, { AppIconName } from '../../components/common/AppIcon';
+import AppIconButton from '../../components/common/AppIconButton';
 import { formatDisplayTime } from '../../utils/dateUtils';
 import { HELP } from '../../constants/helpContent';
 
 const isExpoGo = Constants.appOwnership === 'expo';
+const appVersion = Constants.nativeAppVersion ?? Constants.expoConfig?.version ?? null;
+const versionLabel = appVersion ? `Version ${appVersion}` : 'Version unavailable';
 
 type Nav = StackNavigationProp<RootStackParamList>;
 
@@ -53,7 +56,7 @@ function SettingsCard({ children }: { children: React.ReactNode }) {
 }
 
 interface NavRowProps {
-  icon: string;
+  icon: AppIconName;
   label: string;
   onPress: () => void;
   iconColor?: string;
@@ -70,14 +73,14 @@ function NavRow({ icon, label, onPress, iconColor, isLast, showDot, subtitle }: 
     <>
       <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.7}>
         <View style={styles.rowIcon}>
-          <MaterialCommunityIcons name={icon as never} size={18} color={resolvedIconColor} />
+          <AppIcon name={icon} size={18} color={resolvedIconColor} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.rowLabel}>{label}</Text>
           {subtitle ? <Text style={styles.rowSubtitle}>{subtitle}</Text> : null}
         </View>
         {showDot && <View style={styles.rowDot} />}
-        <MaterialCommunityIcons name="chevron-right" size={20} color={Brand.textMuted} />
+        <AppIcon name="caretRight" size={20} color={Brand.textMuted} />
       </TouchableOpacity>
       {!isLast && <View style={styles.divider} />}
     </>
@@ -101,7 +104,7 @@ export default function SettingsScreen() {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <IconButton icon="help-circle-outline" iconColor={accentPalette.textAccent} onPress={() => setHelpVisible(true)} />
+        <AppIconButton icon="question" iconColor={accentPalette.textAccent} onPress={() => setHelpVisible(true)} />
       ),
     });
   }, [accentPalette.textAccent, navigation, theme.colors.primary]);
@@ -207,7 +210,7 @@ export default function SettingsScreen() {
                     end={{ x: 1, y: 0 }}
                     style={styles.swatch}
                   >
-                    {selected && <MaterialCommunityIcons name="check" size={15} color={Brand.textPrimary} />}
+                    {selected && <AppIcon name="check" size={15} color={Brand.textPrimary} weight="bold" />}
                   </LinearGradient>
                 </TouchableOpacity>
               );
@@ -220,7 +223,7 @@ export default function SettingsScreen() {
       <SettingsCard>
         <View style={styles.row}>
           <View style={styles.rowIcon}>
-            <MaterialCommunityIcons name="bell-outline" size={18} color={accentPalette.main} />
+            <AppIcon name="bell" size={18} color={accentPalette.main} />
           </View>
           <Text style={[styles.rowLabel, { flex: 1 }]}>Class Reminders</Text>
           <GradientSwitch
@@ -244,7 +247,7 @@ export default function SettingsScreen() {
         <View style={styles.divider} />
         <View style={styles.row}>
           <View style={styles.rowIcon}>
-            <MaterialCommunityIcons name="cash-clock" size={18} color={Brand.pink} />
+            <AppIcon name="handCoins" size={18} color={accentPalette.main} />
           </View>
           <Text style={[styles.rowLabel, { flex: 1 }]}>Payment Reminders</Text>
           <GradientSwitch
@@ -257,20 +260,19 @@ export default function SettingsScreen() {
             <View style={styles.divider} />
             <TouchableOpacity style={styles.row} onPress={() => setTimePickerVisible(true)} activeOpacity={0.7}>
               <View style={styles.rowIcon}>
-                <MaterialCommunityIcons name="clock-outline" size={18} color={Brand.orange} />
+                <AppIcon name="clockAlert" size={18} color={accentPalette.main} />
               </View>
               <Text style={[styles.rowLabel, { flex: 1 }]}>Reminder Time</Text>
               <Text style={[styles.timeValue, { color: accentPalette.textAccent }]}>
                 {formatDisplayTime(paymentNotifTime)}
               </Text>
-              <MaterialCommunityIcons name="chevron-right" size={20} color={Brand.textMuted} />
+              <AppIcon name="caretRight" size={20} color={Brand.textMuted} />
             </TouchableOpacity>
             <View style={styles.divider} />
             <NavRow
-              icon="tune-vertical"
+              icon="sliders"
               label="Payment Overdue Alerts"
               subtitle={`Notify after ${thresholdReminder}, ${thresholdHigh} & ${thresholdUrgent} days`}
-              iconColor={Brand.pink}
               onPress={() => navigation.navigate('PaymentThresholds')}
               isLast
             />
@@ -288,21 +290,18 @@ export default function SettingsScreen() {
       <SectionHeader label="Data" />
       <SettingsCard>
         <NavRow
-          icon="tag-multiple"
+          icon="tag"
           label="Class Types"
-          iconColor={accentPalette.main}
           onPress={() => navigation.navigate('ClassTypes')}
         />
         <NavRow
-          icon="map-marker-multiple"
+          icon="mapPin"
           label="Centers"
-          iconColor={Brand.pink}
           onPress={() => navigation.navigate('Centers')}
         />
         <NavRow
-          icon="database-export"
+          icon="database"
           label="Export / Import"
-          iconColor={Brand.orange}
           onPress={() => navigation.navigate('DataScreen')}
           showDot={isBackupOverdue}
           isLast
@@ -315,7 +314,7 @@ export default function SettingsScreen() {
           style={styles.logoImage}
           resizeMode="contain"
         />
-        <Text style={styles.version}>Version 1.0.0</Text>
+        <Text style={styles.version}>{versionLabel}</Text>
         <Text style={styles.tagline}>Your fitness class companion</Text>
       </View>
 

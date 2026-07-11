@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Text } from 'react-native-paper';
+import { useAppTheme } from '../../theme';
 import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
-import GradientButton from '../../components/common/GradientButton';
 import AppButton from '../../components/common/AppButton';
+import AppIcon from '../../components/common/AppIcon';
 import { exportData, pickAndImportData } from '../../utils/exportUtils';
 import { useBackup } from '../../context/BackupContext';
 
 export default function DataScreen() {
+  const { accentPalette } = useAppTheme();
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
   const { refresh: refreshBackup } = useBackup();
@@ -61,9 +63,9 @@ export default function DataScreen() {
           Save all your FitDesk data as a backup file. Share it to cloud storage or another device.
         </Text>
         {exporting ? (
-          <ActivityIndicator animating color={Brand.orange} />
+          <ActivityIndicator animating color={accentPalette.main} />
         ) : (
-          <GradientButton label="Export Backup" onPress={handleExport} />
+          <AppButton variant="filled" label="Export Backup" onPress={handleExport} />
         )}
       </View>
 
@@ -73,16 +75,16 @@ export default function DataScreen() {
           Restore from a FitDesk backup. Older backups are still supported. All existing data will be replaced.
         </Text>
         <View style={styles.warningBox}>
-          <Text variant="bodySmall" style={{ color: Brand.pink }}>
-            Warning: import is destructive and cannot be undone.
+          <AppIcon name="warning" size={18} color={Brand.orange} />
+          <Text variant="bodySmall" style={styles.warningText}>
+            Import is destructive and cannot be undone.
           </Text>
         </View>
         {importing ? (
-          <ActivityIndicator animating style={{ marginTop: Spacing.md }} color={Brand.pink} />
+          <ActivityIndicator animating style={{ marginTop: Spacing.md }} color="#FF5252" />
         ) : (
           <AppButton
-            variant="secondary"
-            color={Brand.pink}
+            variant="danger"
             label="Import Backup"
             onPress={handleImport}
             style={styles.importBtn}
@@ -102,12 +104,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
     elevation: 4,
-    shadowColor: Brand.purple,
+    shadowColor: '#000000',
     shadowOpacity: 0.2,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
     padding: Spacing.lg,
-    gap: Spacing.md,
+    gap: Spacing.lg,
   },
   sectionTitle: {
     ...Typography.h4,
@@ -117,9 +119,16 @@ const styles = StyleSheet.create({
     color: Brand.textSecondary,
   },
   warningBox: {
-    backgroundColor: Brand.pink + '18',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    backgroundColor: Brand.orange + '12',
     borderRadius: Radius.md,
-    padding: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Brand.orange + '33',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
   },
+  warningText: { color: Brand.orange },
   importBtn: { marginTop: Spacing.xs },
 });

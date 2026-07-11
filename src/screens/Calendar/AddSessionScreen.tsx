@@ -393,6 +393,7 @@ export default function AddSessionScreen() {
         onSelect={(ids) => setSelectedCenterId(ids[0] ?? null)}
         onAddNew={() => { setCenterPickerVisible(false); navigation.navigate('Centers'); }}
         addNewLabel="Manage Centers"
+        leadingIcon="buildings"
       />
     </KeyboardAvoidingView>
   );

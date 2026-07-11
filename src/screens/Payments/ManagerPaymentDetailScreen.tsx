@@ -3,7 +3,6 @@ import { Alert, FlatList, StyleSheet, TouchableOpacity, View } from 'react-nativ
 import { Text } from 'react-native-paper';
 import { useFocusEffect, useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '../../theme';
 import { Brand, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { EnrichedManagerPayment } from '../../types';
@@ -18,6 +17,7 @@ import EmptyState from '../../components/common/EmptyState';
 import { schedulePendingPaymentNotification } from '../../notifications/scheduler';
 import Constants from 'expo-constants';
 import { RootStackParamList } from '../../navigation/types';
+import AppIcon from '../../components/common/AppIcon';
 
 const isExpoGo = Constants.appOwnership === 'expo';
 
@@ -81,7 +81,7 @@ export default function ManagerPaymentDetailScreen() {
           </TouchableOpacity>
         ) : (
           <View style={styles.paidBadge}>
-            <MaterialCommunityIcons name="check" size={11} color={Brand.pink} />
+            <AppIcon name="check" size={11} color={Brand.pink} weight="bold" />
             <Text style={styles.paidText}>Paid</Text>
           </View>
         )}
@@ -110,7 +110,7 @@ export default function ManagerPaymentDetailScreen() {
         renderItem={renderItem}
         ListEmptyComponent={
           <EmptyState
-            icon="cash-check"
+            icon="handCoins"
             title="No payments"
             subtitle="No payments found for this manager."
           />

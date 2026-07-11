@@ -2,7 +2,8 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Brand, Gradients, Radius, Typography } from '../../theme';
+import { Brand, Radius, Typography, useAppTheme } from '../../theme';
+import { withAlpha } from '../../utils/colorUtils';
 
 interface Props {
   todayCount: number;
@@ -20,11 +21,15 @@ function greeting(name?: string): string {
 }
 
 export default function HeroCard({ todayCount, weekTotal, trainerName }: Props) {
+  const { accentPalette } = useAppTheme();
+  const heroColors = [withAlpha(accentPalette.main, 0.5), Brand.surfaceElevated, Brand.surfaceDark] as const;
+
   return (
     <LinearGradient
-      colors={Gradients.hero}
+      colors={heroColors}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
+      locations={[0, 0.34, 1]}
       style={styles.card}
     >
       <Text style={styles.greeting}>{greeting(trainerName)}</Text>

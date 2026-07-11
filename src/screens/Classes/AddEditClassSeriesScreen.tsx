@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, KeyboardAvoidingView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import ThemedDatePickerModal from '../../components/common/ThemedDatePickerModal';
 import ThemedTimePickerModal from '../../components/common/ThemedTimePickerModal';
@@ -10,9 +10,10 @@ import {
   Text,
   TextInput,
 } from 'react-native-paper';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAppTheme } from '../../theme';
 import { Brand, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { ClassType, Manager, Trainee, Center, TraineePackage, RecurrenceType, LocationType, SourceType } from '../../types';
@@ -61,9 +62,11 @@ function ErrorText({ msg }: { msg: string }) {
 }
 
 export default function AddEditClassSeriesScreen() {
+  const { accentPalette } = useAppTheme();
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const insets = useSafeAreaInsets();
+  const didInitialFocus = useRef(false);
   const { seriesId } = route.params ?? {};
   const isEdit = !!seriesId;
 
@@ -101,18 +104,23 @@ export default function AddEditClassSeriesScreen() {
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
 
+  const loadPickerData = useCallback(async () => {
+    const [types, mgrs, traineeList, centerList] = await Promise.all([
+      getAllClassTypes(),
+      getAllManagers(),
+      getAllTrainees(),
+      getAllCenters(),
+    ]);
+    setClassTypes(types);
+    setManagers(mgrs);
+    setTrainees(traineeList);
+    setCenters(centerList);
+    return { types, mgrs, traineeList, centerList };
+  }, []);
+
   const loadData = useCallback(async () => {
     try {
-      const [types, mgrs, traineeList, centerList] = await Promise.all([
-        getAllClassTypes(),
-        getAllManagers(),
-        getAllTrainees(),
-        getAllCenters(),
-      ]);
-      setClassTypes(types);
-      setManagers(mgrs);
-      setTrainees(traineeList);
-      setCenters(centerList);
+      const { types } = await loadPickerData();
 
       if (seriesId) {
         navigation.setOptions({ title: 'Edit Class Series' });
@@ -144,11 +152,21 @@ export default function AddEditClassSeriesScreen() {
     } catch {
       Alert.alert('Error', 'Could not load form data. Please go back and try again.');
     }
-  }, [seriesId, navigation]);
+  }, [seriesId, navigation, loadPickerData]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useFocusEffect(useCallback(() => {
+    if (!didInitialFocus.current) {
+      didInitialFocus.current = true;
+      return;
+    }
+    loadPickerData().catch(() => {
+      Alert.alert('Error', 'Could not refresh form data. Please go back and try again.');
+    });
+  }, [loadPickerData]));
 
   function toggleDay(day: number) {
     setSelectedDays((prev) =>
@@ -465,7 +483,7 @@ export default function AddEditClassSeriesScreen() {
                           styles.dayButton,
                           d.value !== DAYS[0].value && { marginLeft: -1 },
                           active
-                            ? { backgroundColor: Brand.purple, borderColor: Brand.purple }
+                            ? { backgroundColor: accentPalette.main, borderColor: accentPalette.main }
                             : { backgroundColor: 'transparent', borderColor: Brand.borderSubtle },
                         ]}
                       >
@@ -670,6 +688,7 @@ export default function AddEditClassSeriesScreen() {
         onSelect={(ids) => setSelectedCenterId(ids[0] ?? null)}
         onAddNew={() => { setCenterPickerVisible(false); navigation.navigate('Centers'); }}
         addNewLabel="Manage Centers"
+        leadingIcon="buildings"
       />
 
       <LoadingOverlay visible={saving} />

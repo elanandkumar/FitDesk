@@ -1,7 +1,7 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Brand, Layout, Radius, Spacing } from '../../theme/brandColors';
+import AppIcon from './AppIcon';
 
 interface Props {
   placeholder: string;
@@ -31,10 +31,10 @@ export default function PickerField({ placeholder, value, onPress, error, leftCo
             onPress={onClear}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <MaterialCommunityIcons name="close-circle" size={16} color={Brand.textMuted} />
+            <AppIcon name="xCircle" size={16} color={Brand.textMuted} />
           </TouchableOpacity>
         ) : null}
-        <MaterialCommunityIcons name="chevron-down" size={18} color={Brand.textMuted} />
+        <AppIcon name="caretDown" size={18} color={Brand.textMuted} />
       </View>
     </TouchableOpacity>
   );

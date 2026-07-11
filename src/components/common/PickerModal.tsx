@@ -1,4 +1,3 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
   FlatList,
@@ -12,6 +11,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '../../theme';
 import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
+import AppIcon, { AppIconName } from './AppIcon';
 
 export interface PickerItem {
   id: number;
@@ -41,6 +41,7 @@ interface Props {
   onAddNew?: () => void;
   addNewLabel?: string;
   showAvatar?: boolean;
+  leadingIcon?: AppIconName;
 }
 
 export default function PickerModal({
@@ -54,6 +55,7 @@ export default function PickerModal({
   onAddNew,
   addNewLabel = 'Add New',
   showAvatar = false,
+  leadingIcon,
 }: Props) {
   const { accentPalette } = useAppTheme();
   const insets = useSafeAreaInsets();
@@ -91,9 +93,13 @@ export default function PickerModal({
         <View style={styles.rowLeft}>
           {item.leftColor ? (
             <View style={[styles.colorDot, { backgroundColor: item.leftColor }]} />
+          ) : leadingIcon ? (
+            <View style={[styles.leadingIcon, { backgroundColor: `${accentPalette.main}22`, borderColor: `${accentPalette.main}55` }]}>
+              <AppIcon name={leadingIcon} size={20} color={accentPalette.textAccent} />
+            </View>
           ) : showAvatar ? (
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{getInitials(item.label)}</Text>
+            <View style={[styles.avatar, { backgroundColor: `${accentPalette.main}22`, borderColor: `${accentPalette.main}55` }]}>
+              <Text style={[styles.avatarText, { color: accentPalette.textAccent }]}>{getInitials(item.label)}</Text>
             </View>
           ) : null}
           <Text style={[styles.rowLabel, selected && styles.rowLabelSelected]}>
@@ -110,7 +116,7 @@ export default function PickerModal({
               selected && { backgroundColor: accentPalette.main, borderColor: accentPalette.main },
             ]}
           >
-            {selected && <MaterialCommunityIcons name="check" size={13} color={Brand.textPrimary} />}
+            {selected && <AppIcon name="check" size={13} color={Brand.textPrimary} weight="bold" />}
           </View>
         )}
       </TouchableOpacity>
@@ -135,7 +141,7 @@ export default function PickerModal({
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 style={styles.headerBtn}
               >
-                <MaterialCommunityIcons name="plus" size={20} color={accentPalette.textAccent} />
+                <AppIcon name="plus" size={20} color={accentPalette.textAccent} />
               </TouchableOpacity>
             )}
           </View>
@@ -230,6 +236,8 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: Radius.full,
     backgroundColor: Brand.surfaceDark,
+    borderWidth: 1,
+    borderColor: Brand.borderSubtle,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -237,6 +245,16 @@ const styles = StyleSheet.create({
     ...Typography.bodyLg,
     fontWeight: '700',
     color: Brand.textPrimary,
+  },
+  leadingIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.full,
+    backgroundColor: Brand.surfaceDark,
+    borderWidth: 1,
+    borderColor: Brand.borderSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   checkbox: {
     width: 20,

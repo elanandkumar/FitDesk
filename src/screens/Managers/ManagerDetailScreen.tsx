@@ -1,12 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
-import { Chip, Divider, IconButton, Text } from 'react-native-paper';
+import { Chip, Divider, Text } from 'react-native-paper';
 import SectionHeader from '../../components/common/SectionHeader';
 import GradientFAB from '../../components/common/GradientFAB';
 import AppButton from '../../components/common/AppButton';
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useAppTheme } from '../../theme';
 import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { Manager, EnrichedManagerPayment } from '../../types';
@@ -23,12 +24,14 @@ import { formatCurrency } from '../../utils/currencyUtils';
 import { formatDisplayDate, formatDisplayTime } from '../../utils/dateUtils';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import HelpSheet from '../../components/common/HelpSheet';
+import AppIconButton from '../../components/common/AppIconButton';
 import { HELP } from '../../constants/helpContent';
 
 type Nav = StackNavigationProp<RootStackParamList, 'ManagerDetail'>;
 type Route = RouteProp<RootStackParamList, 'ManagerDetail'>;
 
 export default function ManagerDetailScreen() {
+  const { accentPalette } = useAppTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
@@ -65,11 +68,11 @@ export default function ManagerDetailScreen() {
       navigation.setOptions({
         title: manager.name,
         headerRight: () => (
-          <IconButton icon="help-circle-outline" iconColor={Brand.textAccent} onPress={() => setHelpVisible(true)} />
+          <AppIconButton icon="question" iconColor={accentPalette.textAccent} onPress={() => setHelpVisible(true)} />
         ),
       });
     }
-  }, [manager, managerId, navigation]);
+  }, [accentPalette.textAccent, manager, navigation]);
 
   async function handleDelete() {
     try {
@@ -262,7 +265,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
     elevation: 4,
-    shadowColor: Brand.purple,
+    shadowColor: '#000000',
     shadowOpacity: 0.15,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
