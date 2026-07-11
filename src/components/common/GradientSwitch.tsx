@@ -4,9 +4,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Brand, Radius } from '../../theme/brandColors';
 import { useAppTheme } from '../../theme';
 
-const TRACK_W = 50;
-const TRACK_H = 28;
-const THUMB = 22;
+const TRACK_W = 58;
+const TRACK_H = 32;
+const THUMB = 26;
 const PADDING = 3;
 
 interface Props {
@@ -37,20 +37,30 @@ export default function GradientSwitch({ value, onValueChange, disabled }: Props
     <Pressable
       onPress={() => !disabled && onValueChange(!value)}
       hitSlop={8}
+      accessibilityRole="switch"
+      accessibilityState={{ checked: value, disabled }}
       style={disabled ? styles.disabled : undefined}
     >
       <View style={styles.track}>
-        {value ? (
-          <LinearGradient
-            colors={[accentPalette.main + '4D', accentPalette.accent + '26', accentPalette.warm + '33']}
-            start={{ x: 0, y: 1 }}
-            end={{ x: 1, y: 0 }}
-            style={StyleSheet.absoluteFill}
-          />
-        ) : (
-          <View style={[StyleSheet.absoluteFill, styles.trackOff]} />
-        )}
-        <Animated.View style={[styles.thumb, { backgroundColor: accentPalette.main, transform: [{ translateX }] }]} />
+        <LinearGradient
+          colors={
+            value
+              ? [accentPalette.main + '52', accentPalette.accent + '32', accentPalette.main + '42']
+              : [Brand.surfaceElevated, Brand.borderSubtle, Brand.surfaceElevated]
+          }
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        <Animated.View
+          style={[
+            styles.thumb,
+            {
+              backgroundColor: value ? accentPalette.main : Brand.textMuted,
+              transform: [{ translateX }],
+            },
+          ]}
+        />
       </View>
     </Pressable>
   );
@@ -63,9 +73,6 @@ const styles = StyleSheet.create({
     borderRadius: Radius.full,
     overflow: 'hidden',
     justifyContent: 'center',
-  },
-  trackOff: {
-    backgroundColor: Brand.borderSubtle,
   },
   thumb: {
     width: THUMB,

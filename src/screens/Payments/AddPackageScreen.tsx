@@ -236,8 +236,6 @@ const styles = StyleSheet.create({
     flex: 0,
     justifyContent: 'center',
     width: 100,
-    borderColor: Brand.borderSubtle,
-    borderRadius: Radius.lg,
   },
   saveBtn: { flex: 1 },
 });

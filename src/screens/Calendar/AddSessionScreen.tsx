@@ -434,6 +434,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Brand.borderSubtle,
   },
-  cancelBtn: { flex: 0, width: 100, borderColor: Brand.borderSubtle, justifyContent: 'center', borderRadius: Radius.lg },
+  cancelBtn: { flex: 0, width: 100, justifyContent: 'center' },
   saveBtn: { flex: 1 },
 });

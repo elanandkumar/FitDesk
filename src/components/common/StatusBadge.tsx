@@ -1,8 +1,7 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Text } from 'react-native-paper';
 import { SessionStatus } from '../../types';
-import { Brand, Radius, Typography } from '../../theme';
+import { BadgeTone } from '../../theme';
+import AppBadge from './AppBadge';
 
 export type DisplayStatus = SessionStatus | 'missed';
 
@@ -10,12 +9,12 @@ interface Props {
   status: DisplayStatus;
 }
 
-const STATUS_CONFIG: Record<DisplayStatus, { label: string; color: string }> = {
-  upcoming:  { label: 'Upcoming',  color: Brand.statusUpcoming },
-  completed: { label: 'Completed', color: Brand.statusCompleted },
-  cancelled: { label: 'Cancelled', color: Brand.statusCancelled },
-  skipped:   { label: 'Skipped',   color: Brand.statusSkipped },
-  missed:    { label: 'Missed',    color: Brand.statusCancelled },
+const STATUS_CONFIG: Record<DisplayStatus, { label: string; tone: BadgeTone }> = {
+  upcoming:  { label: 'Upcoming',  tone: 'upcoming' },
+  completed: { label: 'Completed', tone: 'completed' },
+  cancelled: { label: 'Cancelled', tone: 'cancelled' },
+  skipped:   { label: 'Skipped',   tone: 'skipped' },
+  missed:    { label: 'Missed',    tone: 'missed' },
 };
 
 export function getDisplayStatus(status: SessionStatus, sessionDate: string, classTime: string): DisplayStatus {
@@ -28,20 +27,5 @@ export function getDisplayStatus(status: SessionStatus, sessionDate: string, cla
 
 export default function StatusBadge({ status }: Props) {
   const cfg = STATUS_CONFIG[status];
-  return (
-    <View style={[styles.badge, { backgroundColor: cfg.color + '33' }]}>
-      <Text style={[styles.label, { color: cfg.color }]}>{cfg.label}</Text>
-    </View>
-  );
+  return <AppBadge label={cfg.label} tone={cfg.tone} />;
 }
-
-const styles = StyleSheet.create({
-  badge: {
-    borderRadius: Radius.full,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  label: {
-    ...Typography.labelSm,
-  },
-});

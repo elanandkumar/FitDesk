@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
-import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 import { Divider, Text } from 'react-native-paper';
 import GradientFAB from '../../components/common/GradientFAB';
 import AppIconButton from '../../components/common/AppIconButton';
@@ -12,24 +12,16 @@ import { AccentPalette, useAppTheme, Brand, Radius, Spacing } from '../../theme'
 import { Layout, Typography } from '../../theme/brandColors';
 import { EnrichedSession } from '../../types';
 import { getEnrichedSessionsByDateRange } from '../../database/repositories/classSessionRepository';
-import { formatDisplayDate, formatDisplayTime, todayISO } from '../../utils/dateUtils';
-import { withAlpha } from '../../utils/colorUtils';
+import { formatDisplayDate, todayISO } from '../../utils/dateUtils';
 import { RootStackParamList } from '../../navigation/types';
-import StatusBadge, { getDisplayStatus } from '../../components/common/StatusBadge';
 import HelpSheet from '../../components/common/HelpSheet';
+import SessionCard from '../../components/common/SessionCard';
 import { HELP } from '../../constants/helpContent';
 
 type Nav = StackNavigationProp<RootStackParamList>;
 type ViewMode = 'week' | 'month';
 
 type MarkedDates = Record<string, { dots: { key: string; color: string }[]; selected?: boolean; selectedColor?: string }>;
-
-function traineeLabel(names?: string): string | null {
-  if (!names) return null;
-  const parts = names.split(', ');
-  if (parts.length === 1) return parts[0];
-  return `${parts[0]} +${parts.length - 1}`;
-}
 
 function localISO(date: Date): string {
   const y = date.getFullYear();
@@ -225,38 +217,11 @@ export default function CalendarScreen() {
           </View>
         }
         renderItem={({ item }) => (
-          <TouchableOpacity
+          <SessionCard
+            session={item}
             onPress={() => navigation.navigate('ClassSessionDetail', { sessionId: item.id })}
-            style={[
-              styles.sessionCard,
-              {
-                borderColor: withAlpha(item.class_type_color, 0.28),
-                borderLeftColor: withAlpha(item.class_type_color, 0.75),
-                shadowColor: '#000000',
-              },
-            ]}
-            activeOpacity={0.75}
-          >
-            <View style={styles.sessionInfo}>
-              <Text variant="titleSmall" style={{ color: Brand.textPrimary }}>
-                {item.series_title}
-              </Text>
-              <Text variant="bodySmall" style={{ color: Brand.textSecondary }}>
-                {formatDisplayTime(item.class_time)} · {item.class_type_name} · {item.duration_minutes} min
-              </Text>
-              {item.source_type === 'personal' && traineeLabel(item.trainee_names) && (
-                <Text variant="bodySmall" style={{ color: accentPalette.textAccent }}>
-                  {traineeLabel(item.trainee_names)}
-                </Text>
-              )}
-              {item.location && (
-                <Text variant="bodySmall" style={{ color: Brand.textMuted }}>
-                  {item.location}
-                </Text>
-              )}
-            </View>
-            <StatusBadge status={getDisplayStatus(item.status, item.session_date, item.class_time)} />
-          </TouchableOpacity>
+            style={styles.sessionCard}
+          />
         )}
         ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
       />
@@ -283,24 +248,8 @@ const styles = StyleSheet.create({
   },
   emptyDay: { flex: 1, alignItems: 'center', paddingTop: Spacing.section },
   sessionCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
     marginHorizontal: Spacing.lg,
-    paddingVertical: Spacing.lg,
-    paddingLeft: Spacing.md,
-    paddingRight: Spacing.md,
-    gap: Spacing.md,
-    backgroundColor: Brand.surfaceDark,
-    borderRadius: Radius.item,
-    borderWidth: 1,
-    borderColor: Brand.borderSubtle,
-    borderLeftWidth: 4,
-    elevation: 4,
-    shadowOpacity: 0.18,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
   },
-  sessionInfo: { flex: 1, gap: 0 },
   fab: {
     position: 'absolute',
     right: Spacing.lg,

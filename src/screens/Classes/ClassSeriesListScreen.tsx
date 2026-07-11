@@ -21,6 +21,7 @@ import EmptyState from '../../components/common/EmptyState';
 import { RootStackParamList } from '../../navigation/types';
 import HelpSheet from '../../components/common/HelpSheet';
 import { HELP } from '../../constants/helpContent';
+import AppBadge from '../../components/common/AppBadge';
 
 type Nav = StackNavigationProp<RootStackParamList>;
 
@@ -131,11 +132,7 @@ export default function ClassSeriesListScreen() {
                 </Text>
               </View>
               {!item.is_active && (
-                <View style={styles.cancelledBadge}>
-                  <Text style={styles.cancelledText}>
-                    {item.end_date && item.end_date <= today ? 'Ended' : 'Cancelled'}
-                  </Text>
-                </View>
+                <AppBadge label={item.end_date && item.end_date <= today ? 'Ended' : 'Cancelled'} tone="cancelled" />
               )}
               <AppIcon name="caretRight" size={20} color={Brand.textMuted} />
             </TouchableOpacity>
@@ -179,18 +176,11 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     gap: Spacing.md,
   },
-  cardInactive: { opacity: 0.6 },
+  cardInactive: { backgroundColor: Brand.surfaceCard },
   cardContent: { flex: 1 },
   cardTitle: { ...Typography.h4, color: Brand.textPrimary },
   textInactive: { color: Brand.textSecondary },
   cardSub: { ...Typography.labelMd, fontFamily: 'Outfit_400Regular', color: Brand.textSecondary, marginTop: 0 },
-  cancelledBadge: {
-    backgroundColor: `${Brand.textMuted}26`,
-    borderRadius: Radius.full,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 3, // micro: below xs(4) — badge pill tight fit
-  },
-  cancelledText: { ...Typography.microLabel, color: Brand.textMuted },
   fab: {
     position: 'absolute',
     right: Spacing.lg,

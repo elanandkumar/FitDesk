@@ -33,5 +33,5 @@ export const HELP = {
     'Configure class reminders, payment reminders, overdue alert thresholds, class types, centers, and backups. Export regularly because FitDesk stores data locally on this device.',
 
   incomeSummary:
-    'Shows paid and pending income by month. Manager income comes from completed manager sessions. Trainee income comes from created packages. Tap a month to see its detailed breakdown.',
+    'Shows paid and pending income by period and month. Manager income comes from completed manager sessions. Trainee income comes from created packages. Tap a month to see its detailed breakdown.',
 } as const;
