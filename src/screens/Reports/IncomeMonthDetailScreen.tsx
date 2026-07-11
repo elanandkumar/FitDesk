@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useFocusEffect, useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useAppTheme } from '../../theme';
 import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { CenterMonthIncome, ManagerMonthIncome, TraineeMonthPackage } from '../../types';
@@ -23,6 +24,7 @@ function formatMonth(ym: string): string {
 
 export default function IncomeMonthDetailScreen() {
   const navigation = useNavigation<Nav>();
+  const { accentPalette } = useAppTheme();
   const route = useRoute<Route>();
   const { month } = route.params;
   const [managers, setManagers] = useState<ManagerMonthIncome[]>([]);
@@ -50,7 +52,7 @@ export default function IncomeMonthDetailScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {!hasData && (
-        <EmptyState icon="chart-bar" title="No data for this month" subtitle="" />
+        <EmptyState icon="chartBar" title="No data for this month" subtitle="" />
       )}
 
       {managers.length > 0 && (
@@ -96,11 +98,11 @@ export default function IncomeMonthDetailScreen() {
                   </Text>
                   <View style={[
                     styles.statusPill,
-                    { backgroundColor: p.status === 'paid' ? Brand.purple + '33' : Brand.pink + '22' },
+                    { backgroundColor: p.status === 'paid' ? accentPalette.main + '33' : Brand.pink + '22' },
                   ]}>
                     <Text style={{
                       ...Typography.microLabel,
-                      color: p.status === 'paid' ? Brand.purple : Brand.pink,
+                      color: p.status === 'paid' ? accentPalette.textAccent : Brand.pink,
                     }}>
                       {p.status === 'paid' ? 'Paid' : 'Pending'}
                     </Text>
@@ -165,7 +167,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
     elevation: 4,
-    shadowColor: Brand.purple,
+    shadowColor: '#000000',
     shadowOpacity: 0.15,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },

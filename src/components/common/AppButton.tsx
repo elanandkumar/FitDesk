@@ -78,11 +78,11 @@ export default function AppButton({
   if (variant === 'danger') {
     return (
       <Button
-        mode="text"
+        mode="outlined"
         onPress={onPress}
         loading={loading}
         disabled={disabled}
-        style={style}
+        style={[{ borderColor: '#FF5252', borderRadius: Radius.lg }, style]}
         contentStyle={{ height: 48 }}
         textColor="#FF5252"
       >

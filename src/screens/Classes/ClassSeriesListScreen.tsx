@@ -1,13 +1,14 @@
 import React, { useCallback, useLayoutEffect, useMemo, useState } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { IconButton, Text } from 'react-native-paper';
+import { Text } from 'react-native-paper';
 import AppSearchbar from '../../components/common/AppSearchbar';
 import GradientFAB from '../../components/common/GradientFAB';
+import AppIcon from '../../components/common/AppIcon';
+import AppIconButton from '../../components/common/AppIconButton';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '../../theme';
 import { Brand, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { ClassSeries, ClassType } from '../../types';
@@ -37,7 +38,7 @@ export default function ClassSeriesListScreen() {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <IconButton icon="help-circle-outline" iconColor={accentPalette.textAccent} onPress={() => setHelpVisible(true)} />
+        <AppIconButton icon="question" iconColor={accentPalette.textAccent} onPress={() => setHelpVisible(true)} />
       ),
     });
   }, [accentPalette.textAccent, navigation, theme.colors.primary]);
@@ -106,7 +107,7 @@ export default function ClassSeriesListScreen() {
         }
         renderItem={({ item, index }) => {
           const ct = classTypes.get(item.class_type_id);
-          const accentColor = ct?.color ?? Brand.purple;
+          const accentColor = ct?.color ?? accentPalette.main;
           const recurrenceText = formatRecurrenceSummary(item.recurrence_type, item.recurrence_days);
           return (
             <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 60).duration(350)}>
@@ -115,7 +116,6 @@ export default function ClassSeriesListScreen() {
                 styles.card,
                 {
                   borderLeftColor: withAlpha(accentColor, item.is_active ? 0.7 : 0.28),
-                  shadowColor: accentPalette.main,
                 },
                 !item.is_active && styles.cardInactive,
               ]}
@@ -137,7 +137,7 @@ export default function ClassSeriesListScreen() {
                   </Text>
                 </View>
               )}
-              <MaterialCommunityIcons name="chevron-right" size={20} color={Brand.textMuted} />
+              <AppIcon name="caretRight" size={20} color={Brand.textMuted} />
             </TouchableOpacity>
             </Animated.View>
           );
@@ -173,6 +173,7 @@ const styles = StyleSheet.create({
     paddingRight: Spacing.lg,
     marginBottom: Spacing.sm,
     elevation: 4,
+    shadowColor: '#000000',
     shadowOpacity: 0.15,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 6,

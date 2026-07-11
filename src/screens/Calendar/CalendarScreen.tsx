@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Divider, IconButton, Text } from 'react-native-paper';
+import { Divider, Text } from 'react-native-paper';
 import GradientFAB from '../../components/common/GradientFAB';
+import AppIconButton from '../../components/common/AppIconButton';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -98,13 +99,13 @@ export default function CalendarScreen() {
     navigation.setOptions({
       headerRight: () => (
         <View style={{ flexDirection: 'row' }}>
-          <IconButton
-            icon="table-edit"
+          <AppIconButton
+            icon="classSeries"
             iconColor={accentPalette.textAccent}
             onPress={() => navigation.navigate('ClassSeriesList')}
           />
-          <IconButton
-            icon={viewMode === 'week' ? 'calendar-month' : 'calendar-week'}
+          <AppIconButton
+            icon={viewMode === 'week' ? 'calendarMonth' : 'calendarWeek'}
             iconColor={accentPalette.textAccent}
             onPress={() =>
               setViewMode((prev) => {
@@ -115,8 +116,8 @@ export default function CalendarScreen() {
               })
             }
           />
-          <IconButton
-            icon="help-circle-outline"
+          <AppIconButton
+            icon="question"
             iconColor={accentPalette.textAccent}
             onPress={() => setHelpVisible(true)}
           />
@@ -228,7 +229,11 @@ export default function CalendarScreen() {
             onPress={() => navigation.navigate('ClassSessionDetail', { sessionId: item.id })}
             style={[
               styles.sessionCard,
-              { borderLeftColor: withAlpha(item.class_type_color, 0.7), shadowColor: accentPalette.main },
+              {
+                borderColor: withAlpha(item.class_type_color, 0.28),
+                borderLeftColor: withAlpha(item.class_type_color, 0.75),
+                shadowColor: '#000000',
+              },
             ]}
             activeOpacity={0.75}
           >
@@ -291,7 +296,7 @@ const styles = StyleSheet.create({
     borderColor: Brand.borderSubtle,
     borderLeftWidth: 4,
     elevation: 4,
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.18,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
   },

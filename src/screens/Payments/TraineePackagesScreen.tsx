@@ -5,7 +5,6 @@ import GradientFAB from '../../components/common/GradientFAB';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '../../theme';
 import { Brand, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { EnrichedTraineePackage } from '../../types';
@@ -18,6 +17,7 @@ import { todayISO } from '../../utils/dateUtils';
 import { RootStackParamList } from '../../navigation/types';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import EmptyState from '../../components/common/EmptyState';
+import AppIcon from '../../components/common/AppIcon';
 type Nav = StackNavigationProp<RootStackParamList>;
 
 type Section = {
@@ -101,7 +101,7 @@ export default function TraineePackagesScreen() {
           </TouchableOpacity>
         ) : (
           <View style={styles.paidBadge}>
-            <MaterialCommunityIcons name="check" size={11} color={Brand.pink} />
+            <AppIcon name="check" size={11} color={Brand.pink} weight="bold" />
             <Text style={styles.paidText}>Paid</Text>
           </View>
         )}
@@ -142,7 +142,7 @@ export default function TraineePackagesScreen() {
       </View>
 
       {allPackages.length > 0 && (
-        <View style={[styles.summaryCard, { shadowColor: accentPalette.main }]}>
+        <View style={styles.summaryCard}>
           <View style={styles.summaryItem}>
             <Text style={styles.summaryLabel}>Pending</Text>
             <Text style={[styles.summaryAmount, { color: Brand.orange }]}>{formatCurrency(totalPending)}</Text>
@@ -163,7 +163,7 @@ export default function TraineePackagesScreen() {
         SectionSeparatorComponent={() => <View style={{ height: 4 }} />}
         ListEmptyComponent={
           <EmptyState
-            icon="package-variant"
+            icon="package"
             title={pendingOnly ? 'No pending packages' : 'No packages yet'}
             subtitle={
               pendingOnly
@@ -214,6 +214,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg,
     paddingHorizontal: Spacing.xl,
     elevation: 4,
+    shadowColor: '#000000',
     shadowOpacity: 0.12,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },

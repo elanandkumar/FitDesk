@@ -1,13 +1,13 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text } from 'react-native-paper';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '../../theme';
+import AppIcon, { AppIconName } from './AppIcon';
 
 interface Props {
   title: string;
   subtitle?: string;
-  icon?: keyof typeof MaterialCommunityIcons.glyphMap;
+  icon?: AppIconName;
 }
 
 export default function EmptyState({ title, subtitle, icon }: Props) {
@@ -15,7 +15,7 @@ export default function EmptyState({ title, subtitle, icon }: Props) {
   return (
     <View style={styles.container}>
       {icon && (
-        <MaterialCommunityIcons name={icon} size={48} color={theme.colors.onSurfaceVariant} />
+        <AppIcon name={icon} size={48} color={theme.colors.onSurfaceVariant} />
       )}
       <Text variant="headlineSmall" style={{ color: theme.colors.onSurfaceVariant }}>
         {title}

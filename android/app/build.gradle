@@ -11,6 +11,11 @@ if (signingPropertiesFile.exists()) {
 def signingProperty = { name ->
     signingProperties.getProperty(name) ?: findProperty(name) ?: System.getenv(name)
 }
+// Local release APKs are signed with the debug key. Upload signing is only
+// required when producing the Play Store AAB via `bundleRelease`.
+def isBundleReleaseRequested = gradle.startParameter.taskNames.any { taskName ->
+    taskName.tokenize(':').last().equalsIgnoreCase('bundleRelease')
+}
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -118,7 +123,7 @@ android {
             def uploadStorePassword = signingProperty('FITDESK_UPLOAD_STORE_PASSWORD')
             def uploadKeyPassword = signingProperty('FITDESK_UPLOAD_KEY_PASSWORD')
 
-            if (uploadStoreFile && uploadKeyAlias && uploadStorePassword && uploadKeyPassword) {
+            if (uploadStoreFile && uploadKeyAlias && uploadStorePassword && uploadKeyPassword && file(uploadStoreFile).isFile()) {
                 storeFile file(uploadStoreFile)
                 keyAlias uploadKeyAlias
                 storePassword uploadStorePassword
@@ -131,8 +136,10 @@ android {
             signingConfig signingConfigs.debug
         }
         release {
-            if (signingConfigs.release.storeFile != null) {
+            if (isBundleReleaseRequested && signingConfigs.release.storeFile != null) {
                 signingConfig signingConfigs.release
+            } else {
+                signingConfig signingConfigs.debug
             }
             def enableShrinkResources = findProperty('android.enableShrinkResourcesInReleaseBuilds') ?: 'false'
             shrinkResources enableShrinkResources.toBoolean()
@@ -154,7 +161,7 @@ android {
 }
 
 gradle.taskGraph.whenReady { taskGraph ->
-    if (taskGraph.hasTask(':app:bundleRelease') || taskGraph.hasTask(':app:assembleRelease')) {
+    if (taskGraph.hasTask(':app:bundleRelease')) {
         if (android.signingConfigs.release.storeFile == null) {
             throw new GradleException("Release signing is not configured. Add FITDESK_UPLOAD_* values to android/signing.properties or environment variables.")
         }

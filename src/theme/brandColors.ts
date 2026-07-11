@@ -1,10 +1,10 @@
 export const Brand = {
   // Backgrounds
-  backgroundDark:  '#1B102F',
-  surfaceDark:     '#241640',
-  surfaceElevated: '#2E1D50',
-  surfaceCard:     '#24163D',
-  borderSubtle:    '#33254F',
+  backgroundDark:  '#111018',
+  surfaceDark:     '#1A1724',
+  surfaceElevated: '#221E2E',
+  surfaceCard:     '#1F1B2A',
+  borderSubtle:    '#332D42',
 
   // Brand palette
   purple:          '#7B35FF',
@@ -16,7 +16,7 @@ export const Brand = {
   textSecondary:   '#C8C4DA',
   textMuted:       '#9B95B5',
   textDisabled:    '#6B6480',
-  textAccent:      '#A78BFF',
+  textAccent:      '#A78BFA',
 
   // Status semantics
   statusUpcoming:  '#7B5FFF',
@@ -26,7 +26,7 @@ export const Brand = {
 } as const;
 
 export const Gradients = {
-  hero:         ['#3D1DB5', '#1B102F'] as const,
+  hero:         ['#3D1DB5', Brand.backgroundDark] as const,
   purpleOrange: [Brand.purple, Brand.orange] as const,
   button:       [Brand.purple, Brand.pink, Brand.orange] as const,
   cardBorder:   [Brand.purple, Brand.pink] as const,
@@ -36,35 +36,35 @@ export const Gradients = {
 export const AccentPalettes = {
   purple: {
     label: 'Violet',
-    main: Brand.purple,
-    accent: Brand.pink,
-    warm: Brand.orange,
+    main: '#7C3AED',
+    accent: '#B91C5C',
+    warm: '#C65300',
     textAccent: Brand.textAccent,
-    gradient: [Brand.purple, Brand.pink, Brand.orange] as const,
+    gradient: ['#7C3AED', '#B91C5C', '#C65300'] as const,
   },
   ocean: {
     label: 'Ocean',
-    main: '#00A7B5',
-    accent: '#20D6A3',
-    warm: Brand.orange,
+    main: '#007D8A',
+    accent: '#007A68',
+    warm: '#5B21B6',
     textAccent: '#77E5DC',
-    gradient: ['#00A7B5', '#20D6A3', '#FF7A00'] as const,
+    gradient: ['#007D8A', '#007A68', '#5B21B6'] as const,
   },
   rose: {
     label: 'Rose',
-    main: '#FF3D81',
-    accent: '#FF7A00',
-    warm: '#7B35FF',
+    main: '#CC1F66',
+    accent: '#C65300',
+    warm: '#6D28D9',
     textAccent: '#FF9ABD',
-    gradient: ['#FF3D81', '#FF7A00', '#7B35FF'] as const,
+    gradient: ['#CC1F66', '#C65300', '#6D28D9'] as const,
   },
   ember: {
-    label: 'Ember',
-    main: '#FF7A00',
-    accent: '#FF3D81',
-    warm: '#7B35FF',
-    textAccent: '#FFB15F',
-    gradient: ['#FF7A00', '#FF3D81', '#7B35FF'] as const,
+    label: 'Cobalt',
+    main: '#2563EB',
+    accent: '#0F766E',
+    warm: '#5B21B6',
+    textAccent: '#93C5FD',
+    gradient: ['#2563EB', '#0F766E', '#5B21B6'] as const,
   },
 } as const;
 
@@ -118,8 +118,8 @@ export const Typography = {
 } as const;
 
 export const Elevation = {
-  base:    Brand.backgroundDark,   // '#1B102F' — screen bg
-  surface: Brand.surfaceDark,      // '#241640' — cards, list items
-  raised:  Brand.surfaceElevated,  // '#2E1D50' — modals, pickers, overlays
-  card:    Brand.surfaceCard,      // '#24163D' — info cards inside surface
+  base:    Brand.backgroundDark,   // '#111018' — screen bg
+  surface: Brand.surfaceDark,      // '#1A1724' — cards, list items
+  raised:  Brand.surfaceElevated,  // '#221E2E' — modals, pickers, overlays
+  card:    Brand.surfaceCard,      // '#1F1B2A' — info cards inside surface
 } as const;

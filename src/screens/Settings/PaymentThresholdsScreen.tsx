@@ -2,8 +2,9 @@ import React, { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Text, TextInput } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useAppTheme } from '../../theme';
 import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
+import AppIcon, { AppIconName } from '../../components/common/AppIcon';
 import { getDatabase } from '../../database/db';
 import { schedulePendingPaymentNotification } from '../../notifications/scheduler';
 import Constants from 'expo-constants';
@@ -22,8 +23,9 @@ async function setSetting(key: string, value: string): Promise<void> {
 }
 
 interface TierRowProps {
-  icon: string;
+  icon: AppIconName;
   iconColor: string;
+  activeColor: string;
   label: string;
   sublabel: string;
   value: string;
@@ -31,11 +33,11 @@ interface TierRowProps {
   onBlur: () => void;
 }
 
-function TierRow({ icon, iconColor, label, sublabel, value, onChangeText, onBlur }: TierRowProps) {
+function TierRow({ icon, iconColor, activeColor, label, sublabel, value, onChangeText, onBlur }: TierRowProps) {
   return (
     <View style={styles.tierRow}>
       <View style={styles.tierIcon}>
-        <MaterialCommunityIcons name={icon as never} size={18} color={iconColor} />
+        <AppIcon name={icon} size={18} color={iconColor} />
       </View>
       <View style={styles.tierBody}>
         <Text style={styles.tierLabel}>{label}</Text>
@@ -52,9 +54,17 @@ function TierRow({ icon, iconColor, label, sublabel, value, onChangeText, onBlur
           style={styles.input}
           contentStyle={styles.inputContent}
           outlineColor={Brand.borderSubtle}
-          activeOutlineColor={iconColor}
+          activeOutlineColor={activeColor}
+          cursorColor={activeColor}
+          selectionColor={`${activeColor}55`}
           textColor={Brand.textPrimary}
-          theme={{ colors: { background: Brand.surfaceElevated } }}
+          theme={{
+            colors: {
+              background: Brand.surfaceElevated,
+              primary: activeColor,
+              onSurfaceVariant: Brand.textMuted,
+            },
+          }}
           maxLength={2}
           selectTextOnFocus
         />
@@ -65,6 +75,7 @@ function TierRow({ icon, iconColor, label, sublabel, value, onChangeText, onBlur
 }
 
 export default function PaymentThresholdsScreen() {
+  const { accentPalette, theme } = useAppTheme();
   const [reminder, setReminder] = useState('3');
   const [high, setHigh] = useState('10');
   const [urgent, setUrgent] = useState('15');
@@ -91,7 +102,7 @@ export default function PaymentThresholdsScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]} contentContainerStyle={styles.content}>
       <Text style={styles.description}>
         Payments are bucketed by how long they have been pending since session completion.
         Set the day thresholds for each priority level.
@@ -99,8 +110,9 @@ export default function PaymentThresholdsScreen() {
 
       <View style={styles.card}>
         <TierRow
-          icon="cash-clock"
-          iconColor={Brand.purple}
+          icon="bellRinging"
+          iconColor={accentPalette.textAccent}
+          activeColor={accentPalette.main}
           label="Reminder"
           sublabel="Gentle nudge — collect soon"
           value={reminder}
@@ -109,8 +121,9 @@ export default function PaymentThresholdsScreen() {
         />
         <View style={styles.divider} />
         <TierRow
-          icon="alert-circle-outline"
-          iconColor={Brand.orange}
+          icon="clockAlert"
+          iconColor={accentPalette.textAccent}
+          activeColor={accentPalette.main}
           label="High Priority"
           sublabel="Overdue — follow up needed"
           value={high}
@@ -119,8 +132,9 @@ export default function PaymentThresholdsScreen() {
         />
         <View style={styles.divider} />
         <TierRow
-          icon="alert-octagon-outline"
-          iconColor={Brand.pink}
+          icon="warningOctagon"
+          iconColor={accentPalette.textAccent}
+          activeColor={accentPalette.main}
           label="Urgent"
           sublabel="Significantly overdue"
           value={urgent}

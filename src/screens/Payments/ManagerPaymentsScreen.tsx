@@ -3,7 +3,6 @@ import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Chip, Text } from 'react-native-paper';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '../../theme';
 import { Brand, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { EnrichedManagerPayment } from '../../types';
@@ -11,6 +10,7 @@ import { getAllEnrichedManagerPayments } from '../../database/repositories/payme
 import { formatCurrency } from '../../utils/currencyUtils';
 import { RootStackParamList } from '../../navigation/types';
 import EmptyState from '../../components/common/EmptyState';
+import AppIcon from '../../components/common/AppIcon';
 
 type Nav = StackNavigationProp<RootStackParamList>;
 
@@ -81,7 +81,7 @@ export default function ManagerPaymentsScreen() {
         <Text style={styles.managerName}>{item.managerName}</Text>
         <View style={styles.viewBtn}>
           <Text style={[styles.viewBtnText, { color: accentPalette.main }]}>View</Text>
-          <MaterialCommunityIcons name="chevron-right" size={14} color={accentPalette.main} />
+          <AppIcon name="caretRight" size={14} color={accentPalette.main} />
         </View>
       </View>
       <Text style={styles.sessionCount}>
@@ -90,7 +90,7 @@ export default function ManagerPaymentsScreen() {
       <View style={styles.amountRow}>
         {item.paidTotal > 0 && (
           <View style={styles.paidBadge}>
-            <MaterialCommunityIcons name="check" size={11} color={Brand.pink} />
+            <AppIcon name="check" size={11} color={Brand.pink} weight="bold" />
             <Text style={styles.paidText}>{formatCurrency(item.paidTotal)} paid</Text>
           </View>
         )}
@@ -101,7 +101,7 @@ export default function ManagerPaymentsScreen() {
         )}
         {item.paidTotal > 0 && item.pendingTotal === 0 && (
           <View style={styles.allPaidBadge}>
-            <MaterialCommunityIcons name="check-all" size={13} color={Brand.pink} />
+            <AppIcon name="checks" size={13} color={Brand.pink} weight="bold" />
             <Text style={styles.allPaidText}>All Paid</Text>
           </View>
         )}
@@ -131,7 +131,7 @@ export default function ManagerPaymentsScreen() {
       </View>
 
       {allPayments.length > 0 && (
-        <View style={[styles.summaryCard, { shadowColor: accentPalette.main }]}>
+        <View style={styles.summaryCard}>
           <View style={styles.summaryItem}>
             <Text style={styles.summaryLabel}>Pending</Text>
             <Text style={[styles.summaryAmount, { color: Brand.orange }]}>{formatCurrency(totalPending)}</Text>
@@ -150,7 +150,7 @@ export default function ManagerPaymentsScreen() {
         renderItem={renderItem}
         ListEmptyComponent={
           <EmptyState
-            icon="cash-check"
+            icon="handCoins"
             title={pendingOnly ? 'No pending payments' : 'No payments yet'}
             subtitle={
               pendingOnly
@@ -180,6 +180,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg,
     paddingHorizontal: Spacing.xl,
     elevation: 4,
+    shadowColor: '#000000',
     shadowOpacity: 0.12,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },

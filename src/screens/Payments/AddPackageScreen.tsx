@@ -6,12 +6,11 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { IconButton, Text, TextInput } from 'react-native-paper';
+import { Text, TextInput } from 'react-native-paper';
 import SectionHeader from '../../components/common/SectionHeader';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '../../theme';
 import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
@@ -21,6 +20,8 @@ import { createTraineePackage } from '../../database/repositories/paymentReposit
 import GradientButton from '../../components/common/GradientButton';
 import AppButton from '../../components/common/AppButton';
 import PickerModal, { PickerItem } from '../../components/common/PickerModal';
+import AppIcon from '../../components/common/AppIcon';
+import AppIconButton from '../../components/common/AppIconButton';
 
 type Nav = StackNavigationProp<RootStackParamList, 'AddPackage'>;
 type Route = RouteProp<RootStackParamList, 'AddPackage'>;
@@ -107,7 +108,7 @@ export default function AddPackageScreen() {
             onPress={() => setTraineePickerVisible(true)}
             style={styles.pickerRow}
           >
-            <MaterialCommunityIcons name="account" size={20} color={accentPalette.main} />
+            <AppIcon name="user" size={20} color={accentPalette.main} />
             <Text style={[styles.pickerText, !selectedTrainee && styles.pickerPlaceholder]}>
               {selectedTrainee
                 ? selectedTrainee.name
@@ -115,15 +116,15 @@ export default function AddPackageScreen() {
                   ? 'No trainees added yet'
                   : 'Select trainee...'}
             </Text>
-            <MaterialCommunityIcons name="chevron-down" size={20} color={Brand.textMuted} />
+            <AppIcon name="caretDown" size={20} color={Brand.textMuted} />
           </TouchableOpacity>
         </View>
 
         <SectionHeader label="Month" />
         <View style={[styles.card, styles.monthCard]}>
-          <IconButton icon="chevron-left" size={24} onPress={() => adjustMonth(-1)} iconColor={Brand.textPrimary} />
+          <AppIconButton icon="caretLeft" size={24} onPress={() => adjustMonth(-1)} iconColor={Brand.textPrimary} />
           <Text style={styles.monthText}>{formatMonth(month)}</Text>
-          <IconButton icon="chevron-right" size={24} onPress={() => adjustMonth(1)} iconColor={Brand.textPrimary} />
+          <AppIconButton icon="caretRight" size={24} onPress={() => adjustMonth(1)} iconColor={Brand.textPrimary} />
         </View>
 
         <SectionHeader label="Package Details" />

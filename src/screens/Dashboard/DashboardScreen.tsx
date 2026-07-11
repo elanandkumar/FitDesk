@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { Pressable, SectionList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { IconButton, Text } from 'react-native-paper';
+import { Text } from 'react-native-paper';
 import GradientFAB from '../../components/common/GradientFAB';
+import AppIconButton from '../../components/common/AppIconButton';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -61,20 +62,20 @@ export default function DashboardScreen() {
     navigation.setOptions({
       headerRight: () => (
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <IconButton icon="chart-bar" iconColor={accentPalette.textAccent} onPress={() => navigation.navigate('IncomeSummary')} />
+          <AppIconButton icon="chartBar" iconColor={accentPalette.textAccent} onPress={() => navigation.navigate('IncomeSummary')} />
           <TouchableOpacity
             onPress={() => navigation.navigate('Notifications')}
             style={styles.bellWrap}
             hitSlop={8}
           >
-            <IconButton icon="bell-outline" iconColor={accentPalette.textAccent} style={{ margin: 0 }} />
+            <AppIconButton icon="bell" iconColor={accentPalette.textAccent} onPress={() => navigation.navigate('Notifications')} />
             {unreadCount > 0 && (
-              <View style={styles.bellBadge}>
+              <View style={[styles.bellBadge, { backgroundColor: accentPalette.warm }]}>
                 <Text style={styles.bellBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
               </View>
             )}
           </TouchableOpacity>
-          <IconButton icon="help-circle-outline" iconColor={accentPalette.textAccent} onPress={() => setHelpVisible(true)} />
+          <AppIconButton icon="question" iconColor={accentPalette.textAccent} onPress={() => setHelpVisible(true)} />
         </View>
       ),
     });
@@ -170,7 +171,7 @@ export default function DashboardScreen() {
         }
         renderSectionHeader={({ section }) => (
           <View style={styles.sectionHeaderRow}>
-            <View style={styles.sectionAccent} />
+            <View style={[styles.sectionAccent, { backgroundColor: accentPalette.main }]} />
             <Text
               variant="titleSmall"
               numberOfLines={1}
@@ -189,7 +190,11 @@ export default function DashboardScreen() {
             onPress={() => navigation.navigate('ClassSessionDetail', { sessionId: item.id })}
             style={[
               styles.sessionCard,
-              { borderLeftColor: withAlpha(item.class_type_color, 0.7), shadowColor: accentPalette.main },
+              {
+                borderColor: withAlpha(item.class_type_color, 0.28),
+                borderLeftColor: withAlpha(item.class_type_color, 0.75),
+                shadowColor: '#000000',
+              },
             ]}
             activeOpacity={0.75}
           >
@@ -245,7 +250,6 @@ const styles = StyleSheet.create({
     width: 4,
     height: 16,
     borderRadius: Radius.xs,
-    backgroundColor: Brand.orange,
   },
   sectionHeaderText: {
     flex: 1,
@@ -268,7 +272,7 @@ const styles = StyleSheet.create({
     borderColor: Brand.borderSubtle,
     borderLeftWidth: 4,
     elevation: 4,
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.18,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
   },
@@ -282,7 +286,6 @@ const styles = StyleSheet.create({
     minWidth: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: Brand.orange,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 3,

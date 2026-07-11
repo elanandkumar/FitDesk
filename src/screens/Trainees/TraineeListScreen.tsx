@@ -7,12 +7,12 @@ import GradientFAB from '../../components/common/GradientFAB';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '../../theme';
 import { Brand, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { Trainee } from '../../types';
 import { getAllTrainees } from '../../database/repositories/traineeRepository';
 import EmptyState from '../../components/common/EmptyState';
+import AppIcon from '../../components/common/AppIcon';
 import { RootStackParamList } from '../../navigation/types';
 
 type Nav = StackNavigationProp<RootStackParamList>;
@@ -27,7 +27,7 @@ function initials(name: string): string {
 }
 
 export default function TraineeListScreen() {
-  const { theme } = useAppTheme();
+  const { accentPalette, theme } = useAppTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const [trainees, setTrainees] = useState<Trainee[]>([]);
@@ -78,8 +78,8 @@ export default function TraineeListScreen() {
             onPress={() => navigation.navigate('TraineeDetail', { traineeId: item.id })}
             activeOpacity={0.75}
           >
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{initials(item.name)}</Text>
+            <View style={[styles.avatar, { backgroundColor: `${accentPalette.main}22`, borderColor: `${accentPalette.main}55` }]}>
+              <Text style={[styles.avatarText, { color: accentPalette.textAccent }]}>{initials(item.name)}</Text>
             </View>
             <View style={styles.cardContent}>
               <Text style={styles.cardTitle}>{item.name}</Text>
@@ -89,7 +89,7 @@ export default function TraineeListScreen() {
                 </Text>
               )}
             </View>
-            <MaterialCommunityIcons name="chevron-right" size={20} color={Brand.textMuted} />
+            <AppIcon name="caretRight" size={20} color={Brand.textMuted} />
           </TouchableOpacity>
           </Animated.View>
         )}
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     marginBottom: Spacing.sm,
     elevation: 4,
-    shadowColor: Brand.purple,
+    shadowColor: '#000000',
     shadowOpacity: 0.15,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 6,
@@ -130,6 +130,8 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: Radius.full,
     backgroundColor: Brand.surfaceElevated,
+    borderWidth: 1,
+    borderColor: Brand.borderSubtle,
     alignItems: 'center',
     justifyContent: 'center',
   },

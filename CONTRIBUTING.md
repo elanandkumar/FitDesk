@@ -39,6 +39,12 @@ Thanks for your interest in contributing!
 - Add new accent colors in `src/theme/brandColors.ts` through `AccentPalettes`
 - Persist user-facing settings with `INSERT OR REPLACE INTO settings`
 - Keep shared controls accent-aware instead of hard-coding `Brand.purple`
+- Use Phosphor icons only, through `src/components/common/AppIcon.tsx` or `src/components/common/AppIconButton.tsx`; do not import `@expo/vector-icons`, `MaterialCommunityIcons`, or React Native Paper `IconButton`
+- Add new icon names to the shared `AppIcon` map instead of importing icon components inside screens
+- Use `accentPalette.main` for selected states, focused controls, and filled accent actions; use `accentPalette.textAccent` for accent text/icons on dark surfaces
+- Use `accentPalette.gradient` only for intentionally prominent actions such as the main FAB or primary completion CTA
+- Keep passive cards, panels, bottom nav containers, and list rows free of accent shadows; use neutral surfaces, borders, and shadows so accent color does not look randomly applied
+- Keep semantic colors stable: orange for warnings and backup/overdue notices, `#FF5252`/danger styling for destructive actions, and accent colors for user-selected identity or navigation state
 
 ## Database Changes
 

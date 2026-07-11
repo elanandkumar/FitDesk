@@ -1,12 +1,12 @@
 import React from 'react';
 import { Pressable, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Brand, Radius } from '../../theme/brandColors';
 import { useAppTheme } from '../../theme';
+import AppIcon, { AppIconName } from './AppIcon';
 
 interface Props {
-  icon: string;
+  icon: AppIconName;
   onPress: () => void;
   style?: StyleProp<ViewStyle>;
   color?: string;
@@ -28,7 +28,7 @@ export default function GradientFAB({ icon, onPress, style, color = Brand.textPr
           end={{ x: 1, y: 0 }}
           style={styles.gradient}
         >
-          <MaterialCommunityIcons name={icon as any} size={20} color={color} />
+          <AppIcon name={icon} size={20} color={color} />
         </LinearGradient>
       </Pressable>
     </View>

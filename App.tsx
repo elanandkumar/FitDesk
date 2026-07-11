@@ -8,7 +8,7 @@ import Constants from 'expo-constants';
 import { useFonts, Poppins_700Bold } from '@expo-google-fonts/poppins';
 import { Montserrat_600SemiBold } from '@expo-google-fonts/montserrat';
 import { Outfit_400Regular } from '@expo-google-fonts/outfit';
-import { ThemeProvider, useAppTheme } from './src/theme';
+import { Brand, ThemeProvider, useAppTheme } from './src/theme';
 import { BackupProvider } from './src/context/BackupContext';
 import { purgeOldNotifications } from './src/database/repositories/appNotificationRepository';
 import AppNavigator from './src/navigation/AppNavigator';
@@ -112,5 +112,5 @@ export default function App() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  loading: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#1B102F' },
+  loading: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Brand.backgroundDark },
 });

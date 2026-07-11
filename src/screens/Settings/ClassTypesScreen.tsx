@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import {
-  IconButton,
   Text,
   TextInput,
 } from 'react-native-paper';
 import AppModal from '../../components/common/AppModal';
 import GradientFAB from '../../components/common/GradientFAB';
-import { Brand, Layout, Radius, Spacing } from '../../theme/brandColors';
+import AppIconButton from '../../components/common/AppIconButton';
+import { Brand, Layout, Radius, Spacing, useAppTheme } from '../../theme';
 import { ClassType } from '../../types';
 import {
   getAllClassTypes,
@@ -20,6 +20,7 @@ import EmptyState from '../../components/common/EmptyState';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 
 export default function ClassTypesScreen() {
+  const { accentPalette, theme } = useAppTheme();
   const [classTypes, setClassTypes] = useState<ClassType[]>([]);
   const [dialogVisible, setDialogVisible] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ClassType | null>(null);
@@ -85,16 +86,16 @@ export default function ClassTypesScreen() {
             <View style={[styles.colorDot, { backgroundColor: item.color }]} />
             <Text variant="titleSmall" style={styles.itemName}>{item.name}</Text>
             <View style={styles.rowActions}>
-              <IconButton
+              <AppIconButton
                 icon="pencil"
                 size={20}
-                iconColor={Brand.textSecondary}
+                iconColor={accentPalette.textAccent}
                 onPress={() => openEdit(item)}
               />
-              <IconButton
-                icon="delete"
+              <AppIconButton
+                icon="trash"
                 size={20}
-                iconColor={Brand.textSecondary}
+                iconColor={theme.colors.error}
                 onPress={() => setDeleteTarget(item)}
               />
             </View>
@@ -169,7 +170,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
     elevation: 4,
-    shadowColor: Brand.purple,
+    shadowColor: '#000000',
     shadowOpacity: 0.15,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },

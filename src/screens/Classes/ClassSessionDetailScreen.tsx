@@ -4,7 +4,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ActivityIndicator,
   Divider,
-  IconButton,
   Text,
   TextInput,
 } from 'react-native-paper';
@@ -15,6 +14,7 @@ import {
   useFocusEffect,
 } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useAppTheme } from '../../theme';
 import { Brand, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { EnrichedSession, Trainee } from '../../types';
 import {
@@ -40,6 +40,7 @@ import ConfirmDialog from '../../components/common/ConfirmDialog';
 import HelpSheet from '../../components/common/HelpSheet';
 import AppButton from '../../components/common/AppButton';
 import AppModal from '../../components/common/AppModal';
+import AppIconButton from '../../components/common/AppIconButton';
 import { schedulePendingPaymentNotification } from '../../notifications/scheduler';
 import Constants from 'expo-constants';
 import { HELP } from '../../constants/helpContent';
@@ -50,6 +51,7 @@ type Route = RouteProp<RootStackParamList, 'ClassSessionDetail'>;
 type Nav = StackNavigationProp<RootStackParamList>;
 
 export default function ClassSessionDetailScreen() {
+  const { accentPalette } = useAppTheme();
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const { sessionId } = route.params;
@@ -122,9 +124,9 @@ export default function ClassSessionDetailScreen() {
       headerRight: () => (
         <View style={{ flexDirection: 'row' }}>
           {session?.status === 'upcoming' && (
-            <IconButton
-              icon="pencil-outline"
-              iconColor={Brand.textAccent}
+            <AppIconButton
+              icon="pencil"
+              iconColor={accentPalette.textAccent}
               onPress={() => {
                 setEditDate(session.session_date);
                 setEditTime(session.class_time);
@@ -132,11 +134,11 @@ export default function ClassSessionDetailScreen() {
               }}
             />
           )}
-          <IconButton icon="help-circle-outline" iconColor={Brand.textAccent} onPress={() => setHelpVisible(true)} />
+          <AppIconButton icon="question" iconColor={accentPalette.textAccent} onPress={() => setHelpVisible(true)} />
         </View>
       ),
     });
-  }, [navigation, session]);
+  }, [accentPalette.textAccent, navigation, session]);
 
   function openCompleteDialog() {
     if (!session) return;
@@ -242,7 +244,7 @@ export default function ClassSessionDetailScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color={Brand.purple} />
+        <ActivityIndicator color={accentPalette.main} />
       </View>
     );
   }
@@ -331,7 +333,7 @@ export default function ClassSessionDetailScreen() {
                         <View key={t.id} style={styles.traineeRow}>
                           <Text variant="bodyMedium" style={{ color: Brand.textPrimary }}>{t.name}</Text>
                           {num && (
-                            <Text variant="labelSmall" style={{ color: Brand.purple }}>
+                            <Text variant="labelSmall" style={{ color: accentPalette.textAccent }}>
                               Session {num.session_number} / {num.total_sessions}
                             </Text>
                           )}
@@ -585,7 +587,7 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     gap: Spacing.sm,
     elevation: 4,
-    shadowColor: Brand.purple,
+    shadowColor: '#000000',
     shadowOpacity: 0.15,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },

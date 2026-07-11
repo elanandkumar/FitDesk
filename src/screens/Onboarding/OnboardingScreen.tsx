@@ -13,14 +13,15 @@ import {
 } from "react-native";
 import { Text } from "react-native-paper";
 import { LinearGradient } from "expo-linear-gradient";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useAppTheme } from "../../theme";
 import { Brand, Radius, Spacing, Typography } from "../../theme/brandColors";
 import { getDatabase } from "../../database/db";
 import { RootStackParamList } from "../../navigation/types";
 import GradientButton from "../../components/common/GradientButton";
+import AppIcon, { AppIconName } from "../../components/common/AppIcon";
 
 type Nav = StackNavigationProp<RootStackParamList>;
 
@@ -28,7 +29,7 @@ const { width } = Dimensions.get("window");
 
 type Slide = {
   key: string;
-  icon: string;
+  icon: AppIconName;
   title: string;
   body: string;
   gradient: readonly [string, string];
@@ -37,21 +38,21 @@ type Slide = {
 const SLIDES: Slide[] = [
   {
     key: "1",
-    icon: "dumbbell",
+    icon: "barbell",
     title: "Welcome to FitDesk",
     body: "Your personal fitness class companion. Manage your classes, clients, and payments — all in one place, right on your device.",
     gradient: ["#3D1DB5", Brand.backgroundDark],
   },
   {
     key: "2",
-    icon: "calendar-check",
+    icon: "calendarCheck",
     title: "How It Works",
     body: "Manager-sourced classes: External managers assign you Zumba, Yoga, or Dance sessions — track each class and get paid per session.\n\nPersonal training: Manage your own clients with monthly session packages and automatic session tracking.",
     gradient: [Brand.surfaceElevated, Brand.backgroundDark],
   },
   {
     key: "3",
-    icon: "shield-lock-outline",
+    icon: "lock",
     title: "Your Data, Your Device",
     body: "All data is stored locally on this device only.\n\nUninstalling the app or clearing app data will permanently erase everything. Use Settings → Export to keep regular backups.",
     gradient: [Brand.backgroundDark, Brand.surfaceDark],
@@ -59,6 +60,7 @@ const SLIDES: Slide[] = [
 ];
 
 export default function OnboardingScreen() {
+  const { accentPalette } = useAppTheme();
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
   const [activeIndex, setActiveIndex] = useState(0);
@@ -115,11 +117,7 @@ export default function OnboardingScreen() {
         >
           <View style={styles.nameContent}>
             <View style={styles.iconCircle}>
-              <MaterialCommunityIcons
-                name="account-circle-outline"
-                size={40}
-                color={Brand.purple}
-              />
+              <AppIcon name="userCircle" size={40} color={accentPalette.main} />
             </View>
             <Text style={styles.title}>What's your name?</Text>
             <Text style={styles.body}>
@@ -174,11 +172,7 @@ export default function OnboardingScreen() {
               />
             ) : (
               <View style={styles.iconCircle}>
-                <MaterialCommunityIcons
-                  name={item.icon as never}
-                  size={40}
-                  color={Brand.purple}
-                />
+                <AppIcon name={item.icon} size={40} color={accentPalette.main} />
               </View>
             )}
 
@@ -207,7 +201,9 @@ export default function OnboardingScreen() {
               key={i}
               style={[
                 styles.dot,
-                i === activeIndex ? styles.dotActive : styles.dotInactive,
+                i === activeIndex
+                  ? [styles.dotActive, { backgroundColor: accentPalette.main }]
+                  : styles.dotInactive,
               ]}
             />
           ))}
@@ -287,7 +283,7 @@ const styles = StyleSheet.create({
   },
   dots: { flexDirection: "row", gap: Spacing.sm },
   dot: { height: Spacing.sm, borderRadius: Radius.full },
-  dotActive: { width: 24, backgroundColor: Brand.purple },
+  dotActive: { width: 24 },
   dotInactive: { width: Spacing.sm, backgroundColor: Brand.borderSubtle },
   button: { width: 260 },
   skipBtn: { paddingVertical: Spacing.sm },
@@ -308,7 +304,7 @@ const styles = StyleSheet.create({
   brandName: {
     ...Typography.h1,
     fontSize: 36, // between h1(24) and heroNum(52) — brand display name
-    color: Brand.purple,
+    color: Brand.textPrimary,
     textAlign: "center",
     letterSpacing: 2,
   },

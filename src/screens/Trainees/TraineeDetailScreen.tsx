@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Divider, IconButton, Text } from 'react-native-paper';
+import { Divider, Text } from 'react-native-paper';
 import SectionHeader from '../../components/common/SectionHeader';
 import GradientFAB from '../../components/common/GradientFAB';
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useAppTheme } from '../../theme';
 import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { Trainee, TraineePackage, EnrichedSession } from '../../types';
@@ -22,6 +23,7 @@ import ConfirmDialog from '../../components/common/ConfirmDialog';
 import AppButton from '../../components/common/AppButton';
 import StatusBadge, { getDisplayStatus } from '../../components/common/StatusBadge';
 import HelpSheet from '../../components/common/HelpSheet';
+import AppIconButton from '../../components/common/AppIconButton';
 import { HELP } from '../../constants/helpContent';
 
 type Nav = StackNavigationProp<RootStackParamList, 'TraineeDetail'>;
@@ -36,6 +38,7 @@ function formatMonth(ym: string): string {
 }
 
 export default function TraineeDetailScreen() {
+  const { accentPalette } = useAppTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
@@ -85,11 +88,11 @@ export default function TraineeDetailScreen() {
       navigation.setOptions({
         title: trainee.name,
         headerRight: () => (
-          <IconButton icon="help-circle-outline" iconColor={Brand.textAccent} onPress={() => setHelpVisible(true)} />
+          <AppIconButton icon="question" iconColor={accentPalette.textAccent} onPress={() => setHelpVisible(true)} />
         ),
       });
     }
-  }, [trainee, traineeId, navigation]);
+  }, [accentPalette.textAccent, trainee, navigation]);
 
   async function handleDelete() {
     try {
@@ -122,20 +125,26 @@ export default function TraineeDetailScreen() {
         {/* Tabs */}
         <View style={styles.tabBar}>
           <TouchableOpacity
-            style={[styles.tabButton, activeTab === 'packages' && styles.tabButtonActive]}
+            style={[
+              styles.tabButton,
+              activeTab === 'packages' && { backgroundColor: accentPalette.main + '33' },
+            ]}
             onPress={() => setActiveTab('packages')}
             activeOpacity={0.7}
           >
-            <Text style={[styles.tabLabel, activeTab === 'packages' && styles.tabLabelActive]}>
+            <Text style={[styles.tabLabel, activeTab === 'packages' && { color: accentPalette.textAccent }]}>
               Packages {packages.length > 0 ? `(${packages.length})` : ''}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.tabButton, activeTab === 'sessions' && styles.tabButtonActive]}
+            style={[
+              styles.tabButton,
+              activeTab === 'sessions' && { backgroundColor: accentPalette.main + '33' },
+            ]}
             onPress={() => setActiveTab('sessions')}
             activeOpacity={0.7}
           >
-            <Text style={[styles.tabLabel, activeTab === 'sessions' && styles.tabLabelActive]}>
+            <Text style={[styles.tabLabel, activeTab === 'sessions' && { color: accentPalette.textAccent }]}>
               Sessions {sessions.length > 0 ? `(${sessions.length})` : ''}
             </Text>
           </TouchableOpacity>
@@ -172,12 +181,12 @@ export default function TraineeDetailScreen() {
                           {
                             backgroundColor: pkg.status === 'pending'
                               ? Brand.pink + '22'
-                              : Brand.purple + '33',
+                              : accentPalette.main + '33',
                           },
                         ]}>
                           <Text style={{
                             ...Typography.microLabel,
-                            color: pkg.status === 'pending' ? Brand.pink : Brand.purple,
+                            color: pkg.status === 'pending' ? Brand.pink : accentPalette.textAccent,
                           }}>
                             {pkg.status === 'pending' ? 'Pending' : 'Paid'}
                           </Text>
@@ -300,15 +309,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: Radius.sm,
   },
-  tabButtonActive: {
-    backgroundColor: Brand.purple + '33',
-  },
   tabLabel: {
     ...Typography.labelSm,
     color: Brand.textMuted,
-  },
-  tabLabelActive: {
-    color: Brand.purple,
   },
   pendingBanner: {
     backgroundColor: Brand.pink + '22',
@@ -324,7 +327,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
     elevation: 4,
-    shadowColor: Brand.purple,
+    shadowColor: '#000000',
     shadowOpacity: 0.15,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },

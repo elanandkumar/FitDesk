@@ -1,17 +1,17 @@
 import React, { useLayoutEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { IconButton } from 'react-native-paper';
 import ThemedSegmentedButtons from '../../components/common/ThemedSegmentedButtons';
+import AppIconButton from '../../components/common/AppIconButton';
 import { useNavigation } from '@react-navigation/native';
 import { useAppTheme } from '../../theme';
-import { Brand, Spacing } from '../../theme/brandColors';
+import { Spacing } from '../../theme/brandColors';
 import ManagerListScreen from '../Managers/ManagerListScreen';
 import TraineeListScreen from '../Trainees/TraineeListScreen';
 import HelpSheet from '../../components/common/HelpSheet';
 import { HELP } from '../../constants/helpContent';
 
 export default function ContactsScreen() {
-  const { theme } = useAppTheme();
+  const { accentPalette, theme } = useAppTheme();
   const navigation = useNavigation();
   const [segment, setSegment] = useState<'managers' | 'trainees'>('managers');
   const [helpVisible, setHelpVisible] = useState(false);
@@ -19,14 +19,14 @@ export default function ContactsScreen() {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <IconButton
-          icon="help-circle-outline"
-          iconColor={Brand.textAccent}
+        <AppIconButton
+          icon="question"
+          iconColor={accentPalette.textAccent}
           onPress={() => setHelpVisible(true)}
         />
       ),
     });
-  }, [navigation, theme.colors.primary]);
+  }, [accentPalette.textAccent, navigation]);
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>

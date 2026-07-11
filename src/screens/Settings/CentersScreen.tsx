@@ -1,11 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
-import { IconButton, Text, TextInput } from 'react-native-paper';
+import { Text, TextInput } from 'react-native-paper';
 import AppModal from '../../components/common/AppModal';
 import GradientFAB from '../../components/common/GradientFAB';
+import AppIconButton from '../../components/common/AppIconButton';
+import AppIcon from '../../components/common/AppIcon';
 import EmptyState from '../../components/common/EmptyState';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
-import { Brand, Layout, Radius, Spacing } from '../../theme/brandColors';
+import { Brand, Layout, Radius, Spacing, useAppTheme } from '../../theme';
 import { Center } from '../../types';
 import {
   getAllCenters,
@@ -15,6 +17,7 @@ import {
 } from '../../database/repositories/centerRepository';
 
 export default function CentersScreen() {
+  const { accentPalette, theme } = useAppTheme();
   const [centers, setCenters] = useState<Center[]>([]);
   const [dialogVisible, setDialogVisible] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Center | null>(null);
@@ -78,6 +81,9 @@ export default function CentersScreen() {
         ListEmptyComponent={<EmptyState title="No centers" subtitle="Tap + to add a venue" />}
         renderItem={({ item }) => (
           <View style={styles.itemCard}>
+            <View style={[styles.centerIcon, { backgroundColor: `${accentPalette.main}22`, borderColor: `${accentPalette.main}55` }]}>
+              <AppIcon name="buildings" size={20} color={accentPalette.textAccent} />
+            </View>
             <View style={styles.itemText}>
               <Text variant="titleSmall" style={styles.itemName}>{item.name}</Text>
               {item.address ? (
@@ -85,16 +91,16 @@ export default function CentersScreen() {
               ) : null}
             </View>
             <View style={styles.rowActions}>
-              <IconButton
+              <AppIconButton
                 icon="pencil"
                 size={20}
-                iconColor={Brand.textSecondary}
+                iconColor={accentPalette.textAccent}
                 onPress={() => openEdit(item)}
               />
-              <IconButton
-                icon="delete"
+              <AppIconButton
+                icon="trash"
                 size={20}
-                iconColor={Brand.textSecondary}
+                iconColor={theme.colors.error}
                 onPress={() => setDeleteTarget(item)}
               />
             </View>
@@ -160,10 +166,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
     elevation: 4,
-    shadowColor: Brand.purple,
+    shadowColor: '#000000',
     shadowOpacity: 0.15,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
+    gap: Spacing.md,
+  },
+  centerIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   itemText: { flex: 1, gap: 2 },
   itemName: { color: Brand.textPrimary },

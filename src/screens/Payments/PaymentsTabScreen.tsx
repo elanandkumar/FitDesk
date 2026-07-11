@@ -1,7 +1,7 @@
 import React, { useLayoutEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { IconButton } from 'react-native-paper';
 import ThemedSegmentedButtons from '../../components/common/ThemedSegmentedButtons';
+import AppIconButton from '../../components/common/AppIconButton';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAppTheme } from '../../theme';
@@ -24,14 +24,14 @@ export default function PaymentsTabScreen() {
     navigation.setOptions({
       headerRight: () => (
         <View style={styles.headerActions}>
-          <IconButton
-            icon="chart-bar"
+          <AppIconButton
+            icon="chartBar"
             iconColor={accentPalette.textAccent}
             size={22}
             onPress={() => navigation.navigate('IncomeSummary')}
           />
-          <IconButton
-            icon="help-circle-outline"
+          <AppIconButton
+            icon="question"
             iconColor={accentPalette.textAccent}
             onPress={() => setHelpVisible(true)}
           />

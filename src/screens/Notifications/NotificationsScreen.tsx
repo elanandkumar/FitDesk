@@ -1,9 +1,9 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useAppTheme } from '../../theme';
 import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { AppNotification } from '../../types';
 import {
@@ -11,13 +11,14 @@ import {
   markAllRead,
 } from '../../database/repositories/appNotificationRepository';
 import EmptyState from '../../components/common/EmptyState';
+import AppIcon, { AppIconName } from '../../components/common/AppIcon';
 
-const TYPE_CONFIG: Record<string, { icon: string; color: string }> = {
-  backup_overdue:   { icon: 'database-export',     color: Brand.orange },
-  payment_pending:  { icon: 'currency-inr',         color: Brand.purple },
-  payment_reminder: { icon: 'cash-clock',            color: Brand.purple },
-  payment_overdue:  { icon: 'alert-circle-outline',  color: Brand.orange },
-  payment_urgent:   { icon: 'alert-octagon-outline', color: Brand.pink },
+const TYPE_CONFIG: Record<string, { icon: AppIconName; color?: string; useAccent?: boolean }> = {
+  backup_overdue:   { icon: 'database',       color: Brand.orange },
+  payment_pending:  { icon: 'currencyInr',    useAccent: true },
+  payment_reminder: { icon: 'handCoins',      useAccent: true },
+  payment_overdue:  { icon: 'warningCircle',  color: Brand.orange },
+  payment_urgent:   { icon: 'warningOctagon', color: Brand.pink },
 };
 
 function timeAgo(isoString: string): string {
@@ -31,19 +32,21 @@ function timeAgo(isoString: string): string {
 }
 
 function NotificationItem({ item, index }: { item: AppNotification; index: number }) {
-  const config = TYPE_CONFIG[item.type] ?? { icon: 'bell', color: Brand.purple };
+  const { accentPalette } = useAppTheme();
+  const config = TYPE_CONFIG[item.type] ?? { icon: 'bell', useAccent: true };
+  const color = config.useAccent ? accentPalette.main : config.color ?? accentPalette.main;
   const isUnread = !item.read_at;
 
   return (
     <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 40).duration(300)}>
       <View style={[styles.item, isUnread && styles.itemUnread]}>
-        <View style={[styles.iconWrap, { backgroundColor: config.color + '22' }]}>
-          <MaterialCommunityIcons name={config.icon as never} size={20} color={config.color} />
+        <View style={styles.iconWrap}>
+          <AppIcon name={config.icon} size={20} color={color} />
         </View>
         <View style={styles.itemBody}>
           <View style={styles.itemHeader}>
             <Text style={styles.itemTitle} numberOfLines={1}>{item.title}</Text>
-            {isUnread && <View style={[styles.unreadDot, { backgroundColor: config.color }]} />}
+            {isUnread && <View style={[styles.unreadDot, { backgroundColor: color }]} />}
           </View>
           <Text style={styles.itemBodyText} numberOfLines={2}>{item.body}</Text>
           <Text style={styles.itemTime}>{timeAgo(item.created_at)}</Text>
@@ -118,9 +121,8 @@ const styles = StyleSheet.create({
     backgroundColor: Brand.surfaceDark + 'EE',
   },
   iconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: Radius.md,
+    width: 24,
+    paddingTop: 1,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
