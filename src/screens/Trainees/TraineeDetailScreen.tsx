@@ -106,6 +106,7 @@ export default function TraineeDetailScreen() {
 
   const pendingPackages = packages.filter((p) => p.status === 'pending');
   const totalPending = pendingPackages.reduce((s, p) => s + p.amount, 0);
+  const totalPaid = packages.filter((p) => p.status === 'paid').reduce((s, p) => s + p.amount, 0);
 
   return (
     <View style={styles.container}>
@@ -152,9 +153,21 @@ export default function TraineeDetailScreen() {
         {/* Packages Tab */}
         {activeTab === 'packages' && (
           <>
-            {totalPending > 0 && (
-              <View style={styles.pendingBanner}>
-                <Text style={styles.pendingBannerText}>{formatCurrency(totalPending)} pending payment</Text>
+            {packages.length > 0 && (
+              <View style={styles.summaryCard}>
+                <View style={styles.summaryItem}>
+                  <Text style={styles.summaryLabel}>Paid</Text>
+                  <Text style={[styles.summaryAmount, totalPaid > 0 ? styles.paidAmount : styles.zeroAmount]}>
+                    {formatCurrency(totalPaid)}
+                  </Text>
+                </View>
+                <View style={styles.summarySep} />
+                <View style={styles.summaryItem}>
+                  <Text style={styles.summaryLabel}>Pending</Text>
+                  <Text style={[styles.summaryAmount, totalPending > 0 ? styles.pendingAmount : styles.zeroAmount]}>
+                    {formatCurrency(totalPending)}
+                  </Text>
+                </View>
               </View>
             )}
             <View style={styles.card}>
@@ -174,22 +187,15 @@ export default function TraineeDetailScreen() {
                         </Text>
                       </View>
                       <View style={styles.packageRight}>
-                        <Text style={styles.packageAmount}>{formatCurrency(pkg.amount)}</Text>
-                        <View style={[
-                          styles.statusPill,
-                          {
-                            backgroundColor: pkg.status === 'pending'
-                              ? Brand.pink + '22'
-                              : accentPalette.main + '33',
-                          },
+                        <Text style={styles.packageStatusLabel}>
+                          {pkg.status === 'pending' ? 'Pending' : 'Paid'}
+                        </Text>
+                        <Text style={[
+                          styles.packageAmount,
+                          pkg.status === 'pending' ? styles.pendingAmount : styles.paidAmount,
                         ]}>
-                          <Text style={{
-                            ...Typography.microLabel,
-                            color: pkg.status === 'pending' ? Brand.pink : accentPalette.textAccent,
-                          }}>
-                            {pkg.status === 'pending' ? 'Pending' : 'Paid'}
-                          </Text>
-                        </View>
+                          {formatCurrency(pkg.amount)}
+                        </Text>
                       </View>
                     </View>
                   </View>
@@ -300,14 +306,26 @@ const styles = StyleSheet.create({
     ...Typography.labelSm,
     color: Brand.textMuted,
   },
-  pendingBanner: {
-    backgroundColor: Brand.pink + '22',
-    borderRadius: Radius.sm,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
+  summaryCard: {
+    alignItems: 'center',
+    backgroundColor: Brand.surfaceElevated,
+    borderColor: Brand.borderSubtle,
+    borderRadius: Radius.card,
+    borderWidth: 1,
+    flexDirection: 'row',
     marginBottom: Spacing.sm,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.lg,
+    elevation: 4,
+    shadowColor: '#000000',
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
   },
-  pendingBannerText: { ...Typography.labelSm, color: Brand.pink },
+  summaryItem: { flex: 1, alignItems: 'center' },
+  summaryLabel: { ...Typography.bodySm, fontWeight: '500', color: Brand.textSecondary, marginBottom: Spacing.xs },
+  summaryAmount: { ...Typography.h2 },
+  summarySep: { width: 1, backgroundColor: Brand.borderSubtle, marginVertical: 4 },
   card: {
     backgroundColor: Brand.surfaceDark,
     borderRadius: Radius.card,
@@ -327,12 +345,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.xs,
   },
-  packageRight: { alignItems: 'flex-end', gap: Spacing.xs },
+  packageRight: { alignItems: 'flex-end' },
+  packageStatusLabel: {
+    ...Typography.caption,
+    color: Brand.textSecondary,
+  },
   packageAmount: {
     ...Typography.labelLg,
-    color: Brand.orange,
   },
-  statusPill: { paddingHorizontal: Spacing.sm, paddingVertical: 3, borderRadius: Radius.full },
+  paidAmount: { color: Brand.pink },
+  pendingAmount: { color: Brand.orange },
+  zeroAmount: { color: Brand.textMuted },
   sessionList: { gap: Spacing.sm },
   fab: {
     position: 'absolute',
