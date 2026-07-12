@@ -16,12 +16,16 @@ import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { Trainee } from '../../types';
 import { getAllTrainees } from '../../database/repositories/traineeRepository';
-import { createTraineePackage } from '../../database/repositories/paymentRepository';
+import {
+  cleanupOrphanedUnusedPendingPackage,
+  getActivePackageForTrainee,
+} from '../../database/repositories/paymentRepository';
 import GradientButton from '../../components/common/GradientButton';
 import AppButton from '../../components/common/AppButton';
 import PickerModal, { PickerItem } from '../../components/common/PickerModal';
 import AppIcon from '../../components/common/AppIcon';
 import AppIconButton from '../../components/common/AppIconButton';
+import AppModal from '../../components/common/AppModal';
 
 type Nav = StackNavigationProp<RootStackParamList, 'AddPackage'>;
 type Route = RouteProp<RootStackParamList, 'AddPackage'>;
@@ -39,6 +43,23 @@ function formatMonth(ym: string): string {
   });
 }
 
+function maxSixDayWeekSessionsForMonth(ym: string): number {
+  const [year, month] = ym.split('-').map(Number);
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const weekdayCounts = Array(7).fill(0) as number[];
+
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    weekdayCounts[new Date(year, month - 1, day).getDay()] += 1;
+  }
+
+  return daysInMonth - Math.min(...weekdayCounts);
+}
+
+function describeExistingPackage(totalSessions: number, usedSessions: number, status: string): string {
+  const statusLabel = status === 'paid' ? 'paid' : 'pending';
+  return `A ${statusLabel} package with ${usedSessions}/${totalSessions} sessions used already exists`;
+}
+
 export default function AddPackageScreen() {
   const { accentPalette, theme } = useAppTheme();
   const navigation = useNavigation<Nav>();
@@ -54,6 +75,15 @@ export default function AddPackageScreen() {
   const [amount, setAmount] = useState('');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
+  const [schedulePromptVisible, setSchedulePromptVisible] = useState(false);
+  const [savedPackage, setSavedPackage] = useState<{
+    traineeId: number;
+    month: string;
+    totalSessions: number;
+    amount: number;
+    notes?: string;
+  } | null>(null);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const selectedTrainee = trainees.find((t) => t.id === traineeId);
 
@@ -83,17 +113,63 @@ export default function AddPackageScreen() {
     if (!isValid) return;
     setSaving(true);
     try {
-      await createTraineePackage(
-        traineeId!,
+      const parsedTotalSessions = parseInt(totalSessions, 10);
+      const maxSessions = maxSixDayWeekSessionsForMonth(month);
+      if (parsedTotalSessions > maxSessions) {
+        setErrorMessage(
+          `${formatMonth(month)} supports up to ${maxSessions} package session${maxSessions === 1 ? '' : 's'} with FitDesk's one-session-per-day scheduling.`
+        );
+        return;
+      }
+
+      await cleanupOrphanedUnusedPendingPackage(traineeId!, month);
+      const existingPackage = await getActivePackageForTrainee(traineeId!, month);
+      if (existingPackage) {
+        setErrorMessage(
+          `${describeExistingPackage(existingPackage.total_sessions, existingPackage.used_sessions, existingPackage.status)} for ${selectedTrainee?.name ?? 'this trainee'} in ${formatMonth(month)}. Check All payments if it is not visible under Pending only.`
+        );
+        return;
+      }
+
+      setSavedPackage({
+        traineeId: traineeId!,
         month,
-        parseInt(totalSessions, 10),
-        parseFloat(amount),
-        notes.trim() || undefined
+        totalSessions: parsedTotalSessions,
+        amount: parseFloat(amount),
+        notes: notes.trim() || undefined,
+      });
+      setSchedulePromptVisible(true);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '';
+      const isDuplicate = message.includes('UNIQUE constraint failed');
+      setErrorMessage(
+        isDuplicate
+          ? `${selectedTrainee?.name ?? 'This trainee'} already has a package for ${formatMonth(month)}. Check All payments if it is not visible under Pending only.`
+          : 'Could not prepare package. Please try again.'
       );
-      navigation.goBack();
     } finally {
       setSaving(false);
     }
+  };
+
+  const dismissSchedulePrompt = () => {
+    setSchedulePromptVisible(false);
+    navigation.navigate('MainTabs', {
+      screen: 'Payments',
+      params: {
+        initialSegment: 'trainees',
+        focusKey: Date.now(),
+        notice: 'Package was not created because scheduling is required.',
+      },
+    });
+  };
+
+  const handleSchedulePackage = () => {
+    if (!savedPackage) return;
+    setSchedulePromptVisible(false);
+    navigation.replace('AddEditClassSeries', {
+      prefillPackage: savedPackage,
+    });
   };
 
   return (
@@ -189,6 +265,30 @@ export default function AddPackageScreen() {
         }}
         showAvatar
       />
+
+      <AppModal
+        visible={schedulePromptVisible}
+        onDismiss={dismissSchedulePrompt}
+        title="Schedule Required"
+        cancelLabel="Not Now"
+        confirmLabel="Schedule"
+        onConfirm={handleSchedulePackage}
+      >
+        <Text variant="bodyMedium" style={{ color: Brand.textSecondary }}>
+          Schedule {savedPackage?.totalSessions ?? 0} calendar sessions to create this package.
+        </Text>
+      </AppModal>
+
+      <AppModal
+        visible={errorMessage.length > 0}
+        onDismiss={() => setErrorMessage('')}
+        title="Could Not Prepare Package"
+        cancelLabel="OK"
+      >
+        <Text variant="bodyMedium" style={{ color: Brand.textSecondary }}>
+          {errorMessage}
+        </Text>
+      </AppModal>
     </KeyboardAvoidingView>
   );
 }

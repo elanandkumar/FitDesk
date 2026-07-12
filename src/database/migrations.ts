@@ -80,6 +80,43 @@ const MIGRATIONS: Migration[] = [
       `INSERT OR IGNORE INTO settings (key, value) VALUES ('payment_threshold_urgent', '15')`,
     ],
   },
+  {
+    version: 10,
+    statements: [
+      `ALTER TABLE trainee_packages ADD COLUMN series_id INTEGER`,
+    ],
+  },
+  {
+    version: 11,
+    statements: [
+      `CREATE TABLE IF NOT EXISTS trainee_packages_next (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        trainee_id      INTEGER NOT NULL REFERENCES trainees(id),
+        series_id       INTEGER REFERENCES class_series(id) ON DELETE SET NULL,
+        month           TEXT NOT NULL,
+        total_sessions  INTEGER NOT NULL DEFAULT 12,
+        used_sessions   INTEGER NOT NULL DEFAULT 0,
+        amount          REAL NOT NULL,
+        status          TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','paid')),
+        paid_date       TEXT,
+        notes           TEXT,
+        created_at      TEXT NOT NULL
+      )`,
+      `INSERT INTO trainee_packages_next (
+        id, trainee_id, series_id, month, total_sessions, used_sessions,
+        amount, status, paid_date, notes, created_at
+      )
+      SELECT
+        id, trainee_id, series_id, month, total_sessions, used_sessions,
+        amount, status, paid_date, notes, created_at
+      FROM trainee_packages`,
+      `DROP TABLE trainee_packages`,
+      `ALTER TABLE trainee_packages_next RENAME TO trainee_packages`,
+      `CREATE UNIQUE INDEX IF NOT EXISTS idx_trainee_packages_pending_month
+        ON trainee_packages(trainee_id, month)
+        WHERE status = 'pending'`,
+    ],
+  },
 ];
 
 async function runStatement(db: SQLite.SQLiteDatabase, sql: string): Promise<void> {

@@ -318,8 +318,8 @@ async function importData(backup: FitDeskBackup): Promise<void> {
     }
     for (const r of backup.trainee_packages) {
       await txn.runAsync(
-        'INSERT INTO trainee_packages (id, trainee_id, month, total_sessions, used_sessions, amount, status, paid_date, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [r.id, r.trainee_id, r.month, r.total_sessions, r.used_sessions, r.amount, r.status, r.paid_date ?? null, r.notes ?? null, r.created_at]
+        'INSERT INTO trainee_packages (id, trainee_id, series_id, month, total_sessions, used_sessions, amount, status, paid_date, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [r.id, r.trainee_id, r.series_id ?? null, r.month, r.total_sessions, r.used_sessions, r.amount, r.status, r.paid_date ?? null, r.notes ?? null, r.created_at]
       );
     }
     for (const r of backup.settings) {

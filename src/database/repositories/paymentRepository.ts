@@ -116,7 +116,7 @@ export async function getAllEnrichedTraineePackages(
   const whereClause = pendingOnly ? 'WHERE tp.status = "pending"' : '';
   return db.getAllAsync<EnrichedTraineePackage>(
     `SELECT
-      tp.id, tp.trainee_id, tp.month, tp.total_sessions, tp.used_sessions,
+      tp.id, tp.trainee_id, tp.series_id, tp.month, tp.total_sessions, tp.used_sessions,
       tp.amount, tp.status, tp.paid_date, tp.notes, tp.created_at,
       t.name AS trainee_name
     FROM trainee_packages tp
@@ -141,9 +141,31 @@ export async function getActivePackageForTrainee(
   const db = await getDatabase();
   return (
     (await db.getFirstAsync<TraineePackage>(
-      'SELECT * FROM trainee_packages WHERE trainee_id = ? AND month = ?',
+      `SELECT * FROM trainee_packages
+       WHERE trainee_id = ? AND month = ? AND status = 'pending'
+       ORDER BY created_at ASC
+       LIMIT 1`,
       [traineeId, month]
     )) ?? null
+  );
+}
+
+export async function cleanupOrphanedUnusedPendingPackage(
+  traineeId: number,
+  month: string
+): Promise<void> {
+  const db = await getDatabase();
+  await db.runAsync(
+    `DELETE FROM trainee_packages
+     WHERE trainee_id = ?
+       AND month = ?
+       AND status = 'pending'
+       AND used_sessions = 0
+       AND series_id IS NOT NULL
+       AND NOT EXISTS (
+         SELECT 1 FROM class_series WHERE class_series.id = trainee_packages.series_id
+       )`,
+    [traineeId, month]
   );
 }
 
@@ -152,17 +174,19 @@ export async function createTraineePackage(
   month: string,
   totalSessions: number,
   amount: number,
-  notes?: string
+  notes?: string,
+  seriesId?: number
 ): Promise<TraineePackage> {
   const db = await getDatabase();
   const now = new Date().toISOString();
   const result = await db.runAsync(
-    'INSERT INTO trainee_packages (trainee_id, month, total_sessions, used_sessions, amount, status, notes, created_at) VALUES (?, ?, ?, 0, ?, "pending", ?, ?)',
-    [traineeId, month, totalSessions, amount, notes ?? null, now]
+    'INSERT INTO trainee_packages (trainee_id, series_id, month, total_sessions, used_sessions, amount, status, notes, created_at) VALUES (?, ?, ?, ?, 0, ?, "pending", ?, ?)',
+    [traineeId, seriesId ?? null, month, totalSessions, amount, notes ?? null, now]
   );
   return {
     id: result.lastInsertRowId,
     trainee_id: traineeId,
+    series_id: seriesId,
     month,
     total_sessions: totalSessions,
     used_sessions: 0,
@@ -173,10 +197,69 @@ export async function createTraineePackage(
   };
 }
 
+export async function updateUnusedPendingTraineePackage(
+  id: number,
+  amount: number,
+  notes?: string
+): Promise<void> {
+  const db = await getDatabase();
+  await db.withTransactionAsync(async () => {
+    const pkg = await db.getFirstAsync<TraineePackage>(
+      'SELECT * FROM trainee_packages WHERE id = ?',
+      [id]
+    );
+    if (!pkg) throw new Error('Package not found.');
+    if (pkg.used_sessions > 0 || pkg.status !== 'pending') {
+      throw new Error('Only unused pending packages can be edited.');
+    }
+
+    await db.runAsync(
+      'UPDATE trainee_packages SET amount = ?, notes = ? WHERE id = ?',
+      [amount, notes ?? null, id]
+    );
+  });
+}
+
+export async function deleteUnusedPendingTraineePackage(id: number): Promise<void> {
+  const db = await getDatabase();
+  await db.withTransactionAsync(async () => {
+    const pkg = await db.getFirstAsync<TraineePackage>(
+      'SELECT * FROM trainee_packages WHERE id = ?',
+      [id]
+    );
+    if (!pkg) throw new Error('Package not found.');
+    if (pkg.used_sessions > 0 || pkg.status !== 'pending') {
+      throw new Error('Only unused pending packages can be deleted.');
+    }
+
+    if (pkg.series_id) {
+      await db.runAsync(
+        `DELETE FROM session_trainees WHERE session_id IN (
+          SELECT id FROM class_sessions WHERE series_id = ?
+        )`,
+        [pkg.series_id]
+      );
+      await db.runAsync('DELETE FROM series_trainees WHERE series_id = ?', [pkg.series_id]);
+      await db.runAsync('DELETE FROM class_sessions WHERE series_id = ?', [pkg.series_id]);
+      await db.runAsync('DELETE FROM class_series WHERE id = ?', [pkg.series_id]);
+    }
+
+    await db.runAsync('DELETE FROM trainee_packages WHERE id = ?', [id]);
+  });
+}
+
 export async function incrementPackageUsedSessions(traineeId: number, month: string): Promise<void> {
   const db = await getDatabase();
   await db.runAsync(
-    'UPDATE trainee_packages SET used_sessions = used_sessions + 1 WHERE trainee_id = ? AND month = ?',
+    `UPDATE trainee_packages SET used_sessions = used_sessions + 1
+     WHERE id = (
+       SELECT id FROM trainee_packages
+       WHERE trainee_id = ?
+         AND month = ?
+         AND status = 'pending'
+         AND used_sessions < total_sessions
+       ORDER BY created_at ASC LIMIT 1
+     )`,
     [traineeId, month]
   );
 }

@@ -197,7 +197,15 @@ export async function completePersonalSession(
         [sessionId, tid]
       );
       const exact = await db.runAsync(
-        'UPDATE trainee_packages SET used_sessions = used_sessions + 1 WHERE trainee_id = ? AND month = ?',
+        `UPDATE trainee_packages SET used_sessions = used_sessions + 1
+         WHERE id = (
+           SELECT id FROM trainee_packages
+           WHERE trainee_id = ?
+             AND month = ?
+             AND status = 'pending'
+             AND used_sessions < total_sessions
+           ORDER BY created_at ASC LIMIT 1
+         )`,
         [tid, month]
       );
       if (exact.changes === 0) {
@@ -206,7 +214,9 @@ export async function completePersonalSession(
           `UPDATE trainee_packages SET used_sessions = used_sessions + 1
            WHERE id = (
              SELECT id FROM trainee_packages
-             WHERE trainee_id = ? AND status = 'pending'
+             WHERE trainee_id = ?
+               AND status = 'pending'
+               AND used_sessions < total_sessions
              ORDER BY month DESC LIMIT 1
            )`,
           [tid]

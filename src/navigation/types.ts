@@ -4,7 +4,16 @@ export type RootStackParamList = {
   Onboarding: undefined;
   MainTabs: NavigatorScreenParams<TabParamList>;
   ClassSeriesList: undefined;
-  AddEditClassSeries: { seriesId?: number };
+  AddEditClassSeries: {
+    seriesId?: number;
+    prefillPackage?: {
+      traineeId: number;
+      month: string;
+      totalSessions: number;
+      amount: number;
+      notes?: string;
+    };
+  };
   ClassSessionDetail: { sessionId: number };
   AddEditManager: { managerId?: number };
   ManagerDetail: { managerId: number };
@@ -26,6 +35,11 @@ export type TabParamList = {
   Dashboard: undefined;
   Calendar: undefined;
   Contacts: undefined;
-  Payments: { initialSegment?: 'managers' | 'trainees'; pendingOnly?: boolean; focusKey?: number } | undefined;
+  Payments: {
+    initialSegment?: 'managers' | 'trainees';
+    pendingOnly?: boolean;
+    focusKey?: number;
+    notice?: string;
+  } | undefined;
   Settings: undefined;
 };

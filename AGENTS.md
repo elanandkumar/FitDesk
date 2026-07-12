@@ -32,4 +32,5 @@
 - Keep the app visually quiet and operational: dense, readable, and consistent rather than decorative.
 - Avoid nested cards and decorative gradients on passive content.
 - Prefer reusable controls for buttons, icons, pickers, empty states, and navigation affordances.
+- Use FitDesk shared modal/dialog components (`AppModal`, `ConfirmDialog`, or another app-styled wrapper) for user-facing alerts and confirmations; do not introduce native `Alert.alert` for new UI flows.
 - Before adding a new visual treatment, check whether it should be accent-driven, semantic, or neutral.
