@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
-import { Alert, FlatList, Modal, Pressable, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Text } from 'react-native-paper';
+import { FlatList, Modal, Pressable, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text, TextInput } from 'react-native-paper';
 import GradientFAB from '../../components/common/GradientFAB';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,8 +9,10 @@ import { useAppTheme } from '../../theme';
 import { Brand, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { EnrichedTraineePackage } from '../../types';
 import {
+  deleteUnusedPendingTraineePackage,
   getAllEnrichedTraineePackages,
   markPackagePaid,
+  updateUnusedPendingTraineePackage,
 } from '../../database/repositories/paymentRepository';
 import { formatCurrency } from '../../utils/currencyUtils';
 import { todayISO } from '../../utils/dateUtils';
@@ -19,6 +21,7 @@ import ConfirmDialog from '../../components/common/ConfirmDialog';
 import EmptyState from '../../components/common/EmptyState';
 import AppIcon from '../../components/common/AppIcon';
 import AppIconButton from '../../components/common/AppIconButton';
+import AppModal from '../../components/common/AppModal';
 type Nav = StackNavigationProp<RootStackParamList>;
 
 type PackageStatusFilter = 'pending' | 'all';
@@ -77,6 +80,12 @@ export default function TraineePackagesScreen() {
   const [monthSort, setMonthSort] = useState<MonthSortOrder>('latest');
   const [filtersVisible, setFiltersVisible] = useState(false);
   const [confirmPkg, setConfirmPkg] = useState<EnrichedTraineePackage | null>(null);
+  const [deletePkg, setDeletePkg] = useState<EnrichedTraineePackage | null>(null);
+  const [editPkg, setEditPkg] = useState<EnrichedTraineePackage | null>(null);
+  const [editAmount, setEditAmount] = useState('');
+  const [editNotes, setEditNotes] = useState('');
+  const [editError, setEditError] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const pendingOnly = statusFilter === 'pending';
   const filtersAreDefault = statusFilter === 'pending' && monthSort === 'latest';
@@ -112,62 +121,132 @@ export default function TraineePackagesScreen() {
       load();
     } catch {
       setConfirmPkg(null);
-      Alert.alert('Error', 'Could not mark package as paid. Please try again.');
+      setErrorMessage('Could not mark package as paid. Please try again.');
     }
   };
 
-  const renderPackage = (item: EnrichedTraineePackage, index: number) => (
-    <View
-      key={item.id}
-      style={[
-        styles.packageRow,
-        index > 0 && styles.packageRowDivider,
-      ]}
-    >
-      <View style={styles.packageMainRow}>
-        <View style={styles.itemLeft}>
-          <Text style={styles.itemTitle}>{formatMonth(item.month)}</Text>
-          <Text style={styles.itemSub}>{item.used_sessions}/{item.total_sessions} sessions used</Text>
-          {item.notes ? (
-            <Text style={styles.itemNote} numberOfLines={1}>{item.notes}</Text>
-          ) : null}
+  const openEditPackage = (pkg: EnrichedTraineePackage) => {
+    setEditPkg(pkg);
+    setEditAmount(String(pkg.amount));
+    setEditNotes(pkg.notes ?? '');
+    setEditError('');
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editPkg) return;
+    const parsedAmount = parseFloat(editAmount);
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      setEditError('Enter a valid amount.');
+      return;
+    }
+
+    try {
+      await updateUnusedPendingTraineePackage(
+        editPkg.id,
+        parsedAmount,
+        editNotes.trim() || undefined
+      );
+      setEditPkg(null);
+      setEditError('');
+      load();
+    } catch (err) {
+      setEditError(err instanceof Error ? err.message : 'Could not update package.');
+    }
+  };
+
+  const handleDeletePackage = async () => {
+    if (!deletePkg) return;
+    try {
+      await deleteUnusedPendingTraineePackage(deletePkg.id);
+      setDeletePkg(null);
+      load();
+    } catch (err) {
+      setDeletePkg(null);
+      setErrorMessage(err instanceof Error ? err.message : 'Could not delete package.');
+    }
+  };
+
+  const renderPackage = (item: EnrichedTraineePackage, index: number) => {
+    const canEditOrDelete = item.status === 'pending' && item.used_sessions === 0;
+
+    return (
+      <View
+        key={item.id}
+        style={[
+          styles.packageRow,
+          index > 0 && styles.packageRowDivider,
+        ]}
+      >
+        <View style={styles.packageMainRow}>
+          <View style={styles.itemLeft}>
+            <Text style={styles.itemTitle}>{formatMonth(item.month)}</Text>
+            <Text style={styles.itemSub}>{item.used_sessions}/{item.total_sessions} sessions used</Text>
+            {item.notes ? (
+              <Text style={styles.itemNote} numberOfLines={1}>{item.notes}</Text>
+            ) : null}
+          </View>
+          <View style={styles.packageAmountRow}>
+            {item.status === 'pending' ? (
+              <>
+                <View style={styles.packageStatusColumn}>
+                  <Text style={styles.amountLabel}>Paid</Text>
+                  <Text style={[styles.amount, styles.zeroAmount]}>
+                    {formatCurrency(0)}
+                  </Text>
+                </View>
+                <View style={styles.packageStatusColumn}>
+                  <Text style={styles.amountLabel}>Pending</Text>
+                  <Text style={[styles.amount, styles.pendingAmount]}>
+                    {formatCurrency(item.amount)}
+                  </Text>
+                </View>
+              </>
+            ) : (
+              <>
+                <View style={styles.packageStatusColumn}>
+                  <Text style={styles.amountLabel}>Paid</Text>
+                  <Text style={[styles.amount, styles.paidAmount]}>
+                    {formatCurrency(item.amount)}
+                  </Text>
+                </View>
+                <View style={styles.packageStatusColumn}>
+                  <Text style={styles.amountLabel}>Pending</Text>
+                  <Text style={[styles.amount, styles.zeroAmount]}>
+                    {formatCurrency(0)}
+                  </Text>
+                </View>
+              </>
+            )}
+          </View>
         </View>
-        <View style={styles.packageAmountRow}>
-          {item.status === 'pending' ? (
-            <>
-              <View style={styles.packageStatusColumn}>
-                <Text style={styles.amountLabel}>Paid</Text>
-                <Text style={[styles.amount, styles.zeroAmount]}>
-                  {formatCurrency(0)}
-                </Text>
-              </View>
-              <View style={styles.packageStatusColumn}>
-                <Text style={styles.amountLabel}>Pending</Text>
-                <Text style={[styles.amount, styles.pendingAmount]}>
-                  {formatCurrency(item.amount)}
-                </Text>
-              </View>
-            </>
-          ) : (
-            <>
-              <View style={styles.packageStatusColumn}>
-                <Text style={styles.amountLabel}>Paid</Text>
-                <Text style={[styles.amount, styles.paidAmount]}>
-                  {formatCurrency(item.amount)}
-                </Text>
-              </View>
-              <View style={styles.packageStatusColumn}>
-                <Text style={styles.amountLabel}>Pending</Text>
-                <Text style={[styles.amount, styles.zeroAmount]}>
-                  {formatCurrency(0)}
-                </Text>
-              </View>
-            </>
-          )}
-        </View>
-      </View>
-      {item.status === 'pending' ? (
+        {item.status === 'pending' ? (
         <View style={styles.packageActionRow}>
+          {canEditOrDelete ? (
+            <>
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={`Edit ${item.trainee_name} package`}
+                activeOpacity={0.72}
+                hitSlop={6}
+                style={[styles.packageUtilityBtn, { borderColor: Brand.borderSubtle }]}
+                onPress={() => openEditPackage(item)}
+              >
+                <AppIcon name="pencil" size={14} color={Brand.textSecondary} weight="bold" />
+                <Text style={styles.packageUtilityText}>Edit</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={`Delete ${item.trainee_name} package`}
+                activeOpacity={0.72}
+                hitSlop={6}
+                style={[styles.packageUtilityBtn, styles.packageDeleteBtn]}
+                onPress={() => setDeletePkg(item)}
+              >
+                <AppIcon name="trash" size={14} color="#FF5252" weight="bold" />
+                <Text style={styles.packageDeleteText}>Delete</Text>
+              </TouchableOpacity>
+            </>
+          ) : null}
           <TouchableOpacity
             accessibilityRole="button"
             accessibilityLabel={`Mark ${formatCurrency(item.amount)} as paid`}
@@ -180,9 +259,10 @@ export default function TraineePackagesScreen() {
             <Text style={[styles.markPaidText, { color: accentPalette.main }]}>Mark Paid</Text>
           </TouchableOpacity>
         </View>
-      ) : null}
-    </View>
-  );
+        ) : null}
+      </View>
+    );
+  };
 
   const renderItem = ({ item }: { item: Section }) => (
     <View style={styles.card}>
@@ -321,6 +401,62 @@ export default function TraineePackagesScreen() {
         onConfirm={handleMarkPaid}
         onDismiss={() => setConfirmPkg(null)}
       />
+
+      <ConfirmDialog
+        visible={deletePkg !== null}
+        title="Delete Package"
+        message={
+          deletePkg
+            ? `Delete the unused ${formatMonth(deletePkg.month)} package for ${deletePkg.trainee_name}? Linked scheduled sessions will also be removed when available.`
+            : ''
+        }
+        confirmLabel="Delete"
+        destructive
+        onConfirm={handleDeletePackage}
+        onDismiss={() => setDeletePkg(null)}
+      />
+
+      <AppModal
+        visible={editPkg !== null}
+        onDismiss={() => setEditPkg(null)}
+        title="Edit Package"
+        confirmLabel="Save"
+        onConfirm={handleSaveEdit}
+        cancelLabel="Cancel"
+      >
+        <Text variant="bodySmall" style={styles.editHelpText}>
+          Session count and month stay locked because this package is tied to scheduled sessions.
+        </Text>
+        <TextInput
+          label="Amount (₹)"
+          value={editAmount}
+          onChangeText={(v) => setEditAmount(v.replace(/[^0-9.]/g, ''))}
+          keyboardType="decimal-pad"
+          mode="outlined"
+          dense
+        />
+        <View style={styles.editFieldGap} />
+        <TextInput
+          label="Notes (optional)"
+          value={editNotes}
+          onChangeText={setEditNotes}
+          mode="outlined"
+          multiline
+          numberOfLines={3}
+        />
+        {editError ? <Text style={styles.editErrorText}>{editError}</Text> : null}
+      </AppModal>
+
+      <AppModal
+        visible={errorMessage.length > 0}
+        onDismiss={() => setErrorMessage('')}
+        title="Package Error"
+        cancelLabel="OK"
+      >
+        <Text variant="bodyMedium" style={{ color: Brand.textSecondary }}>
+          {errorMessage}
+        </Text>
+      </AppModal>
 
       <Modal
         visible={filtersVisible}
@@ -461,11 +597,31 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.sm,
   },
   packageStatusColumn: { alignItems: 'center', gap: Spacing.xs, minWidth: 86 },
-  packageActionRow: { alignItems: 'flex-end', marginTop: Spacing.xs },
+  packageActionRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    marginTop: Spacing.xs,
+    flexWrap: 'wrap',
+  },
   amount: { ...Typography.h4, fontWeight: '700' },
   paidAmount: { color: Brand.pink },
   pendingAmount: { color: Brand.orange },
   zeroAmount: { color: Brand.textMuted },
+  packageUtilityBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    minHeight: 34,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+  },
+  packageUtilityText: { ...Typography.labelSm, color: Brand.textSecondary },
+  packageDeleteBtn: { borderColor: '#FF5252' },
+  packageDeleteText: { ...Typography.labelSm, color: '#FF5252' },
   markPaidBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -477,6 +633,16 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xs,
   },
   markPaidText: { ...Typography.labelSm },
+  editHelpText: {
+    color: Brand.textSecondary,
+    marginBottom: Spacing.md,
+  },
+  editFieldGap: { height: Spacing.sm },
+  editErrorText: {
+    ...Typography.bodySm,
+    color: Brand.pink,
+    marginTop: Spacing.sm,
+  },
   fab: {
     position: 'absolute',
     right: Spacing.lg,

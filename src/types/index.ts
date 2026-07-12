@@ -101,6 +101,7 @@ export interface ManagerPayment {
 export interface TraineePackage {
   id: number;
   trainee_id: number;
+  series_id?: number;
   month: string;
   total_sessions: number;
   used_sessions: number;
@@ -148,6 +149,7 @@ export interface EnrichedManagerPayment {
 export interface EnrichedTraineePackage {
   id: number;
   trainee_id: number;
+  series_id?: number;
   trainee_name: string;
   month: string;
   total_sessions: number;

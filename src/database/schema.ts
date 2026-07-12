@@ -117,6 +117,7 @@ export const CREATE_TRAINEE_PACKAGES = `
   CREATE TABLE IF NOT EXISTS trainee_packages (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     trainee_id      INTEGER NOT NULL REFERENCES trainees(id),
+    series_id       INTEGER REFERENCES class_series(id) ON DELETE SET NULL,
     month           TEXT NOT NULL,
     total_sessions  INTEGER NOT NULL DEFAULT 12,
     used_sessions   INTEGER NOT NULL DEFAULT 0,
@@ -124,9 +125,14 @@ export const CREATE_TRAINEE_PACKAGES = `
     status          TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','paid')),
     paid_date       TEXT,
     notes           TEXT,
-    created_at      TEXT NOT NULL,
-    UNIQUE(trainee_id, month)
+    created_at      TEXT NOT NULL
   );
+`;
+
+export const CREATE_TRAINEE_PACKAGES_PENDING_INDEX = `
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_trainee_packages_pending_month
+  ON trainee_packages(trainee_id, month)
+  WHERE status = 'pending';
 `;
 
 export const CREATE_SETTINGS = `
@@ -147,6 +153,7 @@ export const ALL_TABLES = [
   CREATE_SESSION_TRAINEES,
   CREATE_MANAGER_PAYMENTS,
   CREATE_TRAINEE_PACKAGES,
+  CREATE_TRAINEE_PACKAGES_PENDING_INDEX,
   CREATE_SETTINGS,
 ];
 

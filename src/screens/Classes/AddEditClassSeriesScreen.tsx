@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, KeyboardAvoidingView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import ThemedDatePickerModal from '../../components/common/ThemedDatePickerModal';
 import ThemedTimePickerModal from '../../components/common/ThemedTimePickerModal';
 import PickerModal from '../../components/common/PickerModal';
@@ -21,7 +21,7 @@ import { getAllClassTypes } from '../../database/repositories/classTypeRepositor
 import { getAllManagers } from '../../database/repositories/managerRepository';
 import { getAllTrainees } from '../../database/repositories/traineeRepository';
 import { getAllCenters } from '../../database/repositories/centerRepository';
-import { getActivePackageForTrainee } from '../../database/repositories/paymentRepository';
+import { createTraineePackage, getActivePackageForTrainee } from '../../database/repositories/paymentRepository';
 import { scheduleUpcomingNotifications } from '../../notifications/scheduler';
 import {
   createClassSeries,
@@ -35,12 +35,13 @@ import {
   createSessionsBatch,
   deleteUpcomingSessionsForSeries,
 } from '../../database/repositories/classSessionRepository';
-import { generateSessionDates } from '../../utils/dateUtils';
+import { addDays, generateSessionDates, todayISO } from '../../utils/dateUtils';
 import { DEFAULT_DURATION_MINUTES } from '../../constants';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import LoadingOverlay from '../../components/common/LoadingOverlay';
 import GradientButton from '../../components/common/GradientButton';
 import AppButton from '../../components/common/AppButton';
+import AppModal from '../../components/common/AppModal';
 
 type Nav = StackNavigationProp<RootStackParamList, 'AddEditClassSeries'>;
 type Route = RouteProp<RootStackParamList, 'AddEditClassSeries'>;
@@ -59,14 +60,54 @@ function ErrorText({ msg }: { msg: string }) {
   return <Text variant="bodySmall" style={{ color: Brand.pink, marginTop: Spacing.xs }}>{msg}</Text>;
 }
 
+function packageStartDate(month: string): string {
+  const firstOfMonth = `${month}-01`;
+  const today = todayISO();
+  return firstOfMonth < today ? today : firstOfMonth;
+}
+
+function formatPackageMonth(month: string): string {
+  return new Date(`${month}-15T00:00:00`).toLocaleDateString('en-IN', {
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
+function generateSessionDatesForCount(
+  startDate: string,
+  recurrenceType: RecurrenceType,
+  recurrenceDays: number[],
+  count: number,
+  endDate?: string
+): string[] {
+  const dates: string[] = [];
+  let current = startDate < todayISO() ? todayISO() : startDate;
+
+  while (dates.length < count && (!endDate || current <= endDate)) {
+    const dayOfWeek = new Date(`${current}T00:00:00`).getDay();
+    const matchesSchedule =
+      recurrenceType === 'daily' || recurrenceDays.includes(dayOfWeek);
+
+    if (matchesSchedule) {
+      dates.push(current);
+    }
+
+    current = addDays(current, 1);
+  }
+
+  return dates;
+}
+
 export default function AddEditClassSeriesScreen() {
   const { accentPalette } = useAppTheme();
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const insets = useSafeAreaInsets();
   const didInitialFocus = useRef(false);
-  const { seriesId } = route.params ?? {};
+  const allowPrefillLeave = useRef(false);
+  const { seriesId, prefillPackage } = route.params ?? {};
   const isEdit = !!seriesId;
+  const plannedSessionCount = !isEdit ? prefillPackage?.totalSessions : undefined;
 
   const [classTypes, setClassTypes] = useState<ClassType[]>([]);
   const [managers, setManagers] = useState<Manager[]>([]);
@@ -96,6 +137,7 @@ export default function AddEditClassSeriesScreen() {
   const [traineePickerVisible, setTraineePickerVisible] = useState(false);
   const [centerPickerVisible, setCenterPickerVisible] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [modalError, setModalError] = useState<{ title: string; message: string } | null>(null);
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -116,7 +158,7 @@ export default function AddEditClassSeriesScreen() {
 
   const loadData = useCallback(async () => {
     try {
-      const { types } = await loadPickerData();
+      const { types, traineeList } = await loadPickerData();
 
       if (seriesId) {
         navigation.setOptions({ title: 'Edit Class Series' });
@@ -142,13 +184,27 @@ export default function AddEditClassSeriesScreen() {
           setSelectedTraineeIds(linkedTrainees.map((t) => t.id));
         }
       } else {
-        navigation.setOptions({ title: 'New Class Series' });
+        navigation.setOptions({ title: prefillPackage ? 'Schedule Package' : 'New Class Series' });
         if (types.length > 0) setSelectedClassTypeId(types[0].id);
+        if (prefillPackage) {
+          const trainee = traineeList.find((t) => t.id === prefillPackage.traineeId);
+          const initialStartDate = packageStartDate(prefillPackage.month);
+          setTitle(trainee ? `${trainee.name} Training` : 'Personal Training');
+          setSourceType('personal');
+          setSelectedManagerId(null);
+          setSelectedCenterId(null);
+          setSelectedTraineeIds([prefillPackage.traineeId]);
+          setRecurrenceType('weekly');
+          setSelectedDays([new Date(`${initialStartDate}T00:00:00`).getDay()]);
+          setStartDate(initialStartDate);
+          setEndDate('');
+          setNotes(`${formatPackageMonth(prefillPackage.month)} package: ${prefillPackage.totalSessions} sessions`);
+        }
       }
     } catch {
-      Alert.alert('Error', 'Could not load form data. Please go back and try again.');
+      setModalError({ title: 'Error', message: 'Could not load form data. Please go back and try again.' });
     }
-  }, [seriesId, navigation, loadPickerData]);
+  }, [seriesId, prefillPackage, navigation, loadPickerData]);
 
   useEffect(() => {
     loadData();
@@ -160,9 +216,31 @@ export default function AddEditClassSeriesScreen() {
       return;
     }
     loadPickerData().catch(() => {
-      Alert.alert('Error', 'Could not refresh form data. Please go back and try again.');
+      setModalError({ title: 'Error', message: 'Could not refresh form data. Please go back and try again.' });
     });
   }, [loadPickerData]));
+
+  const returnToPaymentsWithNotice = useCallback(() => {
+    allowPrefillLeave.current = true;
+    navigation.navigate('MainTabs', {
+      screen: 'Payments',
+      params: {
+        initialSegment: 'trainees',
+        focusKey: Date.now(),
+        notice: 'Package was not created because scheduling is required.',
+      },
+    });
+  }, [navigation]);
+
+  useEffect(() => {
+    if (!prefillPackage) return undefined;
+
+    return navigation.addListener('beforeRemove', (event) => {
+      if (allowPrefillLeave.current) return;
+      event.preventDefault();
+      returnToPaymentsWithNotice();
+    });
+  }, [navigation, prefillPackage, returnToPaymentsWithNotice]);
 
   function toggleDay(day: number) {
     setSelectedDays((prev) =>
@@ -217,12 +295,93 @@ export default function AddEditClassSeriesScreen() {
         is_active: 1,
       };
 
-      const dates = generateSessionDates(
-        startDate,
-        recurrenceType,
-        recurrenceType === 'daily' ? [] : selectedDays,
-        endDate.trim() || undefined
-      );
+      const recurrenceDaysForSave = recurrenceType === 'daily' ? [] : selectedDays;
+      const trimmedEndDate = endDate.trim() || undefined;
+      const traineeIdsForSave = prefillPackage ? [prefillPackage.traineeId] : selectedTraineeIds;
+      const dates =
+        plannedSessionCount !== undefined
+          ? generateSessionDatesForCount(
+              startDate,
+              recurrenceType,
+              recurrenceDaysForSave,
+              plannedSessionCount,
+              trimmedEndDate
+            )
+          : generateSessionDates(
+              startDate,
+              recurrenceType,
+              recurrenceDaysForSave,
+              trimmedEndDate
+            );
+
+      if (plannedSessionCount !== undefined && dates.length < plannedSessionCount) {
+        setModalError({
+          title: 'Not Enough Sessions',
+          message: `This schedule creates ${dates.length} session${dates.length === 1 ? '' : 's'}. Adjust the days or end date to create ${plannedSessionCount} sessions.`,
+        });
+        return;
+      }
+
+      if (prefillPackage) {
+        const existingPackage = await getActivePackageForTrainee(prefillPackage.traineeId, prefillPackage.month);
+        if (existingPackage) {
+          const traineeName = trainees.find((t) => t.id === prefillPackage.traineeId)?.name ?? 'This trainee';
+          setModalError({
+            title: 'Package Already Exists',
+            message: `${traineeName} already has a pending package for ${formatPackageMonth(prefillPackage.month)}.`,
+          });
+          return;
+        }
+
+        const lastSessionDate = dates[dates.length - 1];
+        if (lastSessionDate && lastSessionDate.slice(0, 7) !== prefillPackage.month) {
+          setModalError({
+            title: 'Schedule Extends Past Package Month',
+            message: `This schedule reaches ${formatPackageMonth(lastSessionDate.slice(0, 7))}. Adjust the days, start date, or end date so all ${prefillPackage.totalSessions} sessions fit within ${formatPackageMonth(prefillPackage.month)}.`,
+          });
+          return;
+        }
+      }
+
+      if (sourceType === 'personal' && traineeIdsForSave.length > 0 && !prefillPackage) {
+        const currentMonth = new Date().toISOString().slice(0, 7);
+        const packages = await Promise.all(
+          traineeIdsForSave.map((tid) => getActivePackageForTrainee(tid, currentMonth))
+        );
+
+        const packagesWithData = packages.filter((p): p is TraineePackage => p !== null);
+        if (packagesWithData.length > 0) {
+          const remainings = packagesWithData.map((p) => p.total_sessions - p.used_sessions);
+          const minRemaining = Math.min(...remainings);
+          if (dates.length > minRemaining) {
+            const minIdx = remainings.indexOf(minRemaining);
+            const minTid = packagesWithData[minIdx].trainee_id;
+            const tname = trainees.find((t) => t.id === minTid)?.name ?? 'A trainee';
+            setModalError({
+              title: 'Session Overflow',
+              message: `This series will create ${dates.length} sessions. ${tname}'s active package covers ${minRemaining} more. Adjust the schedule before saving.`,
+            });
+            return;
+          }
+        }
+
+        const missing = traineeIdsForSave
+          .filter((_, i) => packages[i] === null)
+          .map((tid) => trainees.find((t) => t.id === tid)?.name)
+          .filter((n): n is string => n !== undefined);
+
+        if (missing.length > 0) {
+          const monthDisplay = new Date(`${currentMonth}-15T00:00:00`).toLocaleDateString('en-IN', {
+            month: 'long',
+            year: 'numeric',
+          });
+          setModalError({
+            title: 'No Package Found',
+            message: `No package for ${monthDisplay}: ${missing.join(', ')}. Add packages from the Trainees screen before saving this series.`,
+          });
+          return;
+        }
+      }
 
       let savedSeriesId: number;
       if (isEdit) {
@@ -237,57 +396,34 @@ export default function AddEditClassSeriesScreen() {
       }
 
       if (sourceType === 'personal') {
-        await setTraineesForSeries(savedSeriesId, selectedTraineeIds);
+        await setTraineesForSeries(savedSeriesId, traineeIdsForSave);
+      }
+
+      if (prefillPackage) {
+        await createTraineePackage(
+          prefillPackage.traineeId,
+          prefillPackage.month,
+          prefillPackage.totalSessions,
+          prefillPackage.amount,
+          prefillPackage.notes,
+          savedSeriesId
+        );
       }
 
       await scheduleUpcomingNotifications();
 
-      if (sourceType === 'personal' && selectedTraineeIds.length > 0) {
-        const currentMonth = new Date().toISOString().slice(0, 7);
-        const packages = await Promise.all(
-          selectedTraineeIds.map((tid) => getActivePackageForTrainee(tid, currentMonth))
-        );
-
-        const alerts: string[] = [];
-
-        const packagesWithData = packages.filter((p): p is TraineePackage => p !== null);
-        if (packagesWithData.length > 0) {
-          const remainings = packagesWithData.map((p) => p.total_sessions - p.used_sessions);
-          const minRemaining = Math.min(...remainings);
-          if (dates.length > minRemaining) {
-            const minIdx = remainings.indexOf(minRemaining);
-            const minTid = packagesWithData[minIdx].trainee_id;
-            const tname = trainees.find((t) => t.id === minTid)?.name ?? 'A trainee';
-            alerts.push(
-              `Session overflow: This series will create ${dates.length} sessions. ${tname}'s active package covers ${minRemaining} more. Extra sessions can be skipped from the calendar.`
-            );
-          }
-        }
-
-        const missing = selectedTraineeIds
-          .filter((_, i) => packages[i] === null)
-          .map((tid) => trainees.find((t) => t.id === tid)?.name)
-          .filter((n): n is string => n !== undefined);
-
-        if (missing.length > 0) {
-          const monthDisplay = new Date(currentMonth + '-15').toLocaleDateString('en-IN', {
-            month: 'long',
-            year: 'numeric',
-          });
-          alerts.push(
-            `No package for ${monthDisplay}: ${missing.join(', ')}. Add packages from the Trainees screen.`
-          );
-        }
-
-        if (alerts.length > 0) {
-          Alert.alert('Heads Up', alerts.join('\n\n'), [
-            { text: 'OK', onPress: () => navigation.goBack() },
-          ]);
-          return;
-        }
+      allowPrefillLeave.current = true;
+      if (prefillPackage) {
+        navigation.navigate('MainTabs', {
+          screen: 'Payments',
+          params: {
+            initialSegment: 'trainees',
+            focusKey: Date.now(),
+          },
+        });
+      } else {
+        navigation.goBack();
       }
-
-      navigation.goBack();
     } finally {
       setSaving(false);
     }
@@ -299,7 +435,7 @@ export default function AddEditClassSeriesScreen() {
       await deactivateClassSeries(seriesId);
       navigation.goBack();
     } catch {
-      Alert.alert('Error', 'Could not end series. Please try again.');
+      setModalError({ title: 'Error', message: 'Could not end series. Please try again.' });
     }
   }
 
@@ -355,6 +491,20 @@ export default function AddEditClassSeriesScreen() {
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
         >
+          {prefillPackage && (
+            <>
+              <SectionHeader label="Package Schedule" />
+              <View style={styles.card}>
+                <Text style={styles.packageScheduleTitle}>
+                  {prefillPackage.totalSessions} sessions for {formatPackageMonth(prefillPackage.month)}
+                </Text>
+                <Text style={styles.packageScheduleText}>
+                  Choose the recurring days and time. Saving will create exactly {prefillPackage.totalSessions} calendar sessions for this trainee.
+                </Text>
+              </View>
+            </>
+          )}
+
           {/* Class Info section */}
           <SectionHeader label="Class Info" />
           <View style={styles.card}>
@@ -381,14 +531,20 @@ export default function AddEditClassSeriesScreen() {
 
             <View style={styles.fieldGap} />
             <Text variant="labelMedium" style={styles.fieldLabel}>Source</Text>
-            <ThemedSegmentedButtons
-              value={sourceType}
-              onValueChange={(v: string) => setSourceType(v as SourceType)}
-              buttons={[
-                { value: 'manager', label: 'Manager' },
-                { value: 'personal', label: 'Personal' },
-              ]}
-            />
+            {prefillPackage ? (
+              <View style={styles.lockedField}>
+                <Text style={styles.lockedFieldText}>Personal</Text>
+              </View>
+            ) : (
+              <ThemedSegmentedButtons
+                value={sourceType}
+                onValueChange={(v: string) => setSourceType(v as SourceType)}
+                buttons={[
+                  { value: 'manager', label: 'Manager' },
+                  { value: 'personal', label: 'Personal' },
+                ]}
+              />
+            )}
 
             {sourceType === 'manager' && (
               <>
@@ -416,15 +572,25 @@ export default function AddEditClassSeriesScreen() {
             {sourceType === 'personal' && (
               <>
                 <View style={styles.fieldGap} />
-                <Text variant="labelMedium" style={styles.fieldLabel}>Trainees (optional)</Text>
-                <PickerField
-                  placeholder="Select trainees..."
-                  value={selectedTraineeIds.length === 0 ? undefined
-                    : selectedTraineeIds.length === 1
-                    ? trainees.find((t) => t.id === selectedTraineeIds[0])?.name ?? '1 trainee'
-                    : `${selectedTraineeIds.length} trainees selected`}
-                  onPress={() => setTraineePickerVisible(true)}
-                />
+                <Text variant="labelMedium" style={styles.fieldLabel}>
+                  {prefillPackage ? 'Trainee' : 'Trainees (optional)'}
+                </Text>
+                {prefillPackage ? (
+                  <View style={styles.lockedField}>
+                    <Text style={styles.lockedFieldText}>
+                      {trainees.find((t) => t.id === prefillPackage.traineeId)?.name ?? 'Selected trainee'}
+                    </Text>
+                  </View>
+                ) : (
+                  <PickerField
+                    placeholder="Select trainees..."
+                    value={selectedTraineeIds.length === 0 ? undefined
+                      : selectedTraineeIds.length === 1
+                      ? trainees.find((t) => t.id === selectedTraineeIds[0])?.name ?? '1 trainee'
+                      : `${selectedTraineeIds.length} trainees selected`}
+                    onPress={() => setTraineePickerVisible(true)}
+                  />
+                )}
               </>
             )}
           </View>
@@ -569,7 +735,7 @@ export default function AddEditClassSeriesScreen() {
           <AppButton
             variant="ghost"
             label="Cancel"
-            onPress={() => navigation.goBack()}
+            onPress={prefillPackage ? returnToPaymentsWithNotice : () => navigation.goBack()}
             style={styles.cancelBtn}
           />
           <GradientButton
@@ -671,6 +837,17 @@ export default function AddEditClassSeriesScreen() {
         onConfirm={handleEndSeries}
         onDismiss={() => setEndSeriesVisible(false)}
       />
+
+      <AppModal
+        visible={modalError !== null}
+        onDismiss={() => setModalError(null)}
+        title={modalError?.title ?? 'Error'}
+        cancelLabel="OK"
+      >
+        <Text variant="bodyMedium" style={{ color: Brand.textSecondary }}>
+          {modalError?.message ?? ''}
+        </Text>
+      </AppModal>
     </>
   );
 }
@@ -684,6 +861,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Brand.borderSubtle,
     padding: Spacing.lg,
+  },
+  packageScheduleTitle: {
+    ...Typography.body,
+    color: Brand.textPrimary,
+    marginBottom: Spacing.xs,
+  },
+  packageScheduleText: {
+    ...Typography.bodySm,
+    color: Brand.textSecondary,
   },
   fieldLabel: { color: Brand.textSecondary, marginBottom: Spacing.xs },
   fieldGap: { height: Spacing.sm },
@@ -706,6 +892,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   pickerError: { borderColor: Brand.pink },
+  lockedField: {
+    borderWidth: 1,
+    borderRadius: Radius.md,
+    borderColor: Brand.borderSubtle,
+    minHeight: Layout.INPUT_HEIGHT,
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.lg,
+    backgroundColor: Brand.surfaceElevated,
+  },
+  lockedFieldText: { ...Typography.body, color: Brand.textPrimary },
   endDateRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   twoColRow: { flexDirection: 'row', gap: Spacing.md },
   twoColCell: { flex: 1 },
