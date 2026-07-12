@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { Divider, Text } from 'react-native-paper';
 import SectionHeader from '../../components/common/SectionHeader';
 import GradientFAB from '../../components/common/GradientFAB';
@@ -25,6 +25,7 @@ import { formatDisplayDate, formatDisplayTime } from '../../utils/dateUtils';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import HelpSheet from '../../components/common/HelpSheet';
 import AppIconButton from '../../components/common/AppIconButton';
+import InfoDialog from '../../components/common/InfoDialog';
 import { HELP } from '../../constants/helpContent';
 
 type Nav = StackNavigationProp<RootStackParamList, 'ManagerDetail'>;
@@ -42,6 +43,7 @@ export default function ManagerDetailScreen() {
   const [payments, setPayments] = useState<EnrichedManagerPayment[]>([]);
   const [upcomingCount, setUpcomingCount] = useState(0);
   const [deleteVisible, setDeleteVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [helpVisible, setHelpVisible] = useState(false);
 
   const load = useCallback(async () => {
@@ -79,7 +81,7 @@ export default function ManagerDetailScreen() {
       await softDeleteManager(managerId);
       navigation.goBack();
     } catch {
-      Alert.alert('Error', 'Could not remove manager. Please try again.');
+      setErrorMessage('Could not remove manager. Please try again.');
     }
   }
 
@@ -186,6 +188,13 @@ export default function ManagerDetailScreen() {
         />
 
         <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP.managerDetail} />
+
+        <InfoDialog
+          visible={errorMessage.length > 0}
+          title="Error"
+          message={errorMessage}
+          onDismiss={() => setErrorMessage('')}
+        />
       </ScrollView>
 
       <GradientFAB

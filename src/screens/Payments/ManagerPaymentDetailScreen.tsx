@@ -1,5 +1,5 @@
 import React, { useCallback, useLayoutEffect, useState } from 'react';
-import { Alert, FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useFocusEffect, useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -14,6 +14,7 @@ import { formatCurrency } from '../../utils/currencyUtils';
 import { formatDisplayDate, formatDisplayTime, todayISO } from '../../utils/dateUtils';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import EmptyState from '../../components/common/EmptyState';
+import InfoDialog from '../../components/common/InfoDialog';
 import { schedulePendingPaymentNotification } from '../../notifications/scheduler';
 import Constants from 'expo-constants';
 import { RootStackParamList } from '../../navigation/types';
@@ -32,6 +33,7 @@ export default function ManagerPaymentDetailScreen() {
 
   const [payments, setPayments] = useState<EnrichedManagerPayment[]>([]);
   const [confirmPayment, setConfirmPayment] = useState<EnrichedManagerPayment | null>(null);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const pendingTotal = payments.filter(p => p.status === 'pending').reduce((s, p) => s + p.amount, 0);
   const paidTotal = payments.filter(p => p.status === 'paid').reduce((s, p) => s + p.amount, 0);
@@ -61,7 +63,7 @@ export default function ManagerPaymentDetailScreen() {
       if (!isExpoGo) schedulePendingPaymentNotification().catch(() => {});
     } catch {
       setConfirmPayment(null);
-      Alert.alert('Error', 'Could not mark payment as paid. Please try again.');
+      setErrorMessage('Could not mark payment as paid. Please try again.');
     }
   };
 
@@ -151,6 +153,13 @@ export default function ManagerPaymentDetailScreen() {
         destructive={false}
         onConfirm={handleMarkPaid}
         onDismiss={() => setConfirmPayment(null)}
+      />
+
+      <InfoDialog
+        visible={errorMessage.length > 0}
+        title="Error"
+        message={errorMessage}
+        onDismiss={() => setErrorMessage('')}
       />
     </View>
   );

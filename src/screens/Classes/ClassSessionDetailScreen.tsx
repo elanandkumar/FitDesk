@@ -1,5 +1,5 @@
 import React, { useCallback, useLayoutEffect, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ActivityIndicator,
@@ -41,6 +41,7 @@ import HelpSheet from '../../components/common/HelpSheet';
 import AppButton from '../../components/common/AppButton';
 import AppModal from '../../components/common/AppModal';
 import AppIconButton from '../../components/common/AppIconButton';
+import InfoDialog from '../../components/common/InfoDialog';
 import { schedulePendingPaymentNotification } from '../../notifications/scheduler';
 import Constants from 'expo-constants';
 import { HELP } from '../../constants/helpContent';
@@ -78,6 +79,7 @@ export default function ClassSessionDetailScreen() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const [showEditModal, setShowEditModal] = useState(false);
+  const [infoDialog, setInfoDialog] = useState<{ title: string; message: string } | null>(null);
   const [editDate, setEditDate] = useState('');
   const [editTime, setEditTime] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -145,10 +147,10 @@ export default function ClassSessionDetailScreen() {
   function openCompleteDialog() {
     if (!session) return;
     if (isSessionInFuture(session.session_date, session.class_time)) {
-      Alert.alert(
-        'Cannot complete future session',
-        `This session is scheduled for ${formatDisplayDate(session.session_date)} at ${formatDisplayTime(session.class_time)}. You can mark it complete after the class time.`
-      );
+      setInfoDialog({
+        title: 'Cannot complete future session',
+        message: `This session is scheduled for ${formatDisplayDate(session.session_date)} at ${formatDisplayTime(session.class_time)}. You can mark it complete after the class time.`,
+      });
       return;
     }
     setCompleteNotes(notes);
@@ -159,10 +161,10 @@ export default function ClassSessionDetailScreen() {
   async function handleComplete() {
     if (!session) return;
     if (isSessionInFuture(session.session_date, session.class_time)) {
-      Alert.alert(
-        'Cannot complete future session',
-        `This session is scheduled for ${formatDisplayDate(session.session_date)} at ${formatDisplayTime(session.class_time)}. You can mark it complete after the class time.`
-      );
+      setInfoDialog({
+        title: 'Cannot complete future session',
+        message: `This session is scheduled for ${formatDisplayDate(session.session_date)} at ${formatDisplayTime(session.class_time)}. You can mark it complete after the class time.`,
+      });
       return;
     }
     setSaving(true);
@@ -189,10 +191,10 @@ export default function ClassSessionDetailScreen() {
         schedulePendingPaymentNotification().catch(() => {});
       }
     } catch (err) {
-      Alert.alert(
-        'Could not complete session',
-        err instanceof Error ? err.message : 'Please try again.'
-      );
+      setInfoDialog({
+        title: 'Could not complete session',
+        message: err instanceof Error ? err.message : 'Please try again.',
+      });
     } finally {
       setSaving(false);
     }
@@ -463,6 +465,13 @@ export default function ClassSessionDetailScreen() {
       />
 
       <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP.classSessionDetail} />
+
+      <InfoDialog
+        visible={infoDialog !== null}
+        title={infoDialog?.title ?? ''}
+        message={infoDialog?.message ?? ''}
+        onDismiss={() => setInfoDialog(null)}
+      />
 
       {/* Edit date/time modal */}
       <AppModal

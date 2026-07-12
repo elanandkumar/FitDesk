@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Divider, Text } from 'react-native-paper';
 import SectionHeader from '../../components/common/SectionHeader';
 import GradientFAB from '../../components/common/GradientFAB';
@@ -23,6 +23,7 @@ import AppButton from '../../components/common/AppButton';
 import HelpSheet from '../../components/common/HelpSheet';
 import AppIconButton from '../../components/common/AppIconButton';
 import SessionCard from '../../components/common/SessionCard';
+import InfoDialog from '../../components/common/InfoDialog';
 import { HELP } from '../../constants/helpContent';
 
 type Nav = StackNavigationProp<RootStackParamList, 'TraineeDetail'>;
@@ -50,6 +51,7 @@ export default function TraineeDetailScreen() {
   const [activeTab, setActiveTab] = useState<'packages' | 'sessions'>('packages');
   const [upcomingCount, setUpcomingCount] = useState(0);
   const [deleteVisible, setDeleteVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [helpVisible, setHelpVisible] = useState(false);
 
   const load = useCallback(async () => {
@@ -98,7 +100,7 @@ export default function TraineeDetailScreen() {
       await softDeleteTrainee(traineeId);
       navigation.goBack();
     } catch {
-      Alert.alert('Error', 'Could not remove trainee. Please try again.');
+      setErrorMessage('Could not remove trainee. Please try again.');
     }
   }
 
@@ -263,6 +265,13 @@ export default function TraineeDetailScreen() {
         />
 
         <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP.traineeDetail} />
+
+        <InfoDialog
+          visible={errorMessage.length > 0}
+          title="Error"
+          message={errorMessage}
+          onDismiss={() => setErrorMessage('')}
+        />
       </ScrollView>
 
       <GradientFAB

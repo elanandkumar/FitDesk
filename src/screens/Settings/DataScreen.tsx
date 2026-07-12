@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Text } from 'react-native-paper';
 import { useAppTheme } from '../../theme';
 import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
 import AppButton from '../../components/common/AppButton';
 import AppIcon from '../../components/common/AppIcon';
+import AppModal from '../../components/common/AppModal';
+import InfoDialog from '../../components/common/InfoDialog';
 import { exportData, pickAndImportData } from '../../utils/exportUtils';
 import { useBackup } from '../../context/BackupContext';
 
@@ -12,6 +14,8 @@ export default function DataScreen() {
   const { accentPalette } = useAppTheme();
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [confirmImportVisible, setConfirmImportVisible] = useState(false);
+  const [infoDialog, setInfoDialog] = useState<{ title: string; message: string } | null>(null);
   const { refresh: refreshBackup } = useBackup();
 
   async function handleExport() {
@@ -20,36 +24,33 @@ export default function DataScreen() {
       await exportData();
       await refreshBackup();
     } catch (err) {
-      Alert.alert('Export failed', err instanceof Error ? err.message : 'Unknown error');
+      setInfoDialog({
+        title: 'Export failed',
+        message: err instanceof Error ? err.message : 'Unknown error',
+      });
     } finally {
       setExporting(false);
     }
   }
 
-  function handleImport() {
-    Alert.alert(
-      'Import Backup',
-      'This will replace ALL current data with the backup. This cannot be undone. Continue?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Replace All Data',
-          style: 'destructive',
-          onPress: async () => {
-            setImporting(true);
-            try {
-              await pickAndImportData();
-              await refreshBackup();
-              Alert.alert('Import complete', 'All data restored from backup.');
-            } catch (err) {
-              Alert.alert('Import failed', err instanceof Error ? err.message : 'Unknown error');
-            } finally {
-              setImporting(false);
-            }
-          },
-        },
-      ]
-    );
+  async function confirmImport() {
+    setConfirmImportVisible(false);
+    setImporting(true);
+    try {
+      await pickAndImportData();
+      await refreshBackup();
+      setInfoDialog({
+        title: 'Import complete',
+        message: 'All data restored from backup.',
+      });
+    } catch (err) {
+      setInfoDialog({
+        title: 'Import failed',
+        message: err instanceof Error ? err.message : 'Unknown error',
+      });
+    } finally {
+      setImporting(false);
+    }
   }
 
   return (
@@ -86,11 +87,31 @@ export default function DataScreen() {
           <AppButton
             variant="danger"
             label="Import Backup"
-            onPress={handleImport}
+            onPress={() => setConfirmImportVisible(true)}
             style={styles.importBtn}
           />
         )}
       </View>
+
+      <AppModal
+        visible={confirmImportVisible}
+        onDismiss={() => setConfirmImportVisible(false)}
+        title="Import Backup"
+        confirmLabel="Replace All Data"
+        onConfirm={confirmImport}
+        destructive
+      >
+        <Text variant="bodyMedium" style={{ color: Brand.textSecondary }}>
+          This will replace ALL current data with the backup. This cannot be undone. Continue?
+        </Text>
+      </AppModal>
+
+      <InfoDialog
+        visible={infoDialog !== null}
+        title={infoDialog?.title ?? ''}
+        message={infoDialog?.message ?? ''}
+        onDismiss={() => setInfoDialog(null)}
+      />
     </ScrollView>
   );
 }
