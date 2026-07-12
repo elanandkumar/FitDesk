@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
-import { Alert, FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Chip, Text } from 'react-native-paper';
+import { Alert, FlatList, Modal, Pressable, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text } from 'react-native-paper';
 import GradientFAB from '../../components/common/GradientFAB';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -18,7 +18,11 @@ import { RootStackParamList } from '../../navigation/types';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import EmptyState from '../../components/common/EmptyState';
 import AppIcon from '../../components/common/AppIcon';
+import AppIconButton from '../../components/common/AppIconButton';
 type Nav = StackNavigationProp<RootStackParamList>;
+
+type PackageStatusFilter = 'pending' | 'all';
+type MonthSortOrder = 'latest' | 'oldest';
 
 type Section = {
   trainee: string;
@@ -28,7 +32,7 @@ type Section = {
   data: EnrichedTraineePackage[];
 };
 
-function groupByTrainee(packages: EnrichedTraineePackage[]): Section[] {
+function groupByTrainee(packages: EnrichedTraineePackage[], monthSort: MonthSortOrder): Section[] {
   const map = new Map<number, Section>();
   for (const p of packages) {
     if (!map.has(p.trainee_id)) {
@@ -45,9 +49,16 @@ function groupByTrainee(packages: EnrichedTraineePackage[]): Section[] {
     if (p.status === 'pending') sec.pendingTotal += p.amount;
     else sec.paidTotal += p.amount;
   }
-  return Array.from(map.values()).sort((a, b) =>
-    b.pendingTotal !== a.pendingTotal ? b.pendingTotal - a.pendingTotal : a.trainee.localeCompare(b.trainee)
-  );
+  return Array.from(map.values())
+    .map((section) => ({
+      ...section,
+      data: [...section.data].sort((a, b) =>
+        monthSort === 'latest' ? b.month.localeCompare(a.month) : a.month.localeCompare(b.month)
+      ),
+    }))
+    .sort((a, b) =>
+      b.pendingTotal !== a.pendingTotal ? b.pendingTotal - a.pendingTotal : a.trainee.localeCompare(b.trainee)
+    );
 }
 
 function formatMonth(ym: string): string {
@@ -62,18 +73,31 @@ export default function TraineePackagesScreen() {
   const navigation = useNavigation<Nav>();
   const [sections, setSections] = useState<Section[]>([]);
   const [allPackages, setAllPackages] = useState<EnrichedTraineePackage[]>([]);
-  const [pendingOnly, setPendingOnly] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<PackageStatusFilter>('pending');
+  const [monthSort, setMonthSort] = useState<MonthSortOrder>('latest');
+  const [filtersVisible, setFiltersVisible] = useState(false);
   const [confirmPkg, setConfirmPkg] = useState<EnrichedTraineePackage | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const pendingOnly = statusFilter === 'pending';
+  const filtersAreDefault = statusFilter === 'pending' && monthSort === 'latest';
+
+  const resetFilters = () => {
+    setStatusFilter('pending');
+    setMonthSort('latest');
+  };
 
   const load = useCallback(async () => {
+    setIsLoading(true);
     try {
       const pkgs = await getAllEnrichedTraineePackages(pendingOnly);
       setAllPackages(pkgs);
-      setSections(groupByTrainee(pkgs));
+      setSections(groupByTrainee(pkgs, monthSort));
     } catch {
       // list stays empty on DB error
+    } finally {
+      setIsLoading(false);
     }
-  }, [pendingOnly]);
+  }, [monthSort, pendingOnly]);
 
   const totalPending = allPackages.filter(p => p.status === 'pending').reduce((s, p) => s + p.amount, 0);
   const totalPaid = allPackages.filter(p => p.status === 'paid').reduce((s, p) => s + p.amount, 0);
@@ -111,7 +135,12 @@ export default function TraineePackagesScreen() {
         <View style={styles.packageAmountRow}>
           {item.status === 'pending' ? (
             <>
-              <View style={styles.packageStatusColumn} />
+              <View style={styles.packageStatusColumn}>
+                <Text style={styles.amountLabel}>Paid</Text>
+                <Text style={[styles.amount, styles.zeroAmount]}>
+                  {formatCurrency(0)}
+                </Text>
+              </View>
               <View style={styles.packageStatusColumn}>
                 <Text style={styles.amountLabel}>Pending</Text>
                 <Text style={[styles.amount, styles.pendingAmount]}>
@@ -127,7 +156,12 @@ export default function TraineePackagesScreen() {
                   {formatCurrency(item.amount)}
                 </Text>
               </View>
-              <View style={styles.packageStatusColumn} />
+              <View style={styles.packageStatusColumn}>
+                <Text style={styles.amountLabel}>Pending</Text>
+                <Text style={[styles.amount, styles.zeroAmount]}>
+                  {formatCurrency(0)}
+                </Text>
+              </View>
             </>
           )}
         </View>
@@ -160,18 +194,18 @@ export default function TraineePackagesScreen() {
           </Text>
         </View>
         <View style={styles.amountRow}>
-          {item.paidTotal > 0 && (
-            <View style={styles.amountStatus}>
-              <Text style={styles.amountLabel}>Paid</Text>
-              <Text style={[styles.cardAmount, styles.paidAmount]}>{formatCurrency(item.paidTotal)}</Text>
-            </View>
-          )}
-          {item.pendingTotal > 0 && (
-            <View style={styles.amountStatus}>
-              <Text style={styles.amountLabel}>Pending</Text>
-              <Text style={[styles.cardAmount, styles.pendingAmount]}>{formatCurrency(item.pendingTotal)}</Text>
-            </View>
-          )}
+          <View style={styles.amountStatus}>
+            <Text style={styles.amountLabel}>Paid</Text>
+            <Text style={[styles.cardAmount, item.paidTotal > 0 ? styles.paidAmount : styles.zeroAmount]}>
+              {formatCurrency(item.paidTotal)}
+            </Text>
+          </View>
+          <View style={styles.amountStatus}>
+            <Text style={styles.amountLabel}>Pending</Text>
+            <Text style={[styles.cardAmount, item.pendingTotal > 0 ? styles.pendingAmount : styles.zeroAmount]}>
+              {formatCurrency(item.pendingTotal)}
+            </Text>
+          </View>
         </View>
       </View>
       <View style={styles.packageList}>
@@ -180,25 +214,47 @@ export default function TraineePackagesScreen() {
     </View>
   );
 
+  const renderSheetTitle = (label: string) => (
+    <View style={styles.sheetSectionTitleRow}>
+      <View style={[styles.sheetSectionAccent, { backgroundColor: accentPalette.main }]} />
+      <Text style={styles.sheetSectionTitle}>{label}</Text>
+    </View>
+  );
+
+  const renderFilterChip = (
+    label: string,
+    selected: boolean,
+    onPress: () => void
+  ) => (
+    <TouchableOpacity
+      activeOpacity={0.72}
+      onPress={onPress}
+      style={[
+        styles.sheetChip,
+        selected && { backgroundColor: accentPalette.main, borderColor: accentPalette.main },
+      ]}
+    >
+      <Text
+        numberOfLines={1}
+        style={[styles.sheetChipText, selected && styles.sheetChipTextSelected]}
+      >
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
+
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={styles.filterRow}>
-        <Chip
-          selected={pendingOnly}
-          onPress={() => setPendingOnly(true)}
-          style={[styles.filterChip, pendingOnly && { backgroundColor: accentPalette.main }]}
-          textStyle={{ color: pendingOnly ? Brand.textPrimary : Brand.textSecondary }}
-        >
-          Pending only
-        </Chip>
-        <Chip
-          selected={!pendingOnly}
-          onPress={() => setPendingOnly(false)}
-          style={[styles.filterChip, !pendingOnly && { backgroundColor: accentPalette.main }]}
-          textStyle={{ color: !pendingOnly ? Brand.textPrimary : Brand.textSecondary }}
-        >
-          All payments
-        </Chip>
+        <Text style={styles.filterSummary}>
+          {pendingOnly ? 'Pending only' : 'All payments'} · {monthSort === 'latest' ? 'Latest first' : 'Oldest first'}
+        </Text>
+        <AppIconButton
+          icon="sliders"
+          iconColor={accentPalette.textAccent}
+          onPress={() => setFiltersVisible(true)}
+          style={[styles.filterButton, { borderColor: accentPalette.main }]}
+        />
       </View>
 
       {allPackages.length > 0 && (
@@ -206,18 +262,22 @@ export default function TraineePackagesScreen() {
           {pendingOnly ? (
             <View style={styles.summaryItem}>
               <Text style={styles.summaryLabel}>Pending</Text>
-              <Text style={[styles.summaryAmount, { color: Brand.orange }]}>{formatCurrency(totalPending)}</Text>
+              <Text style={[styles.summaryAmount, styles.pendingAmount]}>{formatCurrency(totalPending)}</Text>
             </View>
           ) : (
             <>
               <View style={styles.summaryItem}>
                 <Text style={styles.summaryLabel}>Paid</Text>
-                <Text style={[styles.summaryAmount, { color: Brand.pink }]}>{formatCurrency(totalPaid)}</Text>
+                <Text style={[styles.summaryAmount, totalPaid > 0 ? styles.paidAmount : styles.zeroAmount]}>
+                  {formatCurrency(totalPaid)}
+                </Text>
               </View>
               <View style={styles.summarySep} />
               <View style={styles.summaryItem}>
                 <Text style={styles.summaryLabel}>Pending</Text>
-                <Text style={[styles.summaryAmount, { color: Brand.orange }]}>{formatCurrency(totalPending)}</Text>
+                <Text style={[styles.summaryAmount, totalPending > 0 ? styles.pendingAmount : styles.zeroAmount]}>
+                  {formatCurrency(totalPending)}
+                </Text>
               </View>
             </>
           )}
@@ -228,7 +288,7 @@ export default function TraineePackagesScreen() {
         data={sections}
         keyExtractor={(item) => String(item.traineeId)}
         renderItem={renderItem}
-        ListEmptyComponent={
+        ListEmptyComponent={isLoading ? null : (
           <EmptyState
             icon="package"
             title={pendingOnly ? 'No pending packages' : 'No packages yet'}
@@ -238,8 +298,8 @@ export default function TraineePackagesScreen() {
                 : 'Add a monthly session package for a trainee.'
             }
           />
-        }
-        contentContainerStyle={sections.length === 0 ? styles.emptyContainer : styles.listContent}
+        )}
+        contentContainerStyle={sections.length === 0 && !isLoading ? styles.emptyContainer : styles.listContent}
       />
 
       <GradientFAB
@@ -262,14 +322,70 @@ export default function TraineePackagesScreen() {
         onDismiss={() => setConfirmPkg(null)}
       />
 
+      <Modal
+        visible={filtersVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setFiltersVisible(false)}
+        statusBarTranslucent
+      >
+        <Pressable style={styles.sheetRoot} onPress={() => setFiltersVisible(false)}>
+          <Pressable
+            style={[styles.sheet, { paddingBottom: insets.bottom || Spacing.lg }]}
+            onPress={(event) => event.stopPropagation()}
+          >
+            <View style={styles.sheetHandle} />
+            <View style={styles.sheetHeader}>
+              <Text style={styles.sheetTitle}>Filters</Text>
+              <TouchableOpacity
+                accessibilityRole="button"
+                disabled={filtersAreDefault}
+                hitSlop={8}
+                onPress={resetFilters}
+                style={filtersAreDefault && styles.sheetResetDisabled}
+              >
+                <Text style={[styles.sheetResetText, { color: accentPalette.textAccent }]}>Reset</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.sheetSection}>
+              {renderSheetTitle('Payment status')}
+              <View style={styles.sheetChipRow}>
+                {renderFilterChip('Pending only', statusFilter === 'pending', () => setStatusFilter('pending'))}
+                {renderFilterChip('All payments', statusFilter === 'all', () => setStatusFilter('all'))}
+              </View>
+            </View>
+
+            <View style={styles.sheetSection}>
+              {renderSheetTitle('Sort month')}
+              <View style={styles.sheetChipRow}>
+                {renderFilterChip('Latest first', monthSort === 'latest', () => setMonthSort('latest'))}
+                {renderFilterChip('Oldest first', monthSort === 'oldest', () => setMonthSort('oldest'))}
+              </View>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  filterRow: { flexDirection: 'row', gap: Spacing.sm, padding: Spacing.md },
-  filterChip: { backgroundColor: Brand.surfaceDark, borderColor: Brand.borderSubtle },
+  filterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.md,
+    padding: Spacing.md,
+  },
+  filterSummary: { ...Typography.bodySm, color: Brand.textSecondary, flex: 1 },
+  filterButton: {
+    borderWidth: 1,
+    borderRadius: Radius.md,
+    backgroundColor: Brand.surfaceDark,
+  },
   summaryCard: {
     flexDirection: 'row',
     backgroundColor: Brand.surfaceElevated,
@@ -349,6 +465,7 @@ const styles = StyleSheet.create({
   amount: { ...Typography.h4, fontWeight: '700' },
   paidAmount: { color: Brand.pink },
   pendingAmount: { color: Brand.orange },
+  zeroAmount: { color: Brand.textMuted },
   markPaidBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -364,4 +481,71 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: Spacing.lg,
   },
+  sheetRoot: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(10, 5, 25, 0.65)',
+  },
+  sheet: {
+    backgroundColor: Brand.surfaceElevated,
+    borderTopLeftRadius: Radius.item,
+    borderTopRightRadius: Radius.item,
+    borderTopWidth: 1,
+    borderTopColor: Brand.borderSubtle,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
+  },
+  sheetHandle: {
+    alignSelf: 'center',
+    width: 44,
+    height: 4,
+    borderRadius: Radius.full,
+    backgroundColor: Brand.borderSubtle,
+    marginBottom: Spacing.sm,
+  },
+  sheetHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingBottom: Spacing.md,
+  },
+  sheetTitle: { ...Typography.h4, color: Brand.textPrimary, flex: 1 },
+  sheetResetText: { ...Typography.labelSm },
+  sheetResetDisabled: { opacity: 0.4 },
+  sheetSection: { paddingBottom: Spacing.xl },
+  sheetSectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  sheetSectionAccent: {
+    width: 3,
+    height: 14,
+    borderRadius: Radius.xs,
+  },
+  sheetSectionTitle: {
+    ...Typography.labelSm,
+    color: Brand.textPrimary + 'CC',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  sheetChipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  sheetChip: {
+    minHeight: 40,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Brand.borderSubtle,
+    backgroundColor: Brand.surfaceDark,
+    paddingHorizontal: Spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sheetChipText: { ...Typography.labelSm, color: Brand.textSecondary },
+  sheetChipTextSelected: { color: Brand.textPrimary },
 });

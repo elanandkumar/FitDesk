@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
-import { Chip, Divider, Text } from 'react-native-paper';
+import { Divider, Text } from 'react-native-paper';
 import SectionHeader from '../../components/common/SectionHeader';
 import GradientFAB from '../../components/common/GradientFAB';
 import AppButton from '../../components/common/AppButton';
@@ -108,17 +108,12 @@ export default function ManagerDetailScreen() {
           <InfoRow label="Per class rate" value={formatCurrency(manager.per_class_rate)} />
           <View style={styles.balanceRow}>
             <Text variant="bodyMedium" style={{ color: Brand.textSecondary }}>Outstanding balance</Text>
-            <Chip
-              style={{
-                backgroundColor: outstanding > 0 ? Brand.pink + '22' : Brand.surfaceElevated,
-              }}
-              textStyle={{
-                ...Typography.labelMd,
-                color: outstanding > 0 ? Brand.pink : Brand.orange,
-              }}
+            <Text
+              variant="bodyMedium"
+              style={[styles.balanceAmount, { color: outstanding > 0 ? Brand.orange : Brand.textMuted }]}
             >
               {formatCurrency(outstanding)}
-            </Chip>
+            </Text>
           </View>
         </View>
 
@@ -129,7 +124,7 @@ export default function ManagerDetailScreen() {
             <View style={styles.card}>
               {pendingPayments.length > 0 && (
                 <>
-                  <Text style={styles.subLabel}>PENDING ({pendingPayments.length})</Text>
+                  <Text style={styles.pendingSubLabel}>PENDING ({pendingPayments.length})</Text>
                   {pendingPayments.map((p, i) => (
                     <PaymentRow key={p.id} payment={p} showDivider={i > 0} />
                   ))}
@@ -140,7 +135,7 @@ export default function ManagerDetailScreen() {
               )}
               {paidPayments.length > 0 && (
                 <>
-                  <Text style={[styles.subLabel, { color: Brand.textMuted }]}>
+                  <Text style={styles.paidSubLabel}>
                     PAID ({paidPayments.length})
                   </Text>
                   {paidPayments.slice(0, 8).map((p, i) => (
@@ -230,7 +225,7 @@ function PaymentRow({
         <Text
           variant="bodySmall"
           style={{
-            color: payment.status === 'pending' ? Brand.pink : Brand.orange,
+            color: payment.status === 'pending' ? Brand.orange : Brand.pink,
             fontWeight: '600',
           }}
         >
@@ -253,7 +248,13 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Brand.backgroundDark },
   content: { padding: Spacing.lg, gap: Spacing.xs, paddingBottom: 80 },
-  subLabel: {
+  pendingSubLabel: {
+    ...Typography.microLabel,
+    color: Brand.orange,
+    letterSpacing: 0.5,
+    marginBottom: Spacing.xs,
+  },
+  paidSubLabel: {
     ...Typography.microLabel,
     color: Brand.pink,
     letterSpacing: 0.5,
@@ -279,6 +280,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: Spacing.xs,
   },
+  balanceAmount: { ...Typography.h4, fontWeight: '700' },
   paymentRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, paddingVertical: Spacing.xs },
   colorDot: { width: 8, height: 8, borderRadius: Radius.full, marginTop: 2 },
   fab: {

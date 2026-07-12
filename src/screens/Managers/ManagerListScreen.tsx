@@ -11,17 +11,12 @@ import { useAppTheme } from '../../theme';
 import { Brand, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { Manager } from '../../types';
 import { getAllManagers } from '../../database/repositories/managerRepository';
-import { getManagerOutstandingBalance } from '../../database/repositories/paymentRepository';
 import { formatCurrency } from '../../utils/currencyUtils';
 import EmptyState from '../../components/common/EmptyState';
 import AppIcon from '../../components/common/AppIcon';
 import { RootStackParamList } from '../../navigation/types';
 
 type Nav = StackNavigationProp<RootStackParamList>;
-
-interface ManagerWithBalance extends Manager {
-  outstanding: number;
-}
 
 function initials(name: string): string {
   return name
@@ -36,18 +31,14 @@ export default function ManagerListScreen() {
   const { accentPalette, theme } = useAppTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
-  const [managers, setManagers] = useState<ManagerWithBalance[]>([]);
+  const [managers, setManagers] = useState<Manager[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const all = await getAllManagers();
-      const withBalance = await Promise.all(
-        all.map(async (m) => ({ ...m, outstanding: await getManagerOutstandingBalance(m.id) }))
-      );
-      setManagers(withBalance);
+      setManagers(await getAllManagers());
     } finally {
       setLoading(false);
     }
@@ -93,13 +84,8 @@ export default function ManagerListScreen() {
             </View>
             <View style={styles.cardContent}>
               <Text style={styles.cardTitle}>{item.name}</Text>
-              <Text style={styles.cardSub}>{formatCurrency(item.per_class_rate)}/class</Text>
             </View>
-            {item.outstanding > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{formatCurrency(item.outstanding)}</Text>
-              </View>
-            )}
+            <Text style={styles.cardRate}>{formatCurrency(item.per_class_rate)}/class</Text>
             <AppIcon name="caretRight" size={20} color={Brand.textMuted} />
           </TouchableOpacity>
           </Animated.View>
@@ -149,14 +135,7 @@ const styles = StyleSheet.create({
   avatarText: { ...Typography.bodyLg, fontWeight: '700', color: Brand.textPrimary },
   cardContent: { flex: 1 },
   cardTitle: { ...Typography.h4, color: Brand.textPrimary },
-  cardSub: { ...Typography.labelMd, fontFamily: 'Outfit_400Regular', color: Brand.textSecondary, marginTop: 0 },
-  badge: {
-    backgroundColor: `${Brand.orange}33`,
-    borderRadius: Radius.full,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-  },
-  badgeText: { ...Typography.labelSm, color: Brand.orange },
+  cardRate: { ...Typography.labelMd, fontFamily: 'Outfit_400Regular', color: Brand.textSecondary },
   fab: {
     position: 'absolute',
     right: Spacing.lg,
