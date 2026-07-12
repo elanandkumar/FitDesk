@@ -12,7 +12,6 @@ import { getMonthlyIncomeSummary } from '../../database/repositories/paymentRepo
 import { formatCurrency } from '../../utils/currencyUtils';
 import EmptyState from '../../components/common/EmptyState';
 import HelpSheet from '../../components/common/HelpSheet';
-import AppIcon from '../../components/common/AppIcon';
 import AppIconButton from '../../components/common/AppIconButton';
 import { withAlpha } from '../../utils/colorUtils';
 
@@ -186,61 +185,65 @@ export default function IncomeSummaryScreen() {
 
   const renderItem = ({ item }: { item: MonthlyIncomeSummary }) => (
     <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityLabel={`${formatMonth(item.month)} income details`}
+      accessibilityHint="Shows income details for this month"
       style={styles.monthCard}
       activeOpacity={0.75}
       onPress={() => navigation.navigate('IncomeMonthDetail', { month: item.month })}
     >
-      <View style={styles.monthCardTop}>
-        <Text style={styles.monthTitle}>{formatMonth(item.month)}</Text>
-      </View>
-
-      <View style={styles.monthCategories}>
-        {(item.manager_paid > 0 || item.manager_pending > 0) && (
-          <View style={styles.monthCategory}>
-            <Text style={styles.monthCategoryLabel}>Manager classes</Text>
-            <View style={styles.monthAmounts}>
-              <View style={styles.monthAmountStatus}>
-                <Text style={styles.monthAmountLabel}>Paid</Text>
-                <Text style={[styles.monthAmount, item.manager_paid > 0 ? styles.monthAmountPaid : styles.zeroAmount]}>
-                  {formatCurrency(item.manager_paid)}
-                </Text>
-              </View>
-              <View style={styles.monthAmountStatus}>
-                <Text style={styles.monthAmountLabel}>Pending</Text>
-                <Text style={[styles.monthAmount, item.manager_pending > 0 ? styles.monthAmountPending : styles.zeroAmount]}>
-                  {formatCurrency(item.manager_pending)}
-                </Text>
-              </View>
-            </View>
+      <View style={styles.monthCardContent}>
+        <View style={styles.monthCardMain}>
+          <View style={styles.monthCardTop}>
+            <Text style={styles.monthTitle}>{formatMonth(item.month)}</Text>
           </View>
-        )}
 
-        {(item.manager_paid > 0 || item.manager_pending > 0) && (item.trainee_paid > 0 || item.trainee_pending > 0) && (
-          <View style={styles.monthCategorySep} />
-        )}
+          <View style={styles.monthCategories}>
+            {(item.manager_paid > 0 || item.manager_pending > 0) && (
+              <View style={styles.monthCategory}>
+                <Text style={styles.monthCategoryLabel}>Manager classes</Text>
+                <View style={styles.monthAmounts}>
+                  <View style={styles.monthAmountStatus}>
+                    <Text style={styles.monthAmountLabel}>Paid</Text>
+                    <Text style={[styles.monthAmount, item.manager_paid > 0 ? styles.monthAmountPaid : styles.zeroAmount]}>
+                      {formatCurrency(item.manager_paid)}
+                    </Text>
+                  </View>
+                  <View style={styles.monthAmountStatus}>
+                    <Text style={styles.monthAmountLabel}>Pending</Text>
+                    <Text style={[styles.monthAmount, item.manager_pending > 0 ? styles.monthAmountPending : styles.zeroAmount]}>
+                      {formatCurrency(item.manager_pending)}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            )}
 
-        {(item.trainee_paid > 0 || item.trainee_pending > 0) && (
-          <View style={styles.monthCategory}>
-            <Text style={styles.monthCategoryLabel}>Trainee packages</Text>
-            <View style={styles.monthAmounts}>
-              <View style={styles.monthAmountStatus}>
-                <Text style={styles.monthAmountLabel}>Paid</Text>
-                <Text style={[styles.monthAmount, item.trainee_paid > 0 ? styles.monthAmountPaid : styles.zeroAmount]}>
-                  {formatCurrency(item.trainee_paid)}
-                </Text>
+            {(item.manager_paid > 0 || item.manager_pending > 0) && (item.trainee_paid > 0 || item.trainee_pending > 0) && (
+              <View style={styles.monthCategorySep} />
+            )}
+
+            {(item.trainee_paid > 0 || item.trainee_pending > 0) && (
+              <View style={styles.monthCategory}>
+                <Text style={styles.monthCategoryLabel}>Trainee packages</Text>
+                <View style={styles.monthAmounts}>
+                  <View style={styles.monthAmountStatus}>
+                    <Text style={styles.monthAmountLabel}>Paid</Text>
+                    <Text style={[styles.monthAmount, item.trainee_paid > 0 ? styles.monthAmountPaid : styles.zeroAmount]}>
+                      {formatCurrency(item.trainee_paid)}
+                    </Text>
+                  </View>
+                  <View style={styles.monthAmountStatus}>
+                    <Text style={styles.monthAmountLabel}>Pending</Text>
+                    <Text style={[styles.monthAmount, item.trainee_pending > 0 ? styles.monthAmountPending : styles.zeroAmount]}>
+                      {formatCurrency(item.trainee_pending)}
+                    </Text>
+                  </View>
+                </View>
               </View>
-              <View style={styles.monthAmountStatus}>
-                <Text style={styles.monthAmountLabel}>Pending</Text>
-                <Text style={[styles.monthAmount, item.trainee_pending > 0 ? styles.monthAmountPending : styles.zeroAmount]}>
-                  {formatCurrency(item.trainee_pending)}
-                </Text>
-              </View>
-            </View>
+            )}
           </View>
-        )}
-      </View>
-      <View style={styles.monthActionRow}>
-        <AppIcon name="caretRight" size={20} color={Brand.textSecondary} />
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -314,16 +317,13 @@ export default function IncomeSummaryScreen() {
                 onPress={() => navigation.navigate('IncomeMonthDetail', { month: item.month })}
               >
                 <View style={styles.chartBarTrack}>
-                  <View style={[styles.chartBarStack, { height: barHeight }]}>
-                    {pendingHeight > 0 && (
-                      <View
-                        style={[
-                          styles.chartBarSegment,
-                          styles.chartBarPending,
-                          { height: pendingHeight },
-                        ]}
-                      />
-                    )}
+                  <View
+                    style={[
+                      styles.chartBarStack,
+                      pendingHeight > 0 && styles.chartBarPending,
+                      { height: barHeight },
+                    ]}
+                  >
                     {paidHeight > 0 && (
                       <View
                         style={[
@@ -381,15 +381,22 @@ export default function IncomeSummaryScreen() {
             )}
           </View>
           <View style={styles.heroRight}>
-            <View style={styles.pill}>
-              <Text style={styles.pillLabel}>Earned</Text>
-              <Text style={[styles.pillValue, { color: Brand.pink }]}>{formatCurrency(totalEarned)}</Text>
+            <View style={styles.heroMetric}>
+              <View style={[styles.heroMetricBar, styles.heroMetricBarEarned]} />
+              <View style={styles.heroMetricText}>
+                <Text style={styles.heroMetricLabel}>Earned</Text>
+                <Text style={[styles.heroMetricValue, { color: Brand.pink }]}>{formatCurrency(totalEarned)}</Text>
+              </View>
             </View>
-            <View style={[styles.pill, totalPending > 0 ? styles.pendingPill : styles.pendingPillMuted]}>
-              <Text style={styles.pillLabel}>Pending</Text>
-              <Text style={[styles.pillValue, totalPending > 0 ? styles.pendingPillValue : styles.zeroPillValue]}>
-                {formatCurrency(totalPending)}
-              </Text>
+            <View style={styles.heroMetricDivider} />
+            <View style={styles.heroMetric}>
+              <View style={[styles.heroMetricBar, totalPending > 0 ? styles.heroMetricBarPending : styles.heroMetricBarMuted]} />
+              <View style={styles.heroMetricText}>
+                <Text style={styles.heroMetricLabel}>Pending</Text>
+                <Text style={[styles.heroMetricValue, totalPending > 0 ? styles.pendingMetricValue : styles.zeroMetricValue]}>
+                  {formatCurrency(totalPending)}
+                </Text>
+              </View>
             </View>
           </View>
         </LinearGradient>
@@ -503,30 +510,47 @@ const styles = StyleSheet.create({
   heroComparisonNegativeText: {
     color: '#FF8A8A',
   },
-  heroRight: { gap: Spacing.sm, alignItems: 'flex-end' },
-  pill: {
-    backgroundColor: 'rgba(255, 61, 129, 0.18)',
-    borderRadius: Radius.lg,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+  heroRight: {
+    alignItems: 'flex-end',
+    gap: Spacing.sm,
+    width: 128,
+  },
+  heroMetric: {
     alignItems: 'center',
-    minWidth: 100,
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    justifyContent: 'space-between',
+    width: 112,
   },
-  pendingPill: { backgroundColor: 'rgba(255, 122, 0, 0.18)' },
-  pendingPillMuted: {
-    backgroundColor: Brand.surfaceElevated,
-    borderColor: Brand.borderSubtle,
-    borderWidth: 1,
+  heroMetricBar: {
+    borderRadius: Radius.full,
+    height: 34,
+    width: 3,
   },
-  pillLabel: {
+  heroMetricBarEarned: { backgroundColor: Brand.pink },
+  heroMetricBarPending: { backgroundColor: Brand.orange },
+  heroMetricBarMuted: { backgroundColor: Brand.borderSubtle },
+  heroMetricText: {
+    alignItems: 'flex-end',
+    gap: 1,
+    width: 92,
+  },
+  heroMetricLabel: {
     ...Typography.caption,
     color: Brand.textSecondary,
   },
-  pillValue: {
+  heroMetricValue: {
     ...Typography.labelLg,
   },
-  pendingPillValue: { color: Brand.orange },
-  zeroPillValue: { color: Brand.textMuted },
+  heroMetricDivider: {
+    alignSelf: 'flex-end',
+    backgroundColor: Brand.borderSubtle,
+    height: 1,
+    opacity: 0.7,
+    width: 112,
+  },
+  pendingMetricValue: { color: Brand.orange },
+  zeroMetricValue: { color: Brand.textMuted },
   chartPanel: {
     backgroundColor: Brand.surfaceDark,
     borderColor: Brand.borderSubtle,
@@ -596,6 +620,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   chartBarSegment: {
+    borderRadius: Radius.full,
     width: '100%',
   },
   chartBarPaid: {
@@ -625,8 +650,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
-    gap: Spacing.sm,
   },
+  monthCardContent: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+  },
+  monthCardMain: { flex: 1, gap: Spacing.sm },
   monthCardTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -671,6 +700,5 @@ const styles = StyleSheet.create({
   },
   monthAmountPaid: { color: Brand.pink },
   monthAmountPending: { color: Brand.orange },
-  monthActionRow: { alignItems: 'flex-end' },
   zeroAmount: { color: Brand.textMuted },
 });

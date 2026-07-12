@@ -4,7 +4,6 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { Text } from 'react-native-paper';
 import AppSearchbar from '../../components/common/AppSearchbar';
 import GradientFAB from '../../components/common/GradientFAB';
-import AppIcon from '../../components/common/AppIcon';
 import AppIconButton from '../../components/common/AppIconButton';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -113,6 +112,9 @@ export default function ClassSeriesListScreen() {
           return (
             <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 60).duration(350)}>
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={`${item.title} class series details`}
+              accessibilityHint="Opens class series details"
               style={[
                 styles.card,
                 {
@@ -134,7 +136,6 @@ export default function ClassSeriesListScreen() {
               {!item.is_active && (
                 <AppBadge label={item.end_date && item.end_date <= today ? 'Ended' : 'Cancelled'} tone="cancelled" />
               )}
-              <AppIcon name="caretRight" size={20} color={Brand.textMuted} />
             </TouchableOpacity>
             </Animated.View>
           );

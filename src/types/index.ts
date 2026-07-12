@@ -186,6 +186,7 @@ export interface CenterMonthIncome {
 }
 
 export interface TraineeMonthPackage {
+  package_id: number;
   trainee_id: number;
   trainee_name: string;
   amount: number;

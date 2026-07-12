@@ -392,6 +392,7 @@ export async function getTraineePackagesForMonth(month: string): Promise<Trainee
   const db = await getDatabase();
   return db.getAllAsync<TraineeMonthPackage>(`
     SELECT
+      tp.id AS package_id,
       t.id AS trainee_id,
       t.name AS trainee_name,
       tp.amount,

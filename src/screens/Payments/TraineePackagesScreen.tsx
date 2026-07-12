@@ -333,7 +333,14 @@ export default function TraineePackagesScreen() {
           icon="sliders"
           iconColor={accentPalette.textAccent}
           onPress={() => setFiltersVisible(true)}
-          style={[styles.filterButton, { borderColor: accentPalette.main }]}
+          style={[
+            styles.filterButton,
+            {
+              borderColor: filtersAreDefault ? accentPalette.main : accentPalette.textAccent,
+              backgroundColor: filtersAreDefault ? Brand.surfaceDark : accentPalette.main + '26',
+            },
+            !filtersAreDefault && styles.filterButtonActive,
+          ]}
         />
       </View>
 
@@ -522,6 +529,9 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     backgroundColor: Brand.surfaceDark,
   },
+  filterButtonActive: {
+    borderWidth: 1.5,
+  },
   summaryCard: {
     flexDirection: 'row',
     backgroundColor: Brand.surfaceElevated,
@@ -612,12 +622,12 @@ const styles = StyleSheet.create({
   packageUtilityBtn: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: Spacing.xs,
-    minHeight: 34,
+    height: 36,
     borderRadius: Radius.md,
     borderWidth: 1,
     paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
   },
   packageUtilityText: { ...Typography.labelSm, color: Brand.textSecondary },
   packageDeleteBtn: { borderColor: '#FF5252' },
@@ -625,12 +635,12 @@ const styles = StyleSheet.create({
   markPaidBtn: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: Spacing.xs,
-    minHeight: 34,
+    height: 36,
     borderRadius: Radius.md,
     borderWidth: 1.5,
     paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
   },
   markPaidText: { ...Typography.labelSm },
   editHelpText: {

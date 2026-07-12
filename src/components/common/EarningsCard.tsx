@@ -3,7 +3,6 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { Brand, Radius, Spacing, Typography } from '../../theme';
 import { formatCurrency } from '../../utils/currencyUtils';
-import AppIcon from './AppIcon';
 
 interface Props {
   pending: number;
@@ -18,6 +17,7 @@ export default function EarningsCard({ pending, paid, onPress }: Props) {
     <Pressable
       accessibilityRole={onPress ? 'button' : undefined}
       accessibilityLabel={onPress ? 'Open payments' : undefined}
+      accessibilityHint={onPress ? 'Shows payment details' : undefined}
       onPress={onPress}
       style={({ pressed }) => [
         styles.card,
@@ -35,11 +35,6 @@ export default function EarningsCard({ pending, paid, onPress }: Props) {
           <Text style={styles.label}>Pending</Text>
           <Text style={[styles.amount, styles.pendingAmount]}>{formatCurrency(pending)}</Text>
         </View>
-        {onPress ? (
-          <View style={styles.actionCol}>
-            <AppIcon name="caretRight" size={16} color={Brand.textMuted} />
-          </View>
-        ) : null}
       </View>
     </Pressable>
   );
@@ -90,13 +85,6 @@ const styles = StyleSheet.create({
   },
   mutedAmount: {
     color: Brand.textMuted,
-  },
-  actionCol: {
-    width: 24,
-    alignItems: 'flex-end',
-    alignSelf: 'stretch',
-    justifyContent: 'flex-end',
-    marginLeft: Spacing.md,
   },
   divider: {
     width: 1,
