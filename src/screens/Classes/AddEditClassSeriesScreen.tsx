@@ -47,13 +47,13 @@ type Nav = StackNavigationProp<RootStackParamList, 'AddEditClassSeries'>;
 type Route = RouteProp<RootStackParamList, 'AddEditClassSeries'>;
 
 const DAYS = [
-  { label: 'M', value: 1 },
-  { label: 'T', value: 2 },
-  { label: 'W', value: 3 },
-  { label: 'T', value: 4 },
-  { label: 'F', value: 5 },
-  { label: 'S', value: 6 },
-  { label: 'S', value: 0 },
+  { label: 'Mon', value: 1 },
+  { label: 'Tue', value: 2 },
+  { label: 'Wed', value: 3 },
+  { label: 'Thu', value: 4 },
+  { label: 'Fri', value: 5 },
+  { label: 'Sat', value: 6 },
+  { label: 'Sun', value: 0 },
 ];
 
 function ErrorText({ msg }: { msg: string }) {
@@ -622,13 +622,12 @@ export default function AddEditClassSeriesScreen() {
                         onPress={() => toggleDay(d.value)}
                         style={[
                           styles.dayButton,
-                          d.value !== DAYS[0].value && { marginLeft: -1 },
                           active
                             ? { backgroundColor: accentPalette.main, borderColor: accentPalette.main }
-                            : { backgroundColor: 'transparent', borderColor: Brand.borderSubtle },
+                            : { backgroundColor: Brand.surfaceDark, borderColor: Brand.borderSubtle },
                         ]}
                       >
-                        <Text style={{ ...Typography.labelMd, color: active ? Brand.textPrimary : Brand.textSecondary }}>
+                        <Text style={[styles.dayButtonText, { color: active ? Brand.textPrimary : Brand.textSecondary }]}>
                           {d.label}
                         </Text>
                       </TouchableOpacity>
@@ -873,14 +872,22 @@ const styles = StyleSheet.create({
   },
   fieldLabel: { color: Brand.textSecondary, marginBottom: Spacing.xs },
   fieldGap: { height: Spacing.sm },
-  daysRow: { flexDirection: 'row' },
+  daysRow: { flexDirection: 'row', gap: Spacing.xs },
   dayButton: {
     flex: 1,
     borderWidth: 1,
-    borderRadius: Radius.sm,
-    height: 44,
+    borderRadius: Radius.md,
+    minWidth: 0,
+    height: 40,
+    minHeight: 40,
+    maxHeight: 40,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 0,
+  },
+  dayButtonText: {
+    ...Typography.labelSm,
+    lineHeight: 16,
   },
   pickerButton: {
     borderWidth: 1,

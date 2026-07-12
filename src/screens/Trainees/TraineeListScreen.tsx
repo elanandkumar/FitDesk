@@ -12,7 +12,6 @@ import { Brand, Layout, Radius, Spacing, Typography } from '../../theme/brandCol
 import { Trainee } from '../../types';
 import { getAllTrainees } from '../../database/repositories/traineeRepository';
 import EmptyState from '../../components/common/EmptyState';
-import AppIcon from '../../components/common/AppIcon';
 import { RootStackParamList } from '../../navigation/types';
 
 type Nav = StackNavigationProp<RootStackParamList>;
@@ -74,6 +73,9 @@ export default function TraineeListScreen() {
         renderItem={({ item, index }) => (
           <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 60).duration(350)}>
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={`${item.name} trainee details`}
+            accessibilityHint="Opens trainee details"
             style={styles.card}
             onPress={() => navigation.navigate('TraineeDetail', { traineeId: item.id })}
             activeOpacity={0.75}
@@ -89,7 +91,6 @@ export default function TraineeListScreen() {
                 </Text>
               )}
             </View>
-            <AppIcon name="caretRight" size={20} color={Brand.textMuted} />
           </TouchableOpacity>
           </Animated.View>
         )}

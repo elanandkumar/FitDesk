@@ -13,7 +13,6 @@ import { Manager } from '../../types';
 import { getAllManagers } from '../../database/repositories/managerRepository';
 import { formatCurrency } from '../../utils/currencyUtils';
 import EmptyState from '../../components/common/EmptyState';
-import AppIcon from '../../components/common/AppIcon';
 import { RootStackParamList } from '../../navigation/types';
 
 type Nav = StackNavigationProp<RootStackParamList>;
@@ -75,6 +74,9 @@ export default function ManagerListScreen() {
         renderItem={({ item, index }) => (
           <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 60).duration(350)}>
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={`${item.name} manager details`}
+            accessibilityHint="Opens manager details"
             style={styles.card}
             onPress={() => navigation.navigate('ManagerDetail', { managerId: item.id })}
             activeOpacity={0.75}
@@ -86,7 +88,6 @@ export default function ManagerListScreen() {
               <Text style={styles.cardTitle}>{item.name}</Text>
             </View>
             <Text style={styles.cardRate}>{formatCurrency(item.per_class_rate)}/class</Text>
-            <AppIcon name="caretRight" size={20} color={Brand.textMuted} />
           </TouchableOpacity>
           </Animated.View>
         )}

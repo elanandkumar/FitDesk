@@ -76,7 +76,7 @@ export default function IncomeMonthDetailScreen() {
           <>
             <SectionHeader label="Manager Classes" />
             {managers.map((m) => (
-              <View key={m.manager_id} style={styles.itemCard}>
+              <View key={`manager-${m.manager_id}`} style={styles.itemCard}>
                 <View style={styles.itemRow}>
                   <Text variant="bodyMedium" style={styles.itemName}>{m.manager_name}</Text>
                   <View style={styles.amounts}>
@@ -93,7 +93,7 @@ export default function IncomeMonthDetailScreen() {
           <>
             <SectionHeader label="Trainee Packages" />
             {packages.map((p) => (
-              <View key={p.trainee_id} style={styles.itemCard}>
+              <View key={`package-${p.package_id}`} style={styles.itemCard}>
                 <View style={styles.itemRow}>
                   <View style={{ flex: 1 }}>
                     <Text variant="bodyMedium" style={styles.itemName}>{p.trainee_name}</Text>

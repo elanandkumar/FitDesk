@@ -11,7 +11,6 @@ import { getAllEnrichedManagerPayments } from '../../database/repositories/payme
 import { formatCurrency } from '../../utils/currencyUtils';
 import { RootStackParamList } from '../../navigation/types';
 import EmptyState from '../../components/common/EmptyState';
-import AppIcon from '../../components/common/AppIcon';
 import AppIconButton from '../../components/common/AppIconButton';
 
 type Nav = StackNavigationProp<RootStackParamList>;
@@ -101,6 +100,9 @@ export default function ManagerPaymentsScreen({ initialPendingOnly, focusKey }: 
 
   const renderItem = ({ item }: { item: ManagerSummary }) => (
     <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityLabel={`${item.managerName} payment details`}
+      accessibilityHint="Shows manager payment details"
       style={styles.card}
       onPress={() => navigation.navigate('ManagerPaymentDetail', {
         managerId: item.managerId,
@@ -129,9 +131,6 @@ export default function ManagerPaymentsScreen({ initialPendingOnly, focusKey }: 
             </Text>
           </View>
         </View>
-      </View>
-      <View style={styles.cardActionRow}>
-        <AppIcon name="caretRight" size={16} color={Brand.textMuted} />
       </View>
     </TouchableOpacity>
   );
@@ -177,7 +176,14 @@ export default function ManagerPaymentsScreen({ initialPendingOnly, focusKey }: 
           icon="sliders"
           iconColor={accentPalette.textAccent}
           onPress={() => setFiltersVisible(true)}
-          style={[styles.filterButton, { borderColor: accentPalette.main }]}
+          style={[
+            styles.filterButton,
+            {
+              borderColor: filtersAreDefault ? accentPalette.main : accentPalette.textAccent,
+              backgroundColor: filtersAreDefault ? Brand.surfaceDark : accentPalette.main + '26',
+            },
+            !filtersAreDefault && styles.filterButtonActive,
+          ]}
         />
       </View>
 
@@ -290,6 +296,9 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     backgroundColor: Brand.surfaceDark,
   },
+  filterButtonActive: {
+    borderWidth: 1.5,
+  },
   summaryCard: {
     flexDirection: 'row',
     backgroundColor: Brand.surfaceElevated,
@@ -339,7 +348,6 @@ const styles = StyleSheet.create({
   amountStatus: { alignItems: 'center', minWidth: 86 },
   amountLabel: { ...Typography.caption, color: Brand.textSecondary },
   cardAmount: { ...Typography.h4, fontWeight: '700' },
-  cardActionRow: { alignItems: 'flex-end', marginTop: Spacing.md },
   paidAmount: { color: Brand.pink },
   pendingAmount: { color: Brand.orange },
   zeroAmount: { color: Brand.textMuted },

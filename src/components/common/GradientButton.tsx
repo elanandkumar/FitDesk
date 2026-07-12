@@ -29,7 +29,7 @@ export default function GradientButton({ label, onPress, loading, disabled, styl
         style={styles.pressable}
       >
         <LinearGradient
-          colors={isDisabled ? ['#3a3a4a', '#2a2a3a'] : accentPalette.gradient}
+          colors={isDisabled ? ['#3a3a4a', '#323244', '#2a2a3a'] : accentPalette.gradient}
           start={{ x: 0.2, y: 0 }}
           end={{ x: 0.8, y: 1 }}
           locations={[0, 0.55, 1]}

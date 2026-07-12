@@ -89,6 +89,7 @@ const MIGRATIONS: Migration[] = [
   {
     version: 11,
     statements: [
+      `DROP TABLE IF EXISTS trainee_packages_next`,
       `CREATE TABLE IF NOT EXISTS trainee_packages_next (
         id              INTEGER PRIMARY KEY AUTOINCREMENT,
         trainee_id      INTEGER NOT NULL REFERENCES trainees(id),
