@@ -35,12 +35,12 @@ export default function EarningsCard({ pending, paid, onPress }: Props) {
           <Text style={styles.label}>Pending</Text>
           <Text style={[styles.amount, styles.pendingAmount]}>{formatCurrency(pending)}</Text>
         </View>
+        {onPress ? (
+          <View style={styles.actionCol}>
+            <AppIcon name="caretRight" size={16} color={Brand.textMuted} />
+          </View>
+        ) : null}
       </View>
-      {onPress ? (
-        <View style={styles.actionRow}>
-          <AppIcon name="caretRight" size={16} color={Brand.textMuted} />
-        </View>
-      ) : null}
     </Pressable>
   );
 }
@@ -91,14 +91,17 @@ const styles = StyleSheet.create({
   mutedAmount: {
     color: Brand.textMuted,
   },
+  actionCol: {
+    width: 24,
+    alignItems: 'flex-end',
+    alignSelf: 'stretch',
+    justifyContent: 'flex-end',
+    marginLeft: Spacing.md,
+  },
   divider: {
     width: 1,
     height: 36,
     backgroundColor: Brand.borderSubtle,
     marginHorizontal: Spacing.lg,
-  },
-  actionRow: {
-    alignItems: 'flex-end',
-    marginTop: -Spacing.xs,
   },
 });
