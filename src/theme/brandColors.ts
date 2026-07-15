@@ -138,12 +138,12 @@ export const Typography = {
   h4:       { fontFamily: 'Montserrat_600SemiBold', fontSize: 15, lineHeight: 22 },
   bodyLg:   { fontFamily: 'Outfit_400Regular',      fontSize: 16, lineHeight: 24 },
   body:     { fontFamily: 'Outfit_400Regular',      fontSize: 14, lineHeight: 20 },
-  bodySm:   { fontFamily: 'Outfit_400Regular',      fontSize: 12, lineHeight: 18 },
+  bodySm:   { fontFamily: 'Outfit_400Regular',      fontSize: 13, lineHeight: 19 },
   labelMd:  { fontFamily: 'Montserrat_600SemiBold', fontSize: 13, lineHeight: 18 },
-  labelSm:  { fontFamily: 'Montserrat_600SemiBold', fontSize: 12, lineHeight: 16, letterSpacing: 0.2 },
+  labelSm:  { fontFamily: 'Montserrat_600SemiBold', fontSize: 12, lineHeight: 17, letterSpacing: 0.2 },
   labelLg:    { fontFamily: 'Montserrat_600SemiBold', fontSize: 14, lineHeight: 20 },
-  microLabel: { fontFamily: 'Montserrat_600SemiBold', fontSize: 11, lineHeight: 14 },
-  caption:  { fontFamily: 'Outfit_400Regular',      fontSize: 11, lineHeight: 16 },
+  microLabel: { fontFamily: 'Montserrat_600SemiBold', fontSize: 11, lineHeight: 15 },
+  caption:  { fontFamily: 'Outfit_400Regular',      fontSize: 12, lineHeight: 17 },
 } as const;
 
 export const Elevation = {

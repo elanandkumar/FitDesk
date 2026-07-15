@@ -244,9 +244,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 4,
     right: 4,
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,
@@ -255,10 +255,8 @@ const styles = StyleSheet.create({
     borderColor: Brand.backgroundDark,
   },
   bellBadgeText: {
+    ...Typography.microLabel,
     color: Brand.backgroundDark,
-    fontSize: 10,
-    fontFamily: 'Montserrat_600SemiBold',
-    lineHeight: 13,
   },
   backupBanner: {
     flexDirection: 'row',
@@ -286,9 +284,8 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   backupBannerBtnText: {
+    ...Typography.labelSm,
     color: Brand.orange,
-    fontSize: 11,
-    fontFamily: 'Montserrat_600SemiBold',
   },
   fab: {
     position: 'absolute',

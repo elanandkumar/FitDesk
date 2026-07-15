@@ -188,7 +188,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   label: {
-    fontSize: 10,
+    fontSize: 11,
+    lineHeight: 14,
     fontFamily: 'Montserrat_600SemiBold',
     letterSpacing: 0.2,
   },

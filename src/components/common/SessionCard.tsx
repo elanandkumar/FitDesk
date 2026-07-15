@@ -1,11 +1,11 @@
 import React from 'react';
-import { StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native';
+import { StyleSheet, View, ViewStyle } from 'react-native';
 import { Text } from 'react-native-paper';
 import { EnrichedSession } from '../../types';
-import { Brand, Radius, Spacing, useAppTheme } from '../../theme';
+import { Brand, useAppTheme } from '../../theme';
 import { formatDisplayDate, formatDisplayTime } from '../../utils/dateUtils';
-import { withAlpha } from '../../utils/colorUtils';
 import StatusBadge, { getDisplayStatus } from './StatusBadge';
+import AccentListCard from './AccentListCard';
 
 interface SessionNumberInfo {
   session_number: number;
@@ -44,8 +44,8 @@ export default function SessionCard({
     showDate ? session.class_type_name : `${session.duration_minutes} min`,
   ];
 
-  const content = (
-    <>
+  return (
+    <AccentListCard accentColor={session.class_type_color} onPress={onPress} style={style}>
       <View style={styles.sessionInfo}>
         <Text variant="titleSmall" style={{ color: Brand.textPrimary }}>
           {session.series_title}
@@ -70,47 +70,10 @@ export default function SessionCard({
         )}
       </View>
       <StatusBadge status={getDisplayStatus(session.status, session.session_date, session.class_time)} />
-    </>
+    </AccentListCard>
   );
-
-  const cardStyle = [
-    styles.sessionCard,
-    {
-      borderColor: withAlpha(session.class_type_color, 0.28),
-      borderLeftColor: withAlpha(session.class_type_color, 0.75),
-      shadowColor: '#000000',
-    },
-    style,
-  ];
-
-  if (onPress) {
-    return (
-      <TouchableOpacity onPress={onPress} style={cardStyle} activeOpacity={0.75}>
-        {content}
-      </TouchableOpacity>
-    );
-  }
-
-  return <View style={cardStyle}>{content}</View>;
 }
 
 const styles = StyleSheet.create({
-  sessionCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: Spacing.lg,
-    paddingLeft: Spacing.md,
-    paddingRight: Spacing.md,
-    gap: Spacing.md,
-    backgroundColor: Brand.surfaceDark,
-    borderRadius: Radius.item,
-    borderWidth: 1,
-    borderColor: Brand.borderSubtle,
-    borderLeftWidth: 4,
-    elevation: 4,
-    shadowOpacity: 0.18,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-  },
   sessionInfo: { flex: 1, gap: 0 },
 });

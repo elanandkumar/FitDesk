@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
 import { MD3DarkTheme } from 'react-native-paper';
 import { getDatabase } from '../database/db';
-import { AccentKey, AccentPalette, AccentPalettes, Brand } from './brandColors';
+import { AccentKey, AccentPalette, AccentPalettes, Brand, Typography } from './brandColors';
 
 export { AccentPalettes, BadgeTones, Brand, Gradients, Radius, Layout, Spacing, Typography, Elevation } from './brandColors';
 export type { AccentKey, AccentPalette, BadgeTone } from './brandColors';
@@ -44,10 +44,10 @@ function createFitDeskTheme(accentKey: AccentKey) {
     titleSmall:    { ...MD3DarkTheme.fonts.titleSmall,    fontFamily: 'Montserrat_600SemiBold' },
     bodyLarge:     { ...MD3DarkTheme.fonts.bodyLarge,     fontFamily: 'Outfit_400Regular' },
     bodyMedium:    { ...MD3DarkTheme.fonts.bodyMedium,    fontFamily: 'Outfit_400Regular' },
-    bodySmall:     { ...MD3DarkTheme.fonts.bodySmall,     fontFamily: 'Outfit_400Regular' },
+    bodySmall:     { ...MD3DarkTheme.fonts.bodySmall,     ...Typography.bodySm },
     labelLarge:    { ...MD3DarkTheme.fonts.labelLarge,    fontFamily: 'Outfit_400Regular' },
-    labelMedium:   { ...MD3DarkTheme.fonts.labelMedium,   fontFamily: 'Outfit_400Regular' },
-    labelSmall:    { ...MD3DarkTheme.fonts.labelSmall,    fontFamily: 'Outfit_400Regular' },
+    labelMedium:   { ...MD3DarkTheme.fonts.labelMedium,   ...Typography.labelMd },
+    labelSmall:    { ...MD3DarkTheme.fonts.labelSmall,    ...Typography.labelSm },
   },
   };
 }
