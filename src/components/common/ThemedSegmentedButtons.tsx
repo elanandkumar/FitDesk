@@ -1,6 +1,5 @@
 import React from 'react';
 import { SegmentedButtons, SegmentedButtonsProps } from 'react-native-paper';
-import { Brand } from '../../theme/brandColors';
 import { useAppTheme } from '../../theme';
 
 type Props = Omit<SegmentedButtonsProps, 'theme' | 'value' | 'onValueChange' | 'multiSelect'> & {
@@ -17,10 +16,10 @@ export default function ThemedSegmentedButtons(props: Props) {
       {...props}
       theme={{
         colors: {
-          secondaryContainer: accentPalette.main + '99',
-          onSecondaryContainer: Brand.textPrimary,
+          secondaryContainer: accentPalette.main,
+          onSecondaryContainer: '#FFFFFF',
         },
-      } as any}
+      }}
     />
   );
 }

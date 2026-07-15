@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { Divider, Text } from 'react-native-paper';
 import GradientFAB from '../../components/common/GradientFAB';
 import AppIconButton from '../../components/common/AppIconButton';
@@ -8,7 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Calendar, CalendarProvider, WeekCalendar } from 'react-native-calendars';
 import type { DateData } from 'react-native-calendars';
-import { AccentPalette, useAppTheme, Brand, Radius, Spacing } from '../../theme';
+import { AccentPalette, useAppTheme, Radius, Spacing } from '../../theme';
 import { Layout, Typography } from '../../theme/brandColors';
 import { EnrichedSession } from '../../types';
 import { getEnrichedSessionsByDateRange } from '../../database/repositories/classSessionRepository';
@@ -17,6 +18,7 @@ import { RootStackParamList } from '../../navigation/types';
 import HelpSheet from '../../components/common/HelpSheet';
 import SessionCard from '../../components/common/SessionCard';
 import { HELP } from '../../constants/helpContent';
+import { listItemEntering } from '../../animations/listItemEntering';
 
 type Nav = StackNavigationProp<RootStackParamList>;
 type ViewMode = 'week' | 'month';
@@ -55,18 +57,18 @@ const CALENDAR_THEME = (
   calendarBackground: theme.colors.surface,
   textSectionTitleColor: theme.colors.onSurfaceVariant,
   selectedDayBackgroundColor: accentPalette.main,
-  selectedDayTextColor: Brand.textPrimary,
+  selectedDayTextColor: theme.colors.onPrimary,
   todayTextColor: accentPalette.warm,
   dayTextColor: theme.colors.onSurface,
   textDisabledColor: theme.colors.onSurfaceVariant,
   arrowColor: accentPalette.main,
-  monthTextColor: Brand.textPrimary,
+  monthTextColor: theme.colors.onSurface,
   dotColor: accentPalette.main,
-  selectedDotColor: Brand.textPrimary,
+  selectedDotColor: theme.colors.onPrimary,
 });
 
 export default function CalendarScreen() {
-  const { accentPalette, theme } = useAppTheme();
+  const { accentPalette, colors, theme } = useAppTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const today = todayISO();
@@ -77,6 +79,7 @@ export default function CalendarScreen() {
   const [monthAnchor, setMonthAnchor] = useState(() => today.slice(0, 7) + '-01');
   const [sessions, setSessions] = useState<EnrichedSession[]>([]);
   const [markedDates, setMarkedDates] = useState<MarkedDates>({});
+  const [animationCycle, setAnimationCycle] = useState(0);
   const [selectedDate, setSelectedDate] = useState<string>(today);
   const daySessions = useMemo(
     () => sessions.filter((s) => s.session_date === selectedDate),
@@ -140,6 +143,10 @@ export default function CalendarScreen() {
     loadRange(range.start, range.end);
   }, [weekStart, monthAnchor, viewMode, isFocused, loadRange]);
 
+  useEffect(() => {
+    if (isFocused) setAnimationCycle((cycle) => cycle + 1);
+  }, [isFocused]);
+
   function handleDateChanged(date: string) {
     const newWeekStart = weekRange(date).start;
     setSelectedDate(date);
@@ -166,7 +173,7 @@ export default function CalendarScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={{ flex: 0, backgroundColor: theme.colors.surface }}>
         {viewMode === 'week' ? (
           <CalendarProvider
@@ -194,34 +201,36 @@ export default function CalendarScreen() {
         )}
       </View>
 
-      <Divider style={{ backgroundColor: Brand.borderSubtle }} />
+      <Divider style={{ backgroundColor: colors.border }} />
 
       <View style={styles.dayHeader}>
-        <Text style={{ ...Typography.h3, color: Brand.textSecondary }}>
+        <Text style={{ ...Typography.h3, color: colors.textSecondary }}>
           {selectedDate === today ? 'Today' : formatDisplayDate(selectedDate)}
         </Text>
-        <Text variant="bodySmall" style={{ color: Brand.textMuted }}>
+        <Text variant="bodySmall" style={{ color: colors.textMuted }}>
           {daySessions.length === 0 ? 'No sessions' : `${daySessions.length} session${daySessions.length > 1 ? 's' : ''}`}
         </Text>
       </View>
 
       <FlatList
         data={daySessions}
-        keyExtractor={(item) => String(item.id)}
+        keyExtractor={(item) => `${animationCycle}-${item.id}`}
         contentContainerStyle={{ flexGrow: 1, paddingBottom: Layout.LIST_PAD_NO_FAB, paddingTop: Spacing.sm }}
         ListEmptyComponent={
           <View style={styles.emptyDay}>
-            <Text variant="bodyMedium" style={{ color: Brand.textMuted }}>
+            <Text variant="bodyMedium" style={{ color: colors.textMuted }}>
               No sessions on this date
             </Text>
           </View>
         }
-        renderItem={({ item }) => (
-          <SessionCard
-            session={item}
-            onPress={() => navigation.navigate('ClassSessionDetail', { sessionId: item.id })}
-            style={styles.sessionCard}
-          />
+        renderItem={({ item, index }) => (
+          <Animated.View entering={listItemEntering(index)}>
+            <SessionCard
+              session={item}
+              onPress={() => navigation.navigate('ClassSessionDetail', { sessionId: item.id })}
+              style={styles.sessionCard}
+            />
+          </Animated.View>
         )}
         ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
       />
@@ -238,7 +247,7 @@ export default function CalendarScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Brand.backgroundDark },
+  container: { flex: 1 },
   dayHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',

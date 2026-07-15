@@ -6,7 +6,7 @@ import AppIconButton from '../../components/common/AppIconButton';
 import { RouteProp, useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAppTheme } from '../../theme';
-import { Brand, Spacing } from '../../theme/brandColors';
+import { Spacing } from '../../theme/brandColors';
 import { RootStackParamList, TabParamList } from '../../navigation/types';
 import ManagerPaymentsScreen from './ManagerPaymentsScreen';
 import TraineePackagesScreen from './TraineePackagesScreen';
@@ -18,7 +18,7 @@ type Nav = StackNavigationProp<RootStackParamList>;
 type PaymentsRoute = RouteProp<TabParamList, 'Payments'>;
 
 export default function PaymentsTabScreen() {
-  const { accentPalette, theme } = useAppTheme();
+  const { accentPalette, colors, theme } = useAppTheme();
   const navigation = useNavigation<Nav>();
   const route = useRoute<PaymentsRoute>();
   const [segment, setSegment] = useState<'managers' | 'trainees'>('managers');
@@ -92,7 +92,7 @@ export default function PaymentsTabScreen() {
         title="Package Not Created"
         cancelLabel="OK"
       >
-        <Text variant="bodyMedium" style={{ color: Brand.textSecondary }}>
+        <Text variant="bodyMedium" style={{ color: colors.textSecondary }}>
           {noticeMessage}
         </Text>
       </AppModal>

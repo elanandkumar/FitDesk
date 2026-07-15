@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Text } from 'react-native-paper';
 import { useAppTheme } from '../../theme';
-import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { AppThemeColors, BrandCore, Radius, Spacing, Typography } from '../../theme/brandColors';
 import AppButton from '../../components/common/AppButton';
 import AppIcon from '../../components/common/AppIcon';
 import AppModal from '../../components/common/AppModal';
@@ -11,7 +11,8 @@ import { exportData, pickAndImportData } from '../../utils/exportUtils';
 import { useBackup } from '../../context/BackupContext';
 
 export default function DataScreen() {
-  const { accentPalette } = useAppTheme();
+  const { accentPalette, colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
   const [confirmImportVisible, setConfirmImportVisible] = useState(false);
@@ -76,7 +77,7 @@ export default function DataScreen() {
           Restore from a FitDesk backup. Older backups are still supported. All existing data will be replaced.
         </Text>
         <View style={styles.warningBox}>
-          <AppIcon name="warning" size={18} color={Brand.orange} />
+          <AppIcon name="warning" size={18} color={BrandCore.orange} />
           <Text variant="bodySmall" style={styles.warningText}>
             Import is destructive and cannot be undone.
           </Text>
@@ -101,7 +102,7 @@ export default function DataScreen() {
         onConfirm={confirmImport}
         destructive
       >
-        <Text variant="bodyMedium" style={{ color: Brand.textSecondary }}>
+        <Text variant="bodyMedium" style={{ color: colors.textSecondary }}>
           This will replace ALL current data with the backup. This cannot be undone. Continue?
         </Text>
       </AppModal>
@@ -116,16 +117,16 @@ export default function DataScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Brand.backgroundDark },
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   content: { padding: Spacing.lg, gap: Spacing.lg },
   card: {
-    backgroundColor: Brand.surfaceDark,
+    backgroundColor: colors.surface,
     borderRadius: Radius.item,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
+    borderColor: colors.border,
     elevation: 4,
-    shadowColor: '#000000',
+    shadowColor: colors.shadow,
     shadowOpacity: 0.2,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
@@ -134,22 +135,22 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...Typography.h4,
-    color: Brand.textPrimary,
+    color: colors.textPrimary,
   },
   sectionDesc: {
-    color: Brand.textSecondary,
+    color: colors.textSecondary,
   },
   warningBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
-    backgroundColor: Brand.orange + '12',
+    backgroundColor: BrandCore.orange + '12',
     borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: Brand.orange + '33',
+    borderColor: BrandCore.orange + '33',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
   },
-  warningText: { color: Brand.orange },
+  warningText: { color: BrandCore.orange },
   importBtn: { marginTop: Spacing.xs },
 });

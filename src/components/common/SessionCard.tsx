@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
 import { Text } from 'react-native-paper';
 import { EnrichedSession } from '../../types';
-import { Brand, useAppTheme } from '../../theme';
+import { BrandCore, useAppTheme } from '../../theme';
 import { formatDisplayDate, formatDisplayTime } from '../../utils/dateUtils';
 import StatusBadge, { getDisplayStatus } from './StatusBadge';
 import AccentListCard from './AccentListCard';
@@ -36,7 +36,7 @@ export default function SessionCard({
   sessionNumber,
   style,
 }: Props) {
-  const { accentPalette } = useAppTheme();
+  const { accentPalette, colors } = useAppTheme();
   const trainee = traineeLabel(session.trainee_names);
   const metadataParts = [
     showDate ? formatDisplayDate(session.session_date) : formatDisplayTime(session.class_time),
@@ -47,10 +47,10 @@ export default function SessionCard({
   return (
     <AccentListCard accentColor={session.class_type_color} onPress={onPress} style={style}>
       <View style={styles.sessionInfo}>
-        <Text variant="titleSmall" style={{ color: Brand.textPrimary }}>
+        <Text variant="titleSmall" style={{ color: colors.textPrimary }}>
           {session.series_title}
         </Text>
-        <Text variant="bodySmall" style={{ color: Brand.textSecondary }}>
+        <Text variant="bodySmall" style={{ color: colors.textSecondary }}>
           {metadataParts.join(' · ')}
         </Text>
         {session.source_type === 'personal' && showTraineeLabel && trainee && (
@@ -59,12 +59,12 @@ export default function SessionCard({
           </Text>
         )}
         {sessionNumber && (
-          <Text variant="bodySmall" style={{ color: Brand.orange }}>
+          <Text variant="bodySmall" style={{ color: BrandCore.orange }}>
             Session {sessionNumber.session_number} / {sessionNumber.total_sessions}
           </Text>
         )}
         {session.location && (
-          <Text variant="bodySmall" style={{ color: Brand.textMuted }}>
+          <Text variant="bodySmall" style={{ color: colors.textMuted }}>
             {session.location}
           </Text>
         )}

@@ -1,11 +1,11 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAppTheme } from '../../theme';
-import { Brand, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { AppThemeColors, BrandCore, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { EnrichedManagerPayment } from '../../types';
 import { getAllEnrichedManagerPayments } from '../../database/repositories/paymentRepository';
 import { formatCurrency } from '../../utils/currencyUtils';
@@ -57,7 +57,8 @@ function buildSummaries(payments: EnrichedManagerPayment[], sortOrder: ManagerSo
 }
 
 export default function ManagerPaymentsScreen({ initialPendingOnly, focusKey }: ManagerPaymentsScreenProps) {
-  const { accentPalette, theme } = useAppTheme();
+  const { accentPalette, colors, theme } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const [summaries, setSummaries] = useState<ManagerSummary[]>([]);
@@ -157,7 +158,7 @@ export default function ManagerPaymentsScreen({ initialPendingOnly, focusKey }: 
     >
       <Text
         numberOfLines={1}
-        style={[styles.sheetChipText, selected && styles.sheetChipTextSelected]}
+        style={[styles.sheetChipText, selected && { color: theme.colors.onPrimary }]}
       >
         {label}
       </Text>
@@ -180,7 +181,7 @@ export default function ManagerPaymentsScreen({ initialPendingOnly, focusKey }: 
             styles.filterButton,
             {
               borderColor: filtersAreDefault ? accentPalette.main : accentPalette.textAccent,
-              backgroundColor: filtersAreDefault ? Brand.surfaceDark : accentPalette.main + '26',
+              backgroundColor: filtersAreDefault ? colors.surface : accentPalette.main + '26',
             },
             !filtersAreDefault && styles.filterButtonActive,
           ]}
@@ -281,7 +282,7 @@ export default function ManagerPaymentsScreen({ initialPendingOnly, focusKey }: 
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   container: { flex: 1 },
   filterRow: {
     flexDirection: 'row',
@@ -290,43 +291,43 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
     padding: Spacing.md,
   },
-  filterSummary: { ...Typography.bodySm, color: Brand.textSecondary, flex: 1 },
+  filterSummary: { ...Typography.bodySm, color: colors.textSecondary, flex: 1 },
   filterButton: {
     borderWidth: 1,
     borderRadius: Radius.md,
-    backgroundColor: Brand.surfaceDark,
+    backgroundColor: colors.surface,
   },
   filterButtonActive: {
     borderWidth: 1.5,
   },
   summaryCard: {
     flexDirection: 'row',
-    backgroundColor: Brand.surfaceElevated,
+    backgroundColor: colors.surfaceRaised,
     borderRadius: Radius.card,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
+    borderColor: colors.border,
     marginHorizontal: Spacing.md,
     marginBottom: Spacing.sm,
     paddingVertical: Spacing.lg,
     paddingHorizontal: Spacing.xl,
     elevation: 4,
-    shadowColor: '#000000',
+    shadowColor: colors.shadow,
     shadowOpacity: 0.12,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
   },
   summaryCardSingle: { justifyContent: 'center' },
   summaryItem: { flex: 1, alignItems: 'center' },
-  summaryLabel: { ...Typography.bodySm, fontWeight: '500', color: Brand.textSecondary, marginBottom: Spacing.xs },
+  summaryLabel: { ...Typography.bodySm, fontWeight: '500', color: colors.textSecondary, marginBottom: Spacing.xs },
   summaryAmount: { ...Typography.h2 },
-  summarySep: { width: 1, backgroundColor: Brand.borderSubtle, marginVertical: 4 },
+  summarySep: { width: 1, backgroundColor: colors.border, marginVertical: 4 },
   listContent: { paddingHorizontal: Spacing.md, paddingTop: Spacing.sm, paddingBottom: Layout.LIST_PAD_NO_FAB },
   emptyContainer: { flex: 1 },
   card: {
-    backgroundColor: Brand.surfaceDark,
+    backgroundColor: colors.surface,
     borderRadius: Radius.card,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
+    borderColor: colors.border,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     marginBottom: Spacing.sm,
@@ -338,30 +339,30 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   cardTitleBlock: { flex: 1 },
-  managerName: { ...Typography.h4, color: Brand.textPrimary },
-  sessionCount: { ...Typography.bodySm, color: Brand.textSecondary, marginTop: Spacing.xs },
+  managerName: { ...Typography.h4, color: colors.textPrimary },
+  sessionCount: { ...Typography.bodySm, color: colors.textSecondary, marginTop: Spacing.xs },
   amountRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     gap: Spacing.sm,
   },
   amountStatus: { alignItems: 'center', minWidth: 86 },
-  amountLabel: { ...Typography.caption, color: Brand.textSecondary },
+  amountLabel: { ...Typography.caption, color: colors.textSecondary },
   cardAmount: { ...Typography.h4, fontWeight: '700' },
-  paidAmount: { color: Brand.pink },
-  pendingAmount: { color: Brand.orange },
-  zeroAmount: { color: Brand.textMuted },
+  paidAmount: { color: BrandCore.pink },
+  pendingAmount: { color: BrandCore.orange },
+  zeroAmount: { color: colors.textMuted },
   sheetRoot: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(10, 5, 25, 0.65)',
+    backgroundColor: colors.scrim,
   },
   sheet: {
-    backgroundColor: Brand.surfaceElevated,
+    backgroundColor: colors.surfaceRaised,
     borderTopLeftRadius: Radius.item,
     borderTopRightRadius: Radius.item,
     borderTopWidth: 1,
-    borderTopColor: Brand.borderSubtle,
+    borderTopColor: colors.border,
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.sm,
   },
@@ -370,7 +371,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 4,
     borderRadius: Radius.full,
-    backgroundColor: Brand.borderSubtle,
+    backgroundColor: colors.border,
     marginBottom: Spacing.sm,
   },
   sheetHeader: {
@@ -378,7 +379,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: Spacing.md,
   },
-  sheetTitle: { ...Typography.h4, color: Brand.textPrimary, flex: 1 },
+  sheetTitle: { ...Typography.h4, color: colors.textPrimary, flex: 1 },
   sheetResetText: { ...Typography.labelSm },
   sheetResetDisabled: { opacity: 0.4 },
   sheetSection: { paddingBottom: Spacing.xl },
@@ -395,7 +396,8 @@ const styles = StyleSheet.create({
   },
   sheetSectionTitle: {
     ...Typography.labelSm,
-    color: Brand.textPrimary + 'CC',
+    color: colors.textPrimary,
+    opacity: 0.8,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
@@ -409,13 +411,12 @@ const styles = StyleSheet.create({
     minHeight: 40,
     borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
-    backgroundColor: Brand.surfaceDark,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
     paddingHorizontal: Spacing.lg,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sheetChipText: { ...Typography.labelSm, color: Brand.textSecondary },
-  sheetChipTextSelected: { color: Brand.textPrimary },
+  sheetChipText: { ...Typography.labelSm, color: colors.textSecondary },
 });

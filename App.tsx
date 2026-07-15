@@ -4,11 +4,12 @@ import { StatusBar } from 'expo-status-bar';
 import { PaperProvider, ActivityIndicator } from 'react-native-paper';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as SplashScreen from 'expo-splash-screen';
+import * as NavigationBar from 'expo-navigation-bar';
 import Constants from 'expo-constants';
 import { useFonts, Poppins_700Bold } from '@expo-google-fonts/poppins';
 import { Montserrat_600SemiBold } from '@expo-google-fonts/montserrat';
 import { Outfit_400Regular } from '@expo-google-fonts/outfit';
-import { Brand, ThemeProvider, useAppTheme } from './src/theme';
+import { ThemeProvider, useAppTheme } from './src/theme';
 import { BackupProvider } from './src/context/BackupContext';
 import { purgeOldNotifications } from './src/database/repositories/appNotificationRepository';
 import AppNavigator from './src/navigation/AppNavigator';
@@ -25,10 +26,15 @@ SplashScreen.preventAutoHideAsync();
 const isExpoGo = Constants.appOwnership === 'expo';
 
 function Root() {
-  const { theme } = useAppTheme();
+  const { isDark, theme } = useAppTheme();
+
+  useEffect(() => {
+    NavigationBar.setStyle(isDark ? 'dark' : 'light');
+  }, [isDark]);
+
   return (
     <PaperProvider theme={theme}>
-      <StatusBar style="light" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <AppNavigator />
     </PaperProvider>
   );
@@ -36,7 +42,8 @@ function Root() {
 
 type AppPhase = 'loading' | 'splash' | 'ready';
 
-export default function App() {
+function AppContent() {
+  const { colors } = useAppTheme();
   const [dbReady, setDbReady] = useState(false);
   const [phase, setPhase] = useState<AppPhase>('loading');
 
@@ -90,7 +97,7 @@ export default function App() {
 
   if (phase === 'loading') {
     return (
-      <View style={styles.loading}>
+      <View style={[styles.loading, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" />
       </View>
     );
@@ -99,18 +106,24 @@ export default function App() {
   return (
     <GestureHandlerRootView style={styles.root}>
       <ErrorBoundary>
-        <ThemeProvider>
-          <BackupProvider>
-            <Root />
-          </BackupProvider>
-        </ThemeProvider>
+        <BackupProvider>
+          <Root />
+        </BackupProvider>
       </ErrorBoundary>
       {phase === 'splash' && <AppSplashScreen onDone={onSplashDone} />}
     </GestureHandlerRootView>
   );
 }
 
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
+  );
+}
+
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  loading: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Brand.backgroundDark },
+  loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 });

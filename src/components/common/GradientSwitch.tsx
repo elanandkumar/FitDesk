@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Brand, Radius } from '../../theme/brandColors';
+import { Radius } from '../../theme/brandColors';
 import { useAppTheme } from '../../theme';
 
 const TRACK_W = 58;
@@ -16,7 +16,7 @@ interface Props {
 }
 
 export default function GradientSwitch({ value, onValueChange, disabled }: Props) {
-  const { accentPalette } = useAppTheme();
+  const { accentPalette, colors } = useAppTheme();
   const anim = useRef(new Animated.Value(value ? 1 : 0)).current;
 
   useEffect(() => {
@@ -46,7 +46,7 @@ export default function GradientSwitch({ value, onValueChange, disabled }: Props
           colors={
             value
               ? [accentPalette.main + '52', accentPalette.accent + '32', accentPalette.main + '42']
-              : [Brand.surfaceElevated, Brand.borderSubtle, Brand.surfaceElevated]
+              : [colors.surfaceRaised, colors.border, colors.surfaceRaised]
           }
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
@@ -56,7 +56,7 @@ export default function GradientSwitch({ value, onValueChange, disabled }: Props
           style={[
             styles.thumb,
             {
-              backgroundColor: value ? accentPalette.main : Brand.textMuted,
+              backgroundColor: value ? accentPalette.main : colors.textMuted,
               transform: [{ translateX }],
             },
           ]}

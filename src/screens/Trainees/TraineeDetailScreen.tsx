@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Divider, Text } from 'react-native-paper';
 import SectionHeader from '../../components/common/SectionHeader';
@@ -7,7 +7,7 @@ import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navig
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAppTheme } from '../../theme';
-import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { AppThemeColors, BrandCore, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { Trainee, TraineePackage, EnrichedSession } from '../../types';
 import {
@@ -38,7 +38,8 @@ function formatMonth(ym: string): string {
 }
 
 export default function TraineeDetailScreen() {
-  const { accentPalette } = useAppTheme();
+  const { accentPalette, colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
@@ -120,7 +121,7 @@ export default function TraineeDetailScreen() {
           {trainee.phone ? <InfoRow label="Phone" value={trainee.phone} /> : null}
           {trainee.email ? <InfoRow label="Email" value={trainee.email} /> : null}
           {!trainee.phone && !trainee.email && (
-            <Text variant="bodyMedium" style={{ color: Brand.textMuted }}>No contact info</Text>
+            <Text variant="bodyMedium" style={{ color: colors.textMuted }}>No contact info</Text>
           )}
         </View>
 
@@ -174,17 +175,17 @@ export default function TraineeDetailScreen() {
             )}
             <View style={styles.card}>
               {packages.length === 0 ? (
-                <Text variant="bodyMedium" style={{ color: Brand.textMuted }}>No packages yet</Text>
+                <Text variant="bodyMedium" style={{ color: colors.textMuted }}>No packages yet</Text>
               ) : (
                 packages.map((pkg, i) => (
                   <View key={pkg.id}>
-                    {i > 0 && <Divider style={{ backgroundColor: Brand.borderSubtle, marginVertical: Spacing.xs }} />}
+                    {i > 0 && <Divider style={{ backgroundColor: colors.border, marginVertical: Spacing.xs }} />}
                     <View style={styles.packageRow}>
                       <View style={{ flex: 1 }}>
-                        <Text variant="bodyMedium" style={{ color: Brand.textPrimary }}>
+                        <Text variant="bodyMedium" style={{ color: colors.textPrimary }}>
                           {formatMonth(pkg.month)}
                         </Text>
-                        <Text variant="bodySmall" style={{ color: Brand.textSecondary }}>
+                        <Text variant="bodySmall" style={{ color: colors.textSecondary }}>
                           {pkg.used_sessions}/{pkg.total_sessions} sessions used
                         </Text>
                       </View>
@@ -212,7 +213,7 @@ export default function TraineeDetailScreen() {
           <>
             {sessions.length === 0 ? (
               <View style={styles.card}>
-                <Text variant="bodyMedium" style={{ color: Brand.textMuted }}>No sessions yet</Text>
+                <Text variant="bodyMedium" style={{ color: colors.textMuted }}>No sessions yet</Text>
               </View>
             ) : (
               <View style={styles.sessionList}>
@@ -236,7 +237,7 @@ export default function TraineeDetailScreen() {
           <>
             <SectionHeader label="Notes" />
             <View style={styles.card}>
-              <Text variant="bodyMedium" style={{ color: Brand.textSecondary }}>
+              <Text variant="bodyMedium" style={{ color: colors.textSecondary }}>
                 {trainee.notes}
               </Text>
             </View>
@@ -284,23 +285,26 @@ export default function TraineeDetailScreen() {
 }
 
 function InfoRow({ label, value }: { label: string; value: string }) {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={styles.infoRow}>
-      <Text variant="bodySmall" style={{ color: Brand.textSecondary }}>{label}</Text>
-      <Text variant="bodyMedium" style={{ color: Brand.textPrimary }}>{value}</Text>
+      <Text variant="bodySmall" style={{ color: colors.textSecondary }}>{label}</Text>
+      <Text variant="bodyMedium" style={{ color: colors.textPrimary }}>{value}</Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Brand.backgroundDark },
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   content: { padding: Spacing.lg, gap: Spacing.xs, paddingBottom: 80 },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: Brand.surfaceDark,
+    backgroundColor: colors.surface,
     borderRadius: Radius.card,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
+    borderColor: colors.border,
     padding: Spacing.xs,
     marginTop: Spacing.lg,
     marginBottom: Spacing.sm,
@@ -313,12 +317,12 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     ...Typography.labelSm,
-    color: Brand.textMuted,
+    color: colors.textMuted,
   },
   summaryCard: {
     alignItems: 'center',
-    backgroundColor: Brand.surfaceElevated,
-    borderColor: Brand.borderSubtle,
+    backgroundColor: colors.surfaceRaised,
+    borderColor: colors.border,
     borderRadius: Radius.card,
     borderWidth: 1,
     flexDirection: 'row',
@@ -326,22 +330,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.lg,
     elevation: 4,
-    shadowColor: '#000000',
+    shadowColor: colors.shadow,
     shadowOpacity: 0.12,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
   },
   summaryItem: { flex: 1, alignItems: 'center' },
-  summaryLabel: { ...Typography.bodySm, fontWeight: '500', color: Brand.textSecondary, marginBottom: Spacing.xs },
+  summaryLabel: { ...Typography.bodySm, fontWeight: '500', color: colors.textSecondary, marginBottom: Spacing.xs },
   summaryAmount: { ...Typography.h2 },
-  summarySep: { width: 1, backgroundColor: Brand.borderSubtle, marginVertical: 4 },
+  summarySep: { width: 1, backgroundColor: colors.border, marginVertical: 4 },
   card: {
-    backgroundColor: Brand.surfaceDark,
+    backgroundColor: colors.surface,
     borderRadius: Radius.card,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
+    borderColor: colors.border,
     elevation: 4,
-    shadowColor: '#000000',
+    shadowColor: colors.shadow,
     shadowOpacity: 0.15,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
@@ -357,14 +361,14 @@ const styles = StyleSheet.create({
   packageRight: { alignItems: 'flex-end' },
   packageStatusLabel: {
     ...Typography.caption,
-    color: Brand.textSecondary,
+    color: colors.textSecondary,
   },
   packageAmount: {
     ...Typography.labelLg,
   },
-  paidAmount: { color: Brand.pink },
-  pendingAmount: { color: Brand.orange },
-  zeroAmount: { color: Brand.textMuted },
+  paidAmount: { color: BrandCore.pink },
+  pendingAmount: { color: BrandCore.orange },
+  zeroAmount: { color: colors.textMuted },
   sessionList: { gap: Spacing.sm },
   fab: {
     position: 'absolute',

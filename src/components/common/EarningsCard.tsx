@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
-import { Brand, Radius, Spacing, Typography } from '../../theme';
+import { BrandCore, Radius, Spacing, Typography, useAppTheme } from '../../theme';
 import { formatCurrency } from '../../utils/currencyUtils';
 
 interface Props {
@@ -11,6 +11,7 @@ interface Props {
 }
 
 export default function EarningsCard({ pending, paid, onPress }: Props) {
+  const { colors } = useAppTheme();
   if (pending === 0 && paid === 0) return null;
 
   return (
@@ -21,18 +22,19 @@ export default function EarningsCard({ pending, paid, onPress }: Props) {
       onPress={onPress}
       style={({ pressed }) => [
         styles.card,
+        { backgroundColor: colors.surfaceRaised, borderColor: colors.border },
         pressed && styles.cardPressed,
       ]}
     >
-      <Text style={styles.title}>This week · earnings</Text>
+      <Text style={[styles.title, { color: colors.textMuted }]}>This week · earnings</Text>
       <View style={styles.row}>
         <View style={styles.col}>
-          <Text style={styles.label}>Paid</Text>
-          <Text style={[styles.amount, paid > 0 ? styles.paidAmount : styles.mutedAmount]}>{formatCurrency(paid)}</Text>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>Paid</Text>
+          <Text style={[styles.amount, { color: paid > 0 ? BrandCore.pink : colors.textMuted }]}>{formatCurrency(paid)}</Text>
         </View>
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: colors.border }]} />
         <View style={styles.col}>
-          <Text style={styles.label}>Pending</Text>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>Pending</Text>
           <Text style={[styles.amount, styles.pendingAmount]}>{formatCurrency(pending)}</Text>
         </View>
       </View>
@@ -45,9 +47,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginBottom: 4,
     borderRadius: Radius.card,
-    backgroundColor: Brand.surfaceElevated,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
     paddingVertical: Spacing.lg,
     paddingHorizontal: Spacing.lg,
     gap: Spacing.md,
@@ -57,7 +57,6 @@ const styles = StyleSheet.create({
   },
   title: {
     ...Typography.caption,
-    color: Brand.textMuted,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
@@ -71,25 +70,16 @@ const styles = StyleSheet.create({
   },
   label: {
     ...Typography.caption,
-    color: Brand.textSecondary,
   },
   amount: {
     ...Typography.labelLg,
-    color: Brand.textPrimary,
   },
   pendingAmount: {
-    color: Brand.orange,
-  },
-  paidAmount: {
-    color: Brand.pink,
-  },
-  mutedAmount: {
-    color: Brand.textMuted,
+    color: BrandCore.orange,
   },
   divider: {
     width: 1,
     height: 36,
-    backgroundColor: Brand.borderSubtle,
     marginHorizontal: Spacing.lg,
   },
 });

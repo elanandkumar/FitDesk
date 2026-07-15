@@ -1,6 +1,6 @@
 import React, { useCallback, useLayoutEffect, useMemo, useState } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, TouchableOpacity, View } from 'react-native';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { Text } from 'react-native-paper';
 import AppSearchbar from '../../components/common/AppSearchbar';
 import GradientFAB from '../../components/common/GradientFAB';
@@ -9,13 +9,14 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAppTheme } from '../../theme';
-import { Brand, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { AppThemeColors, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { ClassSeries, ClassType } from '../../types';
 import { getAllClassSeries } from '../../database/repositories/classSeriesRepository';
 import { getAllClassTypes } from '../../database/repositories/classTypeRepository';
 import { todayISO } from '../../utils/dateUtils';
 import EmptyState from '../../components/common/EmptyState';
 import { RootStackParamList } from '../../navigation/types';
+import { listItemEntering } from '../../animations/listItemEntering';
 import HelpSheet from '../../components/common/HelpSheet';
 import { HELP } from '../../constants/helpContent';
 import ClassSeriesCard from '../../components/common/ClassSeriesCard';
@@ -25,12 +26,14 @@ type SeriesStatusFilter = 'active' | 'all';
 type SeriesSortOrder = 'latest' | 'az';
 
 export default function ClassSeriesListScreen() {
-  const { accentPalette, theme } = useAppTheme();
+  const { accentPalette, colors, theme } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const [series, setSeries] = useState<ClassSeries[]>([]);
   const [classTypes, setClassTypes] = useState<Map<number, ClassType>>(new Map());
   const [loading, setLoading] = useState(true);
+  const [animationCycle, setAnimationCycle] = useState(0);
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<SeriesStatusFilter>('active');
   const [sortOrder, setSortOrder] = useState<SeriesSortOrder>('latest');
@@ -63,7 +66,10 @@ export default function ClassSeriesListScreen() {
     }
   }, []);
 
-  useFocusEffect(useCallback(() => { load(); }, [load]));
+  useFocusEffect(useCallback(() => {
+    setAnimationCycle((cycle) => cycle + 1);
+    load();
+  }, [load]));
 
   const today = todayISO();
 
@@ -101,7 +107,7 @@ export default function ClassSeriesListScreen() {
     >
       <Text
         numberOfLines={1}
-        style={[styles.sheetChipText, selected && styles.sheetChipTextSelected]}
+        style={[styles.sheetChipText, selected && { color: theme.colors.onPrimary }]}
       >
         {label}
       </Text>
@@ -109,12 +115,12 @@ export default function ClassSeriesListScreen() {
   );
 
   return (
-    <Animated.View entering={FadeIn.duration(350)} style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <AppSearchbar
         placeholder="Search class series"
         value={query}
         onChangeText={setQuery}
-        style={[styles.searchbar, { backgroundColor: Brand.surfaceDark }]}
+        style={[styles.searchbar, { backgroundColor: colors.surface }]}
       />
       <View style={styles.filterRow}>
         <Text style={styles.filterSummary}>
@@ -128,7 +134,7 @@ export default function ClassSeriesListScreen() {
             styles.filterButton,
             {
               borderColor: filtersAreDefault ? accentPalette.main : accentPalette.textAccent,
-              backgroundColor: filtersAreDefault ? Brand.surfaceDark : accentPalette.main + '26',
+              backgroundColor: filtersAreDefault ? colors.surface : accentPalette.main + '26',
             },
             !filtersAreDefault && styles.filterButtonActive,
           ]}
@@ -136,7 +142,7 @@ export default function ClassSeriesListScreen() {
       </View>
       <FlatList
         data={filtered}
-        keyExtractor={(item) => String(item.id)}
+        keyExtractor={(item) => `${animationCycle}-${item.id}`}
         contentContainerStyle={[
           filtered.length === 0 && !loading ? styles.emptyContainer : styles.listContent,
           { flexGrow: 1 },
@@ -153,7 +159,7 @@ export default function ClassSeriesListScreen() {
           const ct = classTypes.get(item.class_type_id);
           const statusLabel = item.is_active ? undefined : item.end_date && item.end_date <= today ? 'Ended' : 'Cancelled';
           return (
-            <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 60).duration(350)}>
+            <Animated.View entering={listItemEntering(index)}>
               <ClassSeriesCard
                 series={item}
                 classType={ct}
@@ -218,13 +224,13 @@ export default function ClassSeriesListScreen() {
       </Modal>
 
       <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP.classSeriesList} />
-    </Animated.View>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   container: { flex: 1 },
-  searchbar: { margin: Spacing.md, marginBottom: 0, borderRadius: Radius.lg, elevation: 0, borderWidth: 1, borderColor: Brand.borderSubtle },
+  searchbar: { margin: Spacing.md, marginBottom: 0, borderRadius: Radius.lg, elevation: 0, borderWidth: 1, borderColor: colors.border },
   filterRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -232,11 +238,11 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
     padding: Spacing.md,
   },
-  filterSummary: { ...Typography.bodySm, color: Brand.textSecondary, flex: 1 },
+  filterSummary: { ...Typography.bodySm, color: colors.textSecondary, flex: 1 },
   filterButton: {
     borderWidth: 1,
     borderRadius: Radius.md,
-    backgroundColor: Brand.surfaceDark,
+    backgroundColor: colors.surface,
   },
   filterButtonActive: {
     borderWidth: 1.5,
@@ -253,14 +259,14 @@ const styles = StyleSheet.create({
   sheetRoot: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(10, 5, 25, 0.65)',
+    backgroundColor: colors.scrim,
   },
   sheet: {
-    backgroundColor: Brand.surfaceElevated,
+    backgroundColor: colors.surfaceRaised,
     borderTopLeftRadius: Radius.item,
     borderTopRightRadius: Radius.item,
     borderTopWidth: 1,
-    borderTopColor: Brand.borderSubtle,
+    borderTopColor: colors.border,
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.sm,
   },
@@ -269,7 +275,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 4,
     borderRadius: Radius.full,
-    backgroundColor: Brand.borderSubtle,
+    backgroundColor: colors.border,
     marginBottom: Spacing.sm,
   },
   sheetHeader: {
@@ -277,7 +283,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: Spacing.md,
   },
-  sheetTitle: { ...Typography.h4, color: Brand.textPrimary, flex: 1 },
+  sheetTitle: { ...Typography.h4, color: colors.textPrimary, flex: 1 },
   sheetResetText: { ...Typography.labelSm },
   sheetResetDisabled: { opacity: 0.4 },
   sheetSection: { paddingBottom: Spacing.xl },
@@ -294,7 +300,8 @@ const styles = StyleSheet.create({
   },
   sheetSectionTitle: {
     ...Typography.labelSm,
-    color: Brand.textPrimary + 'CC',
+    color: colors.textPrimary,
+    opacity: 0.8,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
@@ -308,13 +315,12 @@ const styles = StyleSheet.create({
     minHeight: 40,
     borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
-    backgroundColor: Brand.surfaceDark,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
     paddingHorizontal: Spacing.lg,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sheetChipText: { ...Typography.labelSm, color: Brand.textSecondary },
-  sheetChipTextSelected: { color: Brand.textPrimary },
+  sheetChipText: { ...Typography.labelSm, color: colors.textSecondary },
 });

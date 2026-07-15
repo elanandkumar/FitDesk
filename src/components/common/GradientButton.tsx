@@ -2,7 +2,7 @@ import React from 'react';
 import { ActivityIndicator, Pressable, StyleProp, StyleSheet, Text, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
-import { Brand, Radius } from '../../theme/brandColors';
+import { Radius } from '../../theme/brandColors';
 import { useAppTheme } from '../../theme';
 
 interface Props {
@@ -14,7 +14,7 @@ interface Props {
 }
 
 export default function GradientButton({ label, onPress, loading, disabled, style }: Props) {
-  const { accentPalette } = useAppTheme();
+  const { accentPalette, colors } = useAppTheme();
   const isDisabled = disabled || loading;
   const scale = useSharedValue(1);
   const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
@@ -29,7 +29,7 @@ export default function GradientButton({ label, onPress, loading, disabled, styl
         style={styles.pressable}
       >
         <LinearGradient
-          colors={isDisabled ? ['#3a3a4a', '#323244', '#2a2a3a'] : accentPalette.gradient}
+          colors={isDisabled ? [colors.surfaceRaised, colors.border, colors.surfaceRaised] : accentPalette.gradient}
           start={{ x: 0.2, y: 0 }}
           end={{ x: 0.8, y: 1 }}
           locations={[0, 0.55, 1]}
@@ -45,9 +45,9 @@ export default function GradientButton({ label, onPress, loading, disabled, styl
             />
           )}
           {loading ? (
-            <ActivityIndicator color={Brand.textPrimary} size={20} />
+            <ActivityIndicator color="#FFFFFF" size={20} />
           ) : (
-            <Text style={[styles.label, isDisabled && styles.labelDisabled]}>{label}</Text>
+            <Text style={[styles.label, isDisabled && { color: colors.textDisabled }]}>{label}</Text>
           )}
         </LinearGradient>
       </Pressable>
@@ -66,11 +66,10 @@ const styles = StyleSheet.create({
     minHeight: 48,
   },
   label: {
-    color: Brand.textPrimary,
+    color: '#FFFFFF',
     fontWeight: '600',
     fontSize: 16,
     textAlign: 'center',
     includeFontPadding: false,
   } as any,
-  labelDisabled: { color: Brand.textMuted },
 });

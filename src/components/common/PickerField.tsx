@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Brand, Layout, Radius, Spacing } from '../../theme/brandColors';
+import { Layout, Radius, Spacing } from '../../theme/brandColors';
+import { useAppTheme } from '../../theme';
 import AppIcon from './AppIcon';
 
 interface Props {
@@ -13,15 +14,16 @@ interface Props {
 }
 
 export default function PickerField({ placeholder, value, onPress, error, leftColor, onClear }: Props) {
+  const { colors } = useAppTheme();
   return (
     <TouchableOpacity
       onPress={onPress}
-      style={[styles.field, error && styles.fieldError]}
+      style={[styles.field, { backgroundColor: colors.surfaceRaised, borderColor: error ? colors.danger : colors.border }]}
       activeOpacity={0.7}
     >
       <View style={styles.inner}>
         {leftColor && <View style={[styles.colorDot, { backgroundColor: leftColor }]} />}
-        <Text style={[styles.text, !value && styles.placeholder]} numberOfLines={1}>
+        <Text style={[styles.text, { color: value ? colors.textPrimary : colors.textMuted }]} numberOfLines={1}>
           {value ?? placeholder}
         </Text>
       </View>
@@ -31,10 +33,10 @@ export default function PickerField({ placeholder, value, onPress, error, leftCo
             onPress={onClear}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <AppIcon name="xCircle" size={16} color={Brand.textMuted} />
+            <AppIcon name="xCircle" size={16} color={colors.textMuted} />
           </TouchableOpacity>
         ) : null}
-        <AppIcon name="caretDown" size={18} color={Brand.textMuted} />
+        <AppIcon name="caretDown" size={18} color={colors.textMuted} />
       </View>
     </TouchableOpacity>
   );
@@ -45,15 +47,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     minHeight: Layout.INPUT_HEIGHT,
-    backgroundColor: Brand.surfaceElevated,
     borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
     paddingHorizontal: Spacing.md,
     gap: Spacing.sm,
-  },
-  fieldError: {
-    borderColor: '#FF3D81',
   },
   inner: {
     flex: 1,
@@ -65,11 +62,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     fontFamily: 'Outfit_400Regular',
-    color: Brand.textPrimary,
     flex: 1,
-  },
-  placeholder: {
-    color: Brand.textMuted,
   },
   right: {
     flexDirection: 'row',

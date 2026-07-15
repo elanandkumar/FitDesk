@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Brand, Radius, Typography, useAppTheme } from '../../theme';
+import { Radius, Typography, useAppTheme } from '../../theme';
 import { withAlpha } from '../../utils/colorUtils';
 
 interface Props {
@@ -21,8 +21,8 @@ function greeting(name?: string): string {
 }
 
 export default function HeroCard({ todayCount, weekTotal, trainerName }: Props) {
-  const { accentPalette } = useAppTheme();
-  const heroColors = [withAlpha(accentPalette.main, 0.5), Brand.surfaceElevated, Brand.surfaceDark] as const;
+  const { accentPalette, colors } = useAppTheme();
+  const heroColors = [withAlpha(accentPalette.main, 0.5), colors.surfaceRaised, colors.surface] as const;
 
   return (
     <LinearGradient
@@ -32,16 +32,16 @@ export default function HeroCard({ todayCount, weekTotal, trainerName }: Props) 
       locations={[0, 0.34, 1]}
       style={styles.card}
     >
-      <Text style={styles.greeting}>{greeting(trainerName)}</Text>
+      <Text style={[styles.greeting, { color: colors.textSecondary }]}>{greeting(trainerName)}</Text>
       <View style={styles.statsRow}>
         <View style={styles.stat}>
-          <Text style={styles.count}>{todayCount === 0 ? '—' : String(todayCount)}</Text>
-          <Text style={styles.label}>{todayCount === 1 ? 'session today' : 'sessions today'}</Text>
+          <Text style={[styles.count, { color: colors.textPrimary }]}>{todayCount === 0 ? '—' : String(todayCount)}</Text>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>{todayCount === 1 ? 'session today' : 'sessions today'}</Text>
         </View>
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: colors.border }]} />
         <View style={styles.stat}>
-          <Text style={styles.count}>{weekTotal === 0 ? '—' : String(weekTotal)}</Text>
-          <Text style={styles.label}>this week</Text>
+          <Text style={[styles.count, { color: colors.textPrimary }]}>{weekTotal === 0 ? '—' : String(weekTotal)}</Text>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>this week</Text>
         </View>
       </View>
     </LinearGradient>
@@ -58,7 +58,6 @@ const styles = StyleSheet.create({
   },
   greeting: {
     ...Typography.body,
-    color: Brand.textSecondary,
   },
   statsRow: {
     flexDirection: 'row',
@@ -74,16 +73,13 @@ const styles = StyleSheet.create({
     ...Typography.heroNum,
     fontSize: 38,
     lineHeight: 46,
-    color: Brand.textPrimary,
   },
   label: {
     ...Typography.labelMd,
-    color: Brand.textSecondary,
   },
   divider: {
     width: 1,
     height: 40,
-    backgroundColor: 'rgba(255,255,255,0.12)',
     marginHorizontal: 16,
   },
 });

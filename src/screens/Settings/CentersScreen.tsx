@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 import { Text, TextInput } from 'react-native-paper';
 import AppModal from '../../components/common/AppModal';
@@ -7,7 +7,7 @@ import AppIconButton from '../../components/common/AppIconButton';
 import AppIcon from '../../components/common/AppIcon';
 import EmptyState from '../../components/common/EmptyState';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
-import { Brand, Layout, Radius, Spacing, useAppTheme } from '../../theme';
+import { AppThemeColors, Layout, Radius, Spacing, useAppTheme } from '../../theme';
 import { Center } from '../../types';
 import {
   getAllCenters,
@@ -17,7 +17,8 @@ import {
 } from '../../database/repositories/centerRepository';
 
 export default function CentersScreen() {
-  const { accentPalette, theme } = useAppTheme();
+  const { accentPalette, colors, theme } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [centers, setCenters] = useState<Center[]>([]);
   const [dialogVisible, setDialogVisible] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Center | null>(null);
@@ -153,20 +154,20 @@ export default function CentersScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Brand.backgroundDark },
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   listContent: { padding: Spacing.lg, paddingBottom: Layout.LIST_PAD_NO_FAB },
   itemCard: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    backgroundColor: Brand.surfaceDark,
+    backgroundColor: colors.surface,
     borderRadius: Radius.card,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
+    borderColor: colors.border,
     elevation: 4,
-    shadowColor: '#000000',
+    shadowColor: colors.shadow,
     shadowOpacity: 0.15,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
@@ -181,8 +182,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   itemText: { flex: 1, gap: 2 },
-  itemName: { color: Brand.textPrimary },
-  itemAddress: { color: Brand.textMuted },
+  itemName: { color: colors.textPrimary },
+  itemAddress: { color: colors.textMuted },
   rowActions: { flexDirection: 'row', alignItems: 'center' },
   fab: { position: 'absolute', bottom: Spacing.lg, right: Spacing.lg },
   dialogContent: { gap: Spacing.md },

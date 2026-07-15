@@ -1,20 +1,21 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text } from 'react-native-paper';
-import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { Radius, Spacing, Typography } from '../../theme/brandColors';
 import { useAppTheme } from '../../theme';
+import { withAlpha } from '../../utils/colorUtils';
 
 interface Props {
   label: string;
 }
 
 export default function SectionHeader({ label }: Props) {
-  const { accentPalette } = useAppTheme();
+  const { accentPalette, colors } = useAppTheme();
 
   return (
     <View style={styles.container}>
       <View style={[styles.accent, { backgroundColor: accentPalette.main }]} />
-      <Text style={styles.label}>{label}</Text>
+      <Text style={[styles.label, { color: withAlpha(colors.textPrimary, 0.8) }]}>{label}</Text>
     </View>
   );
 }
@@ -34,7 +35,6 @@ const styles = StyleSheet.create({
   },
   label: {
     ...Typography.labelMd,
-    color: Brand.textPrimary + 'CC',
     textTransform: 'uppercase',
     letterSpacing: 1,
   },

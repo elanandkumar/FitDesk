@@ -5,12 +5,7 @@
     "version": "1.2.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#111018"
-    },
+    "userInterfaceStyle": "automatic",
     "android": {
       "package": "com.elanandkumar.fitdesk",
       "versionCode": 6,
@@ -42,11 +37,29 @@
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
-          "color": "#6200ee"
+          "color": "#7B35FF"
         }
       ],
       "expo-font",
-      "expo-splash-screen"
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#111018",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "dark": {
+            "backgroundColor": "#111018",
+            "image": "./assets/splash-icon.png"
+          }
+        }
+      ],
+      [
+        "expo-navigation-bar",
+        {
+          "enforceContrast": false
+        }
+      ]
     ],
     "ios": {
       "bundleIdentifier": "com.elanandkumar.fitdesk"

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text } from 'react-native-paper';
-import { Brand } from '../../theme/brandColors';
+import { useAppTheme } from '../../theme';
 import AppModal from './AppModal';
 
 interface Props {
@@ -22,6 +22,7 @@ export default function ConfirmDialog({
   onConfirm,
   onDismiss,
 }: Props) {
+  const { colors } = useAppTheme();
   return (
     <AppModal
       visible={visible}
@@ -31,7 +32,7 @@ export default function ConfirmDialog({
       onConfirm={onConfirm}
       destructive={destructive}
     >
-      <Text variant="bodyMedium" style={{ color: Brand.textSecondary }}>{message}</Text>
+      <Text variant="bodyMedium" style={{ color: colors.textSecondary }}>{message}</Text>
     </AppModal>
   );
 }

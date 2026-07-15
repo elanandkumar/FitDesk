@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native';
-import { Brand, Radius, Spacing } from '../../theme';
+import { Radius, Spacing, useAppTheme } from '../../theme';
 import { withAlpha } from '../../utils/colorUtils';
 
 interface Props {
@@ -22,14 +22,15 @@ export default function AccentListCard({
   accessibilityLabel,
   accessibilityHint,
 }: Props) {
+  const { colors } = useAppTheme();
   const cardStyle = [
     styles.card,
     {
-      borderColor: withAlpha(accentColor, 0.28),
+      borderColor: colors.border,
       borderLeftColor: withAlpha(accentColor, muted ? 0.28 : 0.75),
-      shadowColor: '#000000',
+      shadowColor: colors.shadow,
+      backgroundColor: muted ? colors.surfaceCard : colors.surface,
     },
-    muted && styles.cardMuted,
     style,
   ];
 
@@ -59,17 +60,12 @@ const styles = StyleSheet.create({
     paddingLeft: Spacing.md,
     paddingRight: Spacing.md,
     gap: Spacing.md,
-    backgroundColor: Brand.surfaceDark,
     borderRadius: Radius.item,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
     borderLeftWidth: 4,
     elevation: 4,
     shadowOpacity: 0.18,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
-  },
-  cardMuted: {
-    backgroundColor: Brand.surfaceCard,
   },
 });
