@@ -1,14 +1,14 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Dimensions, Image, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Brand } from '../../theme/brandColors';
+import { ThemePalettes } from '../../theme';
 
 interface Props {
   onDone: () => void;
 }
 
 const { width, height } = Dimensions.get('window');
-const BG = Brand.backgroundDark;
+const SPLASH_BACKGROUND = ThemePalettes.dark.background;
 const TRANSPARENT = 'transparent';
 
 export default function AppSplashScreen({ onDone }: Props) {
@@ -34,13 +34,13 @@ export default function AppSplashScreen({ onDone }: Props) {
       />
       {/* Top fade — blends status-bar gap into background */}
       <LinearGradient
-        colors={[BG, TRANSPARENT]}
+        colors={[SPLASH_BACKGROUND, TRANSPARENT]}
         style={styles.fadeTop}
         pointerEvents="none"
       />
       {/* Bottom fade — dissolves hard letterbox edge */}
       <LinearGradient
-        colors={[TRANSPARENT, BG]}
+        colors={[TRANSPARENT, SPLASH_BACKGROUND]}
         style={styles.fadeBottom}
         pointerEvents="none"
       />
@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: BG,
+    backgroundColor: SPLASH_BACKGROUND,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 999,

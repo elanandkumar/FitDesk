@@ -2,7 +2,8 @@ import React, { ReactNode } from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { BlurView } from 'expo-blur';
-import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { Radius, Spacing, Typography } from '../../theme/brandColors';
+import { useAppTheme } from '../../theme';
 import AppButton from './AppButton';
 
 interface AppModalProps {
@@ -28,6 +29,7 @@ export default function AppModal({
   loading,
   destructive,
 }: AppModalProps) {
+  const { colors, isDark } = useAppTheme();
   return (
     <Modal
       visible={visible}
@@ -36,11 +38,11 @@ export default function AppModal({
       onRequestClose={onDismiss}
       statusBarTranslucent
     >
-      <View style={styles.overlay}>
-        <BlurView intensity={60} tint="dark" style={[StyleSheet.absoluteFill, styles.blur]} />
+      <View style={[styles.overlay, { backgroundColor: colors.scrim }]}>
+        <BlurView intensity={60} tint={isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
         <Pressable style={StyleSheet.absoluteFill} onPress={onDismiss} />
-        <View style={styles.container}>
-          <Text style={styles.title}>{title}</Text>
+        <View style={[styles.container, { backgroundColor: colors.surfaceRaised, borderColor: colors.border }]}>
+          <Text style={[styles.title, { color: colors.textPrimary }]}>{title}</Text>
           <View style={styles.body}>{children}</View>
           <View style={styles.footer}>
             <AppButton
@@ -73,21 +75,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: Spacing.lg,
-    backgroundColor: 'rgba(10, 5, 25, 0.6)',
-  },
-  blur: {
-    backgroundColor: 'rgba(10, 5, 25, 0.4)',
   },
   container: {
     borderRadius: Radius.card,
-    backgroundColor: Brand.surfaceDark,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
     overflow: 'hidden',
   },
   title: {
     ...Typography.h3,
-    color: Brand.textPrimary,
     paddingTop: Spacing.xl,
     paddingHorizontal: Spacing.xl,
     paddingBottom: Spacing.md,

@@ -1,4 +1,4 @@
-import React, { useCallback, useLayoutEffect, useState } from 'react';
+import React, { useCallback, useLayoutEffect, useMemo, useState } from 'react';
 import { useBackup } from '../../context/BackupContext';
 import { Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -7,8 +7,8 @@ import { useNavigation } from '@react-navigation/native';
 import { useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import Constants from 'expo-constants';
-import { AccentKey, AccentPalettes, useAppTheme } from '../../theme';
-import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { AccentKey, AccentPalettes, ThemePreference, useAppTheme } from '../../theme';
+import { AppThemeColors, BrandCore, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { getDatabase } from '../../database/db';
 import { scheduleUpcomingNotifications, schedulePendingPaymentNotification } from '../../notifications/scheduler';
@@ -35,6 +35,12 @@ const MINUTES_OPTIONS = [
   { value: '60', label: '1 hr' },
 ];
 
+const THEME_OPTIONS = [
+  { value: 'system', label: 'System' },
+  { value: 'light', label: 'Light' },
+  { value: 'dark', label: 'Dark' },
+];
+
 const ACCENT_OPTIONS = Object.entries(AccentPalettes).map(([key, palette]) => ({
   key: key as AccentKey,
   palette,
@@ -52,6 +58,8 @@ async function setSetting(key: string, value: string): Promise<void> {
 }
 
 function SettingsCard({ children }: { children: React.ReactNode }) {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   return <View style={styles.card}>{children}</View>;
 }
 
@@ -66,7 +74,8 @@ interface NavRowProps {
 }
 
 function NavRow({ icon, label, onPress, iconColor, isLast, showDot, subtitle }: NavRowProps) {
-  const { accentPalette } = useAppTheme();
+  const { accentPalette, colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const resolvedIconColor = iconColor ?? accentPalette.main;
 
   return (
@@ -80,7 +89,7 @@ function NavRow({ icon, label, onPress, iconColor, isLast, showDot, subtitle }: 
           {subtitle ? <Text style={styles.rowSubtitle}>{subtitle}</Text> : null}
         </View>
         {showDot && <View style={styles.rowDot} />}
-        <AppIcon name="caretRight" size={20} color={Brand.textMuted} />
+        <AppIcon name="caretRight" size={20} color={colors.textMuted} />
       </TouchableOpacity>
       {!isLast && <View style={styles.divider} />}
     </>
@@ -88,7 +97,16 @@ function NavRow({ icon, label, onPress, iconColor, isLast, showDot, subtitle }: 
 }
 
 export default function SettingsScreen() {
-  const { accentKey, accentPalette, setAccentKey, theme } = useAppTheme();
+  const {
+    accentKey,
+    accentPalette,
+    colors,
+    setAccentKey,
+    setThemePreference,
+    theme,
+    themePreference,
+  } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const navigation = useNavigation<Nav>();
   const { isBackupOverdue } = useBackup();
   const [notifEnabled, setNotifEnabled] = useState(true);
@@ -186,6 +204,16 @@ export default function SettingsScreen() {
     >
       <SectionHeader label="Appearance" />
       <SettingsCard>
+        <View style={styles.themePreferenceRow}>
+          <Text style={styles.rowLabel}>Theme</Text>
+          <Text style={styles.rowSubtitle}>Use your device appearance or choose a fixed theme</Text>
+          <ThemedSegmentedButtons
+            value={themePreference}
+            onValueChange={(value) => setThemePreference(value as ThemePreference)}
+            buttons={THEME_OPTIONS}
+          />
+        </View>
+        <View style={styles.divider} />
         <View style={styles.appearanceRow}>
           <View style={styles.appearanceCopy}>
             <Text style={styles.rowLabel}>Accent Color</Text>
@@ -210,7 +238,7 @@ export default function SettingsScreen() {
                     end={{ x: 1, y: 0 }}
                     style={styles.swatch}
                   >
-                    {selected && <AppIcon name="check" size={15} color={Brand.textPrimary} weight="bold" />}
+                    {selected && <AppIcon name="check" size={15} color={theme.colors.onPrimary} weight="bold" />}
                   </LinearGradient>
                 </TouchableOpacity>
               );
@@ -266,7 +294,7 @@ export default function SettingsScreen() {
               <Text style={[styles.timeValue, { color: accentPalette.textAccent }]}>
                 {formatDisplayTime(paymentNotifTime)}
               </Text>
-              <AppIcon name="caretRight" size={20} color={Brand.textMuted} />
+              <AppIcon name="caretRight" size={20} color={colors.textMuted} />
             </TouchableOpacity>
             <View style={styles.divider} />
             <NavRow
@@ -323,14 +351,14 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   container: { flex: 1 },
   content: { padding: Spacing.lg, paddingBottom: 96 },
   card: {
-    backgroundColor: Brand.surfaceDark,
+    backgroundColor: colors.surface,
     borderRadius: Radius.item,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
+    borderColor: colors.border,
     overflow: 'hidden',
   },
   appearanceRow: {
@@ -338,6 +366,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.lg,
     gap: Spacing.md,
+  },
+  themePreferenceRow: {
+    padding: Spacing.lg,
+    gap: Spacing.sm,
   },
   appearanceCopy: {
     flex: 1,
@@ -378,25 +410,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  rowLabel: { ...Typography.h4, color: Brand.textPrimary },
-  rowSubtitle: { ...Typography.bodySm, color: Brand.textMuted, marginTop: 1 },
+  rowLabel: { ...Typography.h4, color: colors.textPrimary },
+  rowSubtitle: { ...Typography.bodySm, color: colors.textMuted, marginTop: 1 },
   rowDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Brand.orange,
+    backgroundColor: BrandCore.orange,
     marginRight: Spacing.xs,
   },
-  divider: { height: 1, backgroundColor: Brand.borderSubtle, marginHorizontal: Spacing.lg },
+  divider: { height: 1, backgroundColor: colors.border, marginHorizontal: Spacing.lg },
   minutesRow: { padding: Spacing.lg, gap: Spacing.sm },
   timeValue: { ...Typography.body, marginRight: Spacing.xs },
-  minutesLabel: { ...Typography.labelMd, fontFamily: 'Outfit_400Regular', color: Brand.textSecondary },
+  minutesLabel: { ...Typography.labelMd, fontFamily: 'Outfit_400Regular', color: colors.textSecondary },
   about: { alignItems: 'center', paddingTop: Spacing.section, paddingBottom: Spacing.lg, gap: Spacing.xs },
   logoImage: {
     width: 120,
     height: 30,
     marginBottom: Spacing.xs,
   },
-  version: { ...Typography.labelMd, fontFamily: 'Outfit_400Regular', color: Brand.textMuted },
-  tagline: { ...Typography.bodySm, color: Brand.textMuted },
+  version: { ...Typography.labelMd, fontFamily: 'Outfit_400Regular', color: colors.textMuted },
+  tagline: { ...Typography.bodySm, color: colors.textMuted },
 });

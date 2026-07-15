@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { Text } from 'react-native-paper';
-import { BadgeTone, BadgeTones, Radius, Spacing, Typography } from '../../theme';
+import { BadgeTone, getBadgeTones, Radius, Spacing, Typography, useAppTheme } from '../../theme';
 
 interface Props {
   label: string;
@@ -11,7 +11,8 @@ interface Props {
 }
 
 export default function AppBadge({ label, tone = 'neutral', accentColor, style }: Props) {
-  const colors = BadgeTones[tone];
+  const { resolvedThemeMode } = useAppTheme();
+  const colors = getBadgeTones(resolvedThemeMode)[tone];
 
   return (
     <View style={[styles.badge, { backgroundColor: colors.background }, style]}>

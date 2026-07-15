@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Brand, Radius } from '../../theme/brandColors';
+import { Radius } from '../../theme/brandColors';
 import { useAppTheme } from '../../theme';
 import AppIcon, { AppIconName } from './AppIcon';
 
@@ -12,7 +12,7 @@ interface Props {
   color?: string;
 }
 
-export default function GradientFAB({ icon, onPress, style, color = Brand.textPrimary }: Props) {
+export default function GradientFAB({ icon, onPress, style, color = '#FFFFFF' }: Props) {
   const { accentPalette } = useAppTheme();
 
   return (

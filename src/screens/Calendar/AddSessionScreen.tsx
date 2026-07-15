@@ -10,7 +10,8 @@ import { Text, TextInput } from 'react-native-paper';
 import { useFocusEffect, useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Brand, Layout, Radius, Spacing } from '../../theme/brandColors';
+import { AppThemeColors, Layout, Radius, Spacing } from '../../theme/brandColors';
+import { useAppTheme } from '../../theme';
 import { RootStackParamList } from '../../navigation/types';
 import { ClassType, Center, LocationType, Manager, SourceType, Trainee } from '../../types';
 import { getAllClassTypes } from '../../database/repositories/classTypeRepository';
@@ -48,6 +49,8 @@ function displayDate(iso: string): string {
 }
 
 export default function AddSessionScreen() {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const insets = useSafeAreaInsets();
@@ -399,23 +402,23 @@ export default function AddSessionScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Brand.backgroundDark },
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   content: { padding: Spacing.lg },
   card: {
-    backgroundColor: Brand.surfaceDark,
+    backgroundColor: colors.surface,
     borderRadius: Radius.card,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
+    borderColor: colors.border,
     padding: Spacing.lg,
   },
-  fieldLabel: { color: Brand.textSecondary, marginBottom: Spacing.xs },
+  fieldLabel: { color: colors.textSecondary, marginBottom: Spacing.xs },
   fieldGap: { height: Spacing.sm },
   textInput: { height: Layout.INPUT_HEIGHT },
   pickerButton: {
     borderWidth: 1,
     borderRadius: Radius.md,
-    borderColor: Brand.borderSubtle,
+    borderColor: colors.border,
     paddingHorizontal: Spacing.lg,
     minHeight: Layout.INPUT_HEIGHT,
     justifyContent: 'center',
@@ -430,9 +433,9 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.md,
-    backgroundColor: Brand.backgroundDark,
+    backgroundColor: colors.background,
     borderTopWidth: 1,
-    borderTopColor: Brand.borderSubtle,
+    borderTopColor: colors.border,
   },
   cancelBtn: { flex: 0, width: 100, justifyContent: 'center' },
   saveBtn: { flex: 1 },

@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { Pressable, SectionList, StyleSheet, TouchableOpacity, View } from 'react-native';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { Text } from 'react-native-paper';
 import GradientFAB from '../../components/common/GradientFAB';
 import AppIconButton from '../../components/common/AppIconButton';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useAppTheme, Brand, Radius, Spacing, Typography } from '../../theme';
+import { useAppTheme, BrandCore, Radius, Spacing, Typography } from '../../theme';
 import { Layout } from '../../theme/brandColors';
 import { EnrichedSession } from '../../types';
 import {
@@ -26,6 +26,7 @@ import HeroCard from '../../components/common/HeroCard';
 import EarningsCard from '../../components/common/EarningsCard';
 import SessionCard from '../../components/common/SessionCard';
 import { HELP } from '../../constants/helpContent';
+import { listItemEntering } from '../../animations/listItemEntering';
 
 type Nav = StackNavigationProp<RootStackParamList>;
 
@@ -39,12 +40,13 @@ function sectionTitle(isoDate: string, todayStr: string): string {
 }
 
 export default function DashboardScreen() {
-  const { accentPalette, theme } = useAppTheme();
+  const { accentPalette, colors, theme } = useAppTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const { isBackupOverdue } = useBackup();
   const [sections, setSections] = useState<Section[]>([]);
   const [loading, setLoading] = useState(true);
+  const [animationCycle, setAnimationCycle] = useState(0);
   const [helpVisible, setHelpVisible] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [weekEarnings, setWeekEarnings] = useState<{ pending: number; paid: number }>({ pending: 0, paid: 0 });
@@ -62,8 +64,10 @@ export default function DashboardScreen() {
           >
             <AppIconButton icon="bell" iconColor={accentPalette.textAccent} onPress={() => navigation.navigate('Notifications')} />
             {unreadCount > 0 && (
-              <View style={styles.bellBadge}>
-                <Text style={styles.bellBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+              <View style={[styles.bellBadge, { borderColor: colors.background }]}>
+                <Text style={[styles.bellBadgeText, { color: colors.background }]}>
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </Text>
               </View>
             )}
           </TouchableOpacity>
@@ -71,7 +75,7 @@ export default function DashboardScreen() {
         </View>
       ),
     });
-  }, [accentPalette.textAccent, navigation, unreadCount]);
+  }, [accentPalette.textAccent, colors.background, navigation, unreadCount]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -115,6 +119,7 @@ export default function DashboardScreen() {
   }, []);
 
   useFocusEffect(useCallback(() => {
+    setAnimationCycle((cycle) => cycle + 1);
     load();
     refreshUnread();
   }, [load, refreshUnread]));
@@ -128,10 +133,10 @@ export default function DashboardScreen() {
   const weekTotal = sections.reduce((acc, s) => acc + s.data.length, 0);
 
   return (
-    <Animated.View entering={FadeIn.duration(350)} style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <SectionList
         sections={sections}
-        keyExtractor={(item) => String(item.id)}
+        keyExtractor={(item) => `${animationCycle}-${item.id}`}
         contentContainerStyle={styles.listContent}
         stickySectionHeadersEnabled={false}
         ListHeaderComponent={
@@ -182,13 +187,13 @@ export default function DashboardScreen() {
             >
               {section.title}
             </Text>
-            <Text style={styles.sectionCount}>
+            <Text style={[styles.sectionCount, { color: colors.textMuted }]}>
               {section.data.length} {section.data.length === 1 ? 'session' : 'sessions'}
             </Text>
           </View>
         )}
         renderItem={({ item, index }) => (
-          <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 55).duration(350)}>
+          <Animated.View entering={listItemEntering(index)}>
             <SessionCard
               session={item}
               onPress={() => navigation.navigate('ClassSessionDetail', { sessionId: item.id })}
@@ -207,7 +212,7 @@ export default function DashboardScreen() {
       />
 
       <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP.dashboard} />
-    </Animated.View>
+    </View>
   );
 }
 
@@ -232,7 +237,6 @@ const styles = StyleSheet.create({
   },
   sectionCount: {
     ...Typography.bodySm,
-    color: Brand.textMuted,
   },
   sessionCard: {
     marginHorizontal: Spacing.lg,
@@ -250,13 +254,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,
-    backgroundColor: Brand.orange,
+    backgroundColor: BrandCore.orange,
     borderWidth: 1.5,
-    borderColor: Brand.backgroundDark,
   },
   bellBadgeText: {
     ...Typography.microLabel,
-    color: Brand.backgroundDark,
   },
   backupBanner: {
     flexDirection: 'row',
@@ -265,19 +267,19 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.md,
-    backgroundColor: Brand.orange + '18',
+    backgroundColor: BrandCore.orange + '18',
     borderRadius: Radius.item,
     borderWidth: 1,
-    borderColor: Brand.orange + '60',
+    borderColor: BrandCore.orange + '60',
     gap: Spacing.sm,
   },
   backupBannerText: {
     flex: 1,
-    color: Brand.orange,
+    color: BrandCore.orange,
   },
   backupBannerBtn: {
     borderWidth: 1,
-    borderColor: Brand.orange,
+    borderColor: BrandCore.orange,
     borderRadius: Radius.full,
     paddingHorizontal: Spacing.sm,
     paddingVertical: 4,
@@ -285,7 +287,7 @@ const styles = StyleSheet.create({
   },
   backupBannerBtnText: {
     ...Typography.labelSm,
-    color: Brand.orange,
+    color: BrandCore.orange,
   },
   fab: {
     position: 'absolute',

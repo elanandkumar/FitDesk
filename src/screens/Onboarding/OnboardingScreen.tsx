@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import {
   Dimensions,
   FlatList,
@@ -17,7 +17,7 @@ import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppTheme } from "../../theme";
-import { Brand, Radius, Spacing, Typography } from "../../theme/brandColors";
+import { AppThemeColors, Radius, Spacing, Typography } from "../../theme/brandColors";
 import { getDatabase } from "../../database/db";
 import { RootStackParamList } from "../../navigation/types";
 import GradientButton from "../../components/common/GradientButton";
@@ -35,32 +35,34 @@ type Slide = {
   gradient: readonly [string, string];
 };
 
-const SLIDES: Slide[] = [
+const createSlides = (colors: AppThemeColors): Slide[] => [
   {
     key: "1",
     icon: "barbell",
     title: "Welcome to FitDesk",
     body: "Your personal fitness class companion. Manage your classes, clients, and payments — all in one place, right on your device.",
-    gradient: ["#3D1DB5", Brand.backgroundDark],
+    gradient: ["#3D1DB5", colors.background],
   },
   {
     key: "2",
     icon: "calendarCheck",
     title: "How It Works",
     body: "Manager-sourced classes: External managers assign you Zumba, Yoga, or Dance sessions — track each class and get paid per session.\n\nPersonal training: Manage your own clients with monthly session packages and automatic session tracking.",
-    gradient: [Brand.surfaceElevated, Brand.backgroundDark],
+    gradient: [colors.surfaceRaised, colors.background],
   },
   {
     key: "3",
     icon: "lock",
     title: "Your Data, Your Device",
     body: "All data is stored locally on this device only.\n\nUninstalling the app or clearing app data will permanently erase everything. Use Settings → Export to keep regular backups.",
-    gradient: [Brand.backgroundDark, Brand.surfaceDark],
+    gradient: [colors.background, colors.surface],
   },
 ];
 
 export default function OnboardingScreen() {
-  const { accentPalette } = useAppTheme();
+  const { accentPalette, colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const slides = useMemo(() => createSlides(colors), [colors]);
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
   const [activeIndex, setActiveIndex] = useState(0);
@@ -91,7 +93,7 @@ export default function OnboardingScreen() {
   }
 
   function next() {
-    if (activeIndex < SLIDES.length - 1) {
+    if (activeIndex < slides.length - 1) {
       listRef.current?.scrollToIndex({
         index: activeIndex + 1,
         animated: true,
@@ -101,12 +103,12 @@ export default function OnboardingScreen() {
     }
   }
 
-  const isLast = activeIndex === SLIDES.length - 1;
+  const isLast = activeIndex === slides.length - 1;
 
   if (phase === "name") {
     return (
       <LinearGradient
-        colors={[Brand.backgroundDark, Brand.surfaceDark]}
+        colors={[colors.background, colors.surface]}
         start={{ x: 0.3, y: 0 }}
         end={{ x: 0.7, y: 1 }}
         style={styles.container}
@@ -126,7 +128,7 @@ export default function OnboardingScreen() {
             <TextInput
               style={styles.nameInput}
               placeholder="Your name"
-              placeholderTextColor={Brand.textMuted}
+              placeholderTextColor={colors.textMuted}
               value={trainerName}
               onChangeText={setTrainerName}
               autoFocus
@@ -150,7 +152,7 @@ export default function OnboardingScreen() {
     <View style={styles.container}>
       <FlatList
         ref={listRef}
-        data={SLIDES}
+        data={slides}
         keyExtractor={(item) => item.key}
         horizontal
         pagingEnabled
@@ -196,7 +198,7 @@ export default function OnboardingScreen() {
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + 24 }]}>
         <View style={styles.dots}>
-          {SLIDES.map((_, i) => (
+          {slides.map((_, i) => (
             <View
               key={i}
               style={[
@@ -219,8 +221,8 @@ export default function OnboardingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Brand.backgroundDark },
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   slide: {
     flex: 1,
     padding: Spacing.section,
@@ -245,7 +247,7 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: Radius.full,
-    backgroundColor: Brand.surfaceElevated,
+    backgroundColor: colors.surfaceRaised,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: Spacing.sm,
@@ -253,25 +255,25 @@ const styles = StyleSheet.create({
   title: {
     ...Typography.h1,
     fontSize: 26, // between h1(24) and heroNum(52) — onboarding hero title
-    color: Brand.textPrimary,
+    color: colors.textPrimary,
     textAlign: "center",
   },
   body: {
     ...Typography.bodyLg,
     fontSize: 15, // between body(14) and bodyLg(16) — onboarding subtitle
-    color: Brand.textSecondary,
+    color: colors.textSecondary,
     textAlign: "center",
   },
   nameInput: {
     width: "100%",
-    backgroundColor: Brand.surfaceElevated,
+    backgroundColor: colors.surfaceRaised,
     borderRadius: Radius.lg,
     paddingHorizontal: 18, // between lg(16) and xl(20) — tuned for input feel
     paddingVertical: Spacing.lg,
-    color: Brand.textPrimary,
+    color: colors.textPrimary,
     ...Typography.bodyLg,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
+    borderColor: colors.border,
     textAlign: "center",
   },
   footer: {
@@ -279,15 +281,15 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.xxl,
     gap: Spacing.lg,
     alignItems: "center",
-    backgroundColor: Brand.backgroundDark,
+    backgroundColor: colors.background,
   },
   dots: { flexDirection: "row", gap: Spacing.sm },
   dot: { height: Spacing.sm, borderRadius: Radius.full },
   dotActive: { width: 24 },
-  dotInactive: { width: Spacing.sm, backgroundColor: Brand.borderSubtle },
+  dotInactive: { width: Spacing.sm, backgroundColor: colors.border },
   button: { width: 260 },
   skipBtn: { paddingVertical: Spacing.sm },
-  skipText: { ...Typography.body, color: Brand.textMuted },
+  skipText: { ...Typography.body, color: colors.textMuted },
   heroLogo: {
     width: 160,
     height: 160,
@@ -297,14 +299,14 @@ const styles = StyleSheet.create({
   welcomeRow: { flexDirection: "row", gap: 4 },
   welcomeText: {
     ...Typography.h1,
-    color: Brand.textSecondary,
+    color: colors.textSecondary,
     textAlign: "center",
     letterSpacing: 1,
   },
   brandName: {
     ...Typography.h1,
     fontSize: 36, // between h1(24) and heroNum(52) — brand display name
-    color: Brand.textPrimary,
+    color: colors.textPrimary,
     textAlign: "center",
     letterSpacing: 2,
   },

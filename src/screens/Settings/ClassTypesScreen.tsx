@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import {
   Text,
@@ -7,7 +7,7 @@ import {
 import AppModal from '../../components/common/AppModal';
 import GradientFAB from '../../components/common/GradientFAB';
 import AppIconButton from '../../components/common/AppIconButton';
-import { Brand, Layout, Radius, Spacing, useAppTheme } from '../../theme';
+import { AppThemeColors, Layout, Radius, Spacing, useAppTheme } from '../../theme';
 import { ClassType } from '../../types';
 import {
   getAllClassTypes,
@@ -20,7 +20,8 @@ import EmptyState from '../../components/common/EmptyState';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 
 export default function ClassTypesScreen() {
-  const { accentPalette, theme } = useAppTheme();
+  const { accentPalette, colors, theme } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [classTypes, setClassTypes] = useState<ClassType[]>([]);
   const [dialogVisible, setDialogVisible] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ClassType | null>(null);
@@ -127,7 +128,7 @@ export default function ClassTypesScreen() {
             dense
             autoFocus
           />
-          <Text variant="labelMedium" style={{ color: Brand.textSecondary }}>
+          <Text variant="labelMedium" style={{ color: colors.textSecondary }}>
             Color
           </Text>
           <View style={styles.colorRow}>
@@ -157,31 +158,31 @@ export default function ClassTypesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Brand.backgroundDark },
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   listContent: { padding: Spacing.lg, paddingBottom: Layout.LIST_PAD_NO_FAB },
   itemCard: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    backgroundColor: Brand.surfaceDark,
+    backgroundColor: colors.surface,
     borderRadius: Radius.card,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
+    borderColor: colors.border,
     elevation: 4,
-    shadowColor: '#000000',
+    shadowColor: colors.shadow,
     shadowOpacity: 0.15,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
     gap: Spacing.md,
   },
-  itemName: { flex: 1, color: Brand.textPrimary },
+  itemName: { flex: 1, color: colors.textPrimary },
   colorDot: { width: 24, height: 24, borderRadius: Radius.full },
   rowActions: { flexDirection: 'row', alignItems: 'center' },
   fab: { position: 'absolute', bottom: Spacing.lg, right: Spacing.lg },
   dialogContent: { gap: Spacing.md },
   colorRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
   colorSwatch: { width: 28, height: 28, borderRadius: Radius.full },
-  colorSelected: { borderWidth: 3, borderColor: Brand.textPrimary },
+  colorSelected: { borderWidth: 3, borderColor: colors.textPrimary },
 });

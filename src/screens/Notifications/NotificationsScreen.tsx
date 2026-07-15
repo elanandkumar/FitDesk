@@ -1,10 +1,10 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useAppTheme } from '../../theme';
-import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { AppThemeColors, BrandCore, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { AppNotification } from '../../types';
 import {
   getRecentNotifications,
@@ -14,11 +14,11 @@ import EmptyState from '../../components/common/EmptyState';
 import AppIcon, { AppIconName } from '../../components/common/AppIcon';
 
 const TYPE_CONFIG: Record<string, { icon: AppIconName; color?: string; useAccent?: boolean }> = {
-  backup_overdue:   { icon: 'database',       color: Brand.orange },
+  backup_overdue:   { icon: 'database',       color: BrandCore.orange },
   payment_pending:  { icon: 'currencyInr',    useAccent: true },
   payment_reminder: { icon: 'handCoins',      useAccent: true },
-  payment_overdue:  { icon: 'warningCircle',  color: Brand.orange },
-  payment_urgent:   { icon: 'warningOctagon', color: Brand.pink },
+  payment_overdue:  { icon: 'warningCircle',  color: BrandCore.orange },
+  payment_urgent:   { icon: 'warningOctagon', color: '#FF5252' },
 };
 
 function timeAgo(isoString: string): string {
@@ -32,7 +32,8 @@ function timeAgo(isoString: string): string {
 }
 
 function NotificationItem({ item, index }: { item: AppNotification; index: number }) {
-  const { accentPalette } = useAppTheme();
+  const { accentPalette, colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const config = TYPE_CONFIG[item.type] ?? { icon: 'bell', useAccent: true };
   const color = config.useAccent ? accentPalette.main : config.color ?? accentPalette.main;
   const isUnread = !item.read_at;
@@ -57,6 +58,8 @@ function NotificationItem({ item, index }: { item: AppNotification; index: numbe
 }
 
 export default function NotificationsScreen() {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const markTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -103,22 +106,22 @@ export default function NotificationsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Brand.backgroundDark },
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   list: { flexGrow: 1, padding: Spacing.lg, gap: Spacing.xs },
   item: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: Spacing.md,
-    backgroundColor: Brand.surfaceDark,
+    backgroundColor: colors.surface,
     borderRadius: Radius.item,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
+    borderColor: colors.border,
     padding: Spacing.md,
   },
   itemUnread: {
-    borderColor: Brand.borderSubtle,
-    backgroundColor: Brand.surfaceDark + 'EE',
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceRaised,
   },
   iconWrap: {
     width: 24,
@@ -131,7 +134,7 @@ const styles = StyleSheet.create({
   itemHeader: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs },
   itemTitle: {
     ...Typography.h4,
-    color: Brand.textPrimary,
+    color: colors.textPrimary,
     flex: 1,
   },
   unreadDot: {
@@ -140,7 +143,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     flexShrink: 0,
   },
-  itemBodyText: { ...Typography.bodySm, color: Brand.textSecondary },
-  itemTime: { ...Typography.labelMd, fontFamily: 'Outfit_400Regular', color: Brand.textMuted, marginTop: 2 },
+  itemBodyText: { ...Typography.bodySm, color: colors.textSecondary },
+  itemTime: { ...Typography.labelMd, fontFamily: 'Outfit_400Regular', color: colors.textMuted, marginTop: 2 },
   separator: { height: Spacing.xs },
 });

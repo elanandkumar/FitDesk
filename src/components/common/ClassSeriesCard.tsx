@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
 import { Text } from 'react-native-paper';
-import { Brand } from '../../theme';
+import { BrandCore, useAppTheme } from '../../theme';
 import { ClassSeries, ClassType } from '../../types';
 import { formatDisplayTime, formatRecurrenceSummary } from '../../utils/dateUtils';
 import AppBadge from './AppBadge';
@@ -16,7 +16,8 @@ interface Props {
 }
 
 export default function ClassSeriesCard({ series, classType, onPress, statusLabel, style }: Props) {
-  const accentColor = classType?.color ?? Brand.purple;
+  const { colors } = useAppTheme();
+  const accentColor = classType?.color ?? BrandCore.purple;
   const recurrenceText = formatRecurrenceSummary(series.recurrence_type, series.recurrence_days);
 
   return (
@@ -29,14 +30,14 @@ export default function ClassSeriesCard({ series, classType, onPress, statusLabe
       style={style}
     >
       <View style={styles.seriesInfo}>
-        <Text variant="titleSmall" style={[styles.title, !series.is_active && styles.textInactive]}>
+        <Text variant="titleSmall" style={{ color: series.is_active ? colors.textPrimary : colors.textSecondary }}>
           {series.title}
         </Text>
-        <Text variant="bodySmall" style={styles.subtitle}>
+        <Text variant="bodySmall" style={{ color: colors.textSecondary }}>
           {formatDisplayTime(series.class_time)} · {recurrenceText}
         </Text>
         {classType ? (
-          <Text variant="bodySmall" style={styles.classType}>
+          <Text variant="bodySmall" style={{ color: colors.textMuted }}>
             {classType.name}
           </Text>
         ) : null}
@@ -50,17 +51,5 @@ const styles = StyleSheet.create({
   seriesInfo: {
     flex: 1,
     gap: 0,
-  },
-  title: {
-    color: Brand.textPrimary,
-  },
-  textInactive: {
-    color: Brand.textSecondary,
-  },
-  subtitle: {
-    color: Brand.textSecondary,
-  },
-  classType: {
-    color: Brand.textMuted,
   },
 });

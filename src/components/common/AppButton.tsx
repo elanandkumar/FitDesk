@@ -3,7 +3,7 @@ import { ViewStyle } from 'react-native';
 import { Button } from 'react-native-paper';
 import GradientButton from './GradientButton';
 import { useAppTheme } from '../../theme';
-import { Brand, Radius } from '../../theme/brandColors';
+import { Radius } from '../../theme/brandColors';
 
 interface AppButtonProps {
   label: string;
@@ -26,7 +26,7 @@ export default function AppButton({
   fullWidth,
   color,
 }: AppButtonProps) {
-  const { accentPalette } = useAppTheme();
+  const { accentPalette, colors } = useAppTheme();
 
   if (variant === 'primary') {
     const wrapStyle: ViewStyle = fullWidth === false ? { alignSelf: 'flex-start' } : {};
@@ -51,7 +51,7 @@ export default function AppButton({
         style={[{ borderRadius: Radius.lg }, style]}
         contentStyle={{ height: 48 }}
         buttonColor={accentPalette.main}
-        textColor={Brand.textPrimary}
+        textColor="#FFFFFF"
       >
         {label}
       </Button>
@@ -82,9 +82,9 @@ export default function AppButton({
         onPress={onPress}
         loading={loading}
         disabled={disabled}
-        style={[{ borderColor: '#FF5252', borderRadius: Radius.lg }, style]}
+        style={[{ borderColor: colors.danger, borderRadius: Radius.lg }, style]}
         contentStyle={{ height: 48 }}
-        textColor="#FF5252"
+        textColor={colors.danger}
       >
         {label}
       </Button>
@@ -99,7 +99,7 @@ export default function AppButton({
       loading={loading}
       disabled={disabled}
       style={style}
-      textColor={Brand.textSecondary}
+      textColor={colors.textSecondary}
     >
       {label}
     </Button>

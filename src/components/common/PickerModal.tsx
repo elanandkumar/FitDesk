@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '../../theme';
-import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { Radius, Spacing, Typography } from '../../theme/brandColors';
 import AppIcon, { AppIconName } from './AppIcon';
 
 export interface PickerItem {
@@ -57,7 +57,7 @@ export default function PickerModal({
   showAvatar = false,
   leadingIcon,
 }: Props) {
-  const { accentPalette } = useAppTheme();
+  const { accentPalette, colors } = useAppTheme();
   const insets = useSafeAreaInsets();
   const [activeIds, setActiveIds] = useState<number[]>([]);
 
@@ -102,21 +102,22 @@ export default function PickerModal({
               <Text style={[styles.avatarText, { color: accentPalette.textAccent }]}>{getInitials(item.label)}</Text>
             </View>
           ) : null}
-          <Text style={[styles.rowLabel, selected && styles.rowLabelSelected]}>
+          <Text style={[styles.rowLabel, { color: selected ? colors.textPrimary : colors.textSecondary }]}>
             {item.label}
           </Text>
           {item.hint ? (
-            <Text style={styles.rowHint}>{item.hint}</Text>
+            <Text style={[styles.rowHint, { color: colors.textMuted }]}>{item.hint}</Text>
           ) : null}
         </View>
         {multiSelect && (
           <View
             style={[
               styles.checkbox,
+              { borderColor: colors.textMuted },
               selected && { backgroundColor: accentPalette.main, borderColor: accentPalette.main },
             ]}
           >
-            {selected && <AppIcon name="check" size={13} color={Brand.textPrimary} weight="bold" />}
+            {selected && <AppIcon name="check" size={13} color="#FFFFFF" weight="bold" />}
           </View>
         )}
       </TouchableOpacity>
@@ -131,10 +132,10 @@ export default function PickerModal({
       onRequestClose={onDismiss}
       statusBarTranslucent
     >
-      <Pressable style={styles.root} onPress={onDismiss}>
-        <Pressable style={[styles.sheet, { paddingBottom: insets.bottom || Spacing.lg }]} onPress={(e) => e.stopPropagation()}>
+      <Pressable style={[styles.root, { backgroundColor: colors.scrim }]} onPress={onDismiss}>
+        <Pressable style={[styles.sheet, { paddingBottom: insets.bottom || Spacing.lg, backgroundColor: colors.surfaceRaised, borderTopColor: colors.border }]} onPress={(e) => e.stopPropagation()}>
           <View style={styles.header}>
-            <Text style={styles.sheetTitle}>{headerTitle}</Text>
+            <Text style={[styles.sheetTitle, { color: colors.textPrimary }]}>{headerTitle}</Text>
             {onAddNew && (
               <TouchableOpacity
                 onPress={onAddNew}
@@ -152,9 +153,9 @@ export default function PickerModal({
             renderItem={renderItem}
             style={styles.list}
             contentContainerStyle={styles.listContent}
-            ItemSeparatorComponent={() => <View style={styles.separator} />}
+            ItemSeparatorComponent={() => <View style={[styles.separator, { backgroundColor: colors.border }]} />}
             ListEmptyComponent={
-              <Text style={styles.emptyText}>No items</Text>
+              <Text style={[styles.emptyText, { color: colors.textMuted }]}>No items</Text>
             }
           />
         </Pressable>
@@ -167,15 +168,12 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(10, 5, 25, 0.65)',
   },
   sheet: {
     height: '55%',
-    backgroundColor: Brand.surfaceElevated,
     borderTopLeftRadius: Radius.item,
     borderTopRightRadius: Radius.item,
     borderTopWidth: 1,
-    borderTopColor: Brand.borderSubtle,
     overflow: 'hidden',
   },
   header: {
@@ -188,7 +186,6 @@ const styles = StyleSheet.create({
   },
   sheetTitle: {
     ...Typography.h4,
-    color: Brand.textPrimary,
     flex: 1,
   },
   headerBtn: {
@@ -198,7 +195,6 @@ const styles = StyleSheet.create({
   listContent: { paddingHorizontal: Spacing.sm, paddingVertical: Spacing.xs },
   separator: {
     height: 1,
-    backgroundColor: 'rgba(255,255,255,0.07)',
     marginHorizontal: Spacing.md,
   },
   row: {
@@ -216,15 +212,10 @@ const styles = StyleSheet.create({
   },
   rowLabel: {
     ...Typography.body,
-    color: Brand.textSecondary,
     flex: 1,
-  },
-  rowLabelSelected: {
-    color: Brand.textPrimary,
   },
   rowHint: {
     ...Typography.caption,
-    color: Brand.textMuted,
   },
   colorDot: {
     width: 14,
@@ -235,24 +226,19 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: Radius.full,
-    backgroundColor: Brand.surfaceDark,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
     ...Typography.bodyLg,
     fontWeight: '700',
-    color: Brand.textPrimary,
   },
   leadingIcon: {
     width: 40,
     height: 40,
     borderRadius: Radius.full,
-    backgroundColor: Brand.surfaceDark,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -261,14 +247,12 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: Radius.sm,
     borderWidth: 1.5,
-    borderColor: Brand.textMuted,
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: Spacing.sm,
   },
   emptyText: {
     ...Typography.body,
-    color: Brand.textMuted,
     textAlign: 'center',
     paddingVertical: Spacing.xl,
   },

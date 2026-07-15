@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text as RNText, View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useAppTheme, Radius } from '../../theme';
-import { Brand } from '../../theme/brandColors';
 import AppModal from './AppModal';
 import AppIconButton from './AppIconButton';
 
@@ -29,7 +28,7 @@ function to24h(display: number, period: 'AM' | 'PM'): number {
 }
 
 export default function ThemedTimePickerModal({ visible, value, onConfirm, onDismiss }: Props) {
-  const { accentPalette, theme } = useAppTheme();
+  const { accentPalette, colors, theme } = useAppTheme();
   const [hour24, setHour24] = useState(0);
   const [minute, setMinute] = useState(0);
 
@@ -93,12 +92,12 @@ export default function ThemedTimePickerModal({ visible, value, onConfirm, onDis
 
         {/* AM/PM pill — vertical, right of time */}
         <View style={[styles.periodCol, { marginLeft: 12 }]}>
-          <View style={styles.periodPill}>
+          <View style={[styles.periodPill, { borderColor: colors.border }]}>
             <Pressable
               onPress={period === 'PM' ? togglePeriod : undefined}
               style={[styles.periodSegment, period === 'AM' && { backgroundColor: accentPalette.main }]}
             >
-              <RNText style={[styles.periodLabel, { color: period === 'AM' ? '#FFFFFF' : Brand.textSecondary }]}>
+              <RNText style={[styles.periodLabel, { color: period === 'AM' ? '#FFFFFF' : colors.textSecondary }]}>
                 AM
               </RNText>
             </Pressable>
@@ -106,7 +105,7 @@ export default function ThemedTimePickerModal({ visible, value, onConfirm, onDis
               onPress={period === 'AM' ? togglePeriod : undefined}
               style={[styles.periodSegment, period === 'PM' && { backgroundColor: accentPalette.main }]}
             >
-              <RNText style={[styles.periodLabel, { color: period === 'PM' ? '#FFFFFF' : Brand.textSecondary }]}>
+              <RNText style={[styles.periodLabel, { color: period === 'PM' ? '#FFFFFF' : colors.textSecondary }]}>
                 PM
               </RNText>
             </Pressable>
@@ -139,7 +138,6 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
     overflow: 'hidden',
   },
   periodSegment: {

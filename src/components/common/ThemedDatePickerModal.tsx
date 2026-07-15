@@ -2,7 +2,6 @@ import React from 'react';
 import { StyleSheet } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { useAppTheme, Radius } from '../../theme';
-import { Brand } from '../../theme/brandColors';
 import AppModal from './AppModal';
 
 interface Props {
@@ -24,7 +23,7 @@ export default function ThemedDatePickerModal({
   maxDate,
   title = 'Select Date',
 }: Props) {
-  const { theme } = useAppTheme();
+  const { colors, theme } = useAppTheme();
   const [selected, setSelected] = React.useState(value);
 
   React.useEffect(() => {
@@ -32,8 +31,8 @@ export default function ThemedDatePickerModal({
   }, [visible, value]);
 
   const calTheme = {
-    backgroundColor: Brand.surfaceDark,
-    calendarBackground: Brand.surfaceDark,
+    backgroundColor: colors.surface,
+    calendarBackground: colors.surface,
     textSectionTitleColor: theme.colors.onSurfaceVariant,
     selectedDayBackgroundColor: theme.colors.primary,
     selectedDayTextColor: theme.colors.onPrimary,

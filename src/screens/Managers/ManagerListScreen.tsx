@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { Text } from 'react-native-paper';
 import AppSearchbar from '../../components/common/AppSearchbar';
 import GradientFAB from '../../components/common/GradientFAB';
@@ -8,12 +8,13 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAppTheme } from '../../theme';
-import { Brand, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { AppThemeColors, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { Manager } from '../../types';
 import { getAllManagers } from '../../database/repositories/managerRepository';
 import { formatCurrency } from '../../utils/currencyUtils';
 import EmptyState from '../../components/common/EmptyState';
 import { RootStackParamList } from '../../navigation/types';
+import { listItemEntering } from '../../animations/listItemEntering';
 
 type Nav = StackNavigationProp<RootStackParamList>;
 
@@ -27,11 +28,13 @@ function initials(name: string): string {
 }
 
 export default function ManagerListScreen() {
-  const { accentPalette, theme } = useAppTheme();
+  const { accentPalette, colors, theme } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const [managers, setManagers] = useState<Manager[]>([]);
   const [loading, setLoading] = useState(true);
+  const [animationCycle, setAnimationCycle] = useState(0);
   const [query, setQuery] = useState('');
 
   const load = useCallback(async () => {
@@ -43,7 +46,10 @@ export default function ManagerListScreen() {
     }
   }, []);
 
-  useFocusEffect(useCallback(() => { load(); }, [load]));
+  useFocusEffect(useCallback(() => {
+    setAnimationCycle((cycle) => cycle + 1);
+    load();
+  }, [load]));
 
   const filtered = useMemo(() => {
     if (!query.trim()) return managers;
@@ -52,16 +58,16 @@ export default function ManagerListScreen() {
   }, [managers, query]);
 
   return (
-    <Animated.View entering={FadeIn.duration(350)} style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <AppSearchbar
         placeholder="Search managers"
         value={query}
         onChangeText={setQuery}
-        style={[styles.searchbar, { backgroundColor: Brand.surfaceDark }]}
+        style={[styles.searchbar, { backgroundColor: colors.surface }]}
       />
       <FlatList
         data={filtered}
-        keyExtractor={(item) => String(item.id)}
+        keyExtractor={(item) => `${animationCycle}-${item.id}`}
         contentContainerStyle={[styles.listContent, { flexGrow: 1 }]}
         ListEmptyComponent={
           !loading ? (
@@ -72,24 +78,26 @@ export default function ManagerListScreen() {
           ) : null
         }
         renderItem={({ item, index }) => (
-          <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 60).duration(350)}>
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel={`${item.name} manager details`}
-            accessibilityHint="Opens manager details"
-            style={styles.card}
-            onPress={() => navigation.navigate('ManagerDetail', { managerId: item.id })}
-            activeOpacity={0.75}
-          >
-            <View style={[styles.avatar, { backgroundColor: `${accentPalette.main}22`, borderColor: `${accentPalette.main}55` }]}>
-              <Text style={[styles.avatarText, { color: accentPalette.textAccent }]}>{initials(item.name)}</Text>
-            </View>
-            <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>{item.name}</Text>
-            </View>
-            <Text style={styles.cardRate}>{formatCurrency(item.per_class_rate)}/class</Text>
-          </TouchableOpacity>
-          </Animated.View>
+          <View style={styles.cardShadow}>
+            <Animated.View entering={listItemEntering(index)}>
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={`${item.name} manager details`}
+                accessibilityHint="Opens manager details"
+                style={styles.card}
+                onPress={() => navigation.navigate('ManagerDetail', { managerId: item.id })}
+                activeOpacity={0.75}
+              >
+                <View style={[styles.avatar, { backgroundColor: `${accentPalette.main}22`, borderColor: `${accentPalette.main}55` }]}>
+                  <Text style={[styles.avatarText, { color: accentPalette.textAccent }]}>{initials(item.name)}</Text>
+                </View>
+                <View style={styles.cardContent}>
+                  <Text style={styles.cardTitle}>{item.name}</Text>
+                </View>
+                <Text style={styles.cardRate}>{formatCurrency(item.per_class_rate)}/class</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </View>
         )}
       />
       <GradientFAB
@@ -98,45 +106,49 @@ export default function ManagerListScreen() {
         onPress={() => navigation.navigate('AddEditManager', {})}
       />
 
-    </Animated.View>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   container: { flex: 1 },
-  searchbar: { margin: Spacing.md, borderRadius: Radius.lg, elevation: 0, borderWidth: 1, borderColor: Brand.borderSubtle },
+  searchbar: { margin: Spacing.md, borderRadius: Radius.lg, elevation: 0, borderWidth: 1, borderColor: colors.border },
   listContent: { paddingHorizontal: Spacing.md, paddingBottom: Layout.LIST_PAD_WITH_FAB },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Brand.surfaceDark,
+  cardShadow: {
+    backgroundColor: colors.surface,
     borderRadius: Radius.item,
-    borderWidth: 1,
-    borderColor: Brand.borderSubtle,
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.lg,
     marginBottom: Spacing.sm,
     elevation: 4,
-    shadowColor: '#000000',
+    shadowColor: colors.shadow,
     shadowOpacity: 0.15,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 6,
+  },
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: Radius.item,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.lg,
     gap: Spacing.md,
   },
   avatar: {
     width: 44,
     height: 44,
     borderRadius: Radius.full,
-    backgroundColor: Brand.surfaceElevated,
+    backgroundColor: colors.surfaceRaised,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
+    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: { ...Typography.bodyLg, fontWeight: '700', color: Brand.textPrimary },
+  avatarText: { ...Typography.bodyLg, fontWeight: '700', color: colors.textPrimary },
   cardContent: { flex: 1 },
-  cardTitle: { ...Typography.h4, color: Brand.textPrimary },
-  cardRate: { ...Typography.labelMd, fontFamily: 'Outfit_400Regular', color: Brand.textSecondary },
+  cardTitle: { ...Typography.h4, color: colors.textPrimary },
+  cardRate: { ...Typography.labelMd, fontFamily: 'Outfit_400Regular', color: colors.textSecondary },
   fab: {
     position: 'absolute',
     right: Spacing.lg,

@@ -1,10 +1,10 @@
-import React, { useCallback, useLayoutEffect, useState } from 'react';
+import React, { useCallback, useLayoutEffect, useMemo, useState } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useFocusEffect, useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAppTheme } from '../../theme';
-import { Brand, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { AppThemeColors, BrandCore, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { EnrichedManagerPayment } from '../../types';
 import {
   getEnrichedManagerPaymentsByManager,
@@ -26,7 +26,8 @@ type Nav = StackNavigationProp<RootStackParamList, 'ManagerPaymentDetail'>;
 type Route = RouteProp<RootStackParamList, 'ManagerPaymentDetail'>;
 
 export default function ManagerPaymentDetailScreen() {
-  const { accentPalette, theme } = useAppTheme();
+  const { accentPalette, colors, theme } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const { managerId, managerName } = route.params;
@@ -165,14 +166,14 @@ export default function ManagerPaymentDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   container: { flex: 1 },
   summaryCard: {
     flexDirection: 'row',
-    backgroundColor: Brand.surfaceElevated,
+    backgroundColor: colors.surfaceRaised,
     borderRadius: Radius.card,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
+    borderColor: colors.border,
     marginHorizontal: Spacing.md,
     marginTop: Spacing.sm,
     marginBottom: Spacing.sm,
@@ -181,16 +182,16 @@ const styles = StyleSheet.create({
   },
   summaryItem: { flex: 1, alignItems: 'center' },
   summaryCountItem: { flex: 0.75, alignItems: 'center' },
-  summaryLabel: { ...Typography.bodySm, fontWeight: '500', color: Brand.textSecondary, marginBottom: Spacing.xs },
-  summaryValue: { ...Typography.h3, color: Brand.textPrimary },
-  summarySep: { width: 1, backgroundColor: Brand.borderSubtle, marginVertical: 2 },
+  summaryLabel: { ...Typography.bodySm, fontWeight: '500', color: colors.textSecondary, marginBottom: Spacing.xs },
+  summaryValue: { ...Typography.h3, color: colors.textPrimary },
+  summarySep: { width: 1, backgroundColor: colors.border, marginVertical: 2 },
   listContent: { paddingHorizontal: Spacing.md, paddingTop: Spacing.sm, paddingBottom: Layout.LIST_PAD_NO_FAB },
   emptyContainer: { flex: 1 },
   item: {
-    backgroundColor: Brand.surfaceDark,
+    backgroundColor: colors.surface,
     borderRadius: Radius.card,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
+    borderColor: colors.border,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     marginBottom: Spacing.xs,
@@ -202,13 +203,13 @@ const styles = StyleSheet.create({
   },
   dot: { width: 10, height: 10, borderRadius: Radius.full, flexShrink: 0 },
   itemText: { flex: 1 },
-  itemTitle: { ...Typography.body, fontWeight: '500', color: Brand.textPrimary },
-  itemSub: { ...Typography.bodySm, color: Brand.textSecondary, marginTop: 0 },
+  itemTitle: { ...Typography.body, fontWeight: '500', color: colors.textPrimary },
+  itemSub: { ...Typography.bodySm, color: colors.textSecondary, marginTop: 0 },
   itemStatus: { alignItems: 'center', minWidth: 86 },
-  amountLabel: { ...Typography.caption, color: Brand.textSecondary },
+  amountLabel: { ...Typography.caption, color: colors.textSecondary },
   amount: { ...Typography.h4, fontWeight: '700' },
-  paidAmount: { color: Brand.pink },
-  pendingAmount: { color: Brand.orange },
+  paidAmount: { color: BrandCore.pink },
+  pendingAmount: { color: BrandCore.orange },
   itemActionRow: { alignItems: 'flex-end', marginTop: Spacing.xs },
   markPaidBtn: {
     flexDirection: 'row',

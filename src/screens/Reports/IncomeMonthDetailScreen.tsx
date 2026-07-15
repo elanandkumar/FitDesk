@@ -1,10 +1,11 @@
-import React, { useCallback, useLayoutEffect, useState } from 'react';
+import React, { useCallback, useLayoutEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useFocusEffect, useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { AppThemeColors, BrandCore, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { useAppTheme } from '../../theme';
 import { RootStackParamList } from '../../navigation/types';
 import { ManagerMonthIncome, TraineeMonthPackage } from '../../types';
 import { getManagerIncomeForMonth, getTraineePackagesForMonth } from '../../database/repositories/paymentRepository';
@@ -24,6 +25,9 @@ function formatMonth(ym: string): string {
 }
 
 function AmountStatus({ amount, status }: { amount: number; status: 'paid' | 'pending' }) {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={styles.amountStatus}>
       <Text style={styles.amountLabel}>{status === 'paid' ? 'Paid' : 'Pending'}</Text>
@@ -35,6 +39,8 @@ function AmountStatus({ amount, status }: { amount: number; status: 'paid' | 'pe
 }
 
 export default function IncomeMonthDetailScreen() {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
   const route = useRoute<Route>();
@@ -97,7 +103,7 @@ export default function IncomeMonthDetailScreen() {
                 <View style={styles.itemRow}>
                   <View style={{ flex: 1 }}>
                     <Text variant="bodyMedium" style={styles.itemName}>{p.trainee_name}</Text>
-                    <Text variant="bodySmall" style={{ color: Brand.textMuted }}>
+                    <Text variant="bodySmall" style={{ color: colors.textMuted }}>
                       {p.used_sessions}/{p.total_sessions} sessions
                     </Text>
                   </View>
@@ -126,30 +132,30 @@ export default function IncomeMonthDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Brand.backgroundDark },
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   scroll: { flex: 1 },
   content: { padding: Spacing.lg, gap: Spacing.sm },
   emptyContent: { flexGrow: 1 },
   itemCard: {
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.lg,
-    backgroundColor: Brand.surfaceDark,
+    backgroundColor: colors.surface,
     borderRadius: Radius.card,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
+    borderColor: colors.border,
     elevation: 4,
-    shadowColor: '#000000',
+    shadowColor: colors.shadow,
     shadowOpacity: 0.15,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
   },
   itemRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  itemName: { color: Brand.textPrimary, fontWeight: '600' },
-  amountLabel: { ...Typography.caption, color: Brand.textSecondary },
+  itemName: { color: colors.textPrimary, fontWeight: '600' },
+  amountLabel: { ...Typography.caption, color: colors.textSecondary },
   amount: { ...Typography.h4, fontWeight: '700' },
-  paidAmount: { color: Brand.pink },
-  pendingAmount: { color: Brand.orange },
+  paidAmount: { color: BrandCore.pink },
+  pendingAmount: { color: BrandCore.orange },
   amounts: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
@@ -163,14 +169,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.lg,
     paddingHorizontal: Spacing.lg,
-    backgroundColor: Brand.surfaceElevated,
+    backgroundColor: colors.surfaceRaised,
     borderRadius: Radius.card,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
+    borderColor: colors.border,
   },
   footer: {
-    backgroundColor: Brand.backgroundDark,
-    borderTopColor: Brand.borderSubtle,
+    backgroundColor: colors.background,
+    borderTopColor: colors.border,
     borderTopWidth: 1,
     bottom: 0,
     left: 0,
@@ -180,7 +186,7 @@ const styles = StyleSheet.create({
     right: 0,
   },
   totalText: { flex: 1, marginRight: Spacing.md },
-  totalLabel: { ...Typography.labelLg, color: Brand.textPrimary },
-  totalSub: { ...Typography.bodySm, color: Brand.textSecondary, marginTop: 2 },
-  totalAmount: { ...Typography.h1, color: Brand.textPrimary },
+  totalLabel: { ...Typography.labelLg, color: colors.textPrimary },
+  totalSub: { ...Typography.bodySm, color: colors.textSecondary, marginTop: 2 },
+  totalAmount: { ...Typography.h1, color: colors.textPrimary },
 });

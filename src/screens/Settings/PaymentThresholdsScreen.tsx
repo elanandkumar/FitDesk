@@ -1,9 +1,9 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Text, TextInput } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAppTheme } from '../../theme';
-import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { AppThemeColors, Radius, Spacing, Typography } from '../../theme/brandColors';
 import AppIcon, { AppIconName } from '../../components/common/AppIcon';
 import { getDatabase } from '../../database/db';
 import { schedulePendingPaymentNotification } from '../../notifications/scheduler';
@@ -34,6 +34,9 @@ interface TierRowProps {
 }
 
 function TierRow({ icon, iconColor, activeColor, label, sublabel, value, onChangeText, onBlur }: TierRowProps) {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={styles.tierRow}>
       <View style={styles.tierIcon}>
@@ -53,16 +56,16 @@ function TierRow({ icon, iconColor, activeColor, label, sublabel, value, onChang
           dense
           style={styles.input}
           contentStyle={styles.inputContent}
-          outlineColor={Brand.borderSubtle}
+          outlineColor={colors.border}
           activeOutlineColor={activeColor}
           cursorColor={activeColor}
           selectionColor={`${activeColor}55`}
-          textColor={Brand.textPrimary}
+          textColor={colors.textPrimary}
           theme={{
             colors: {
-              background: Brand.surfaceElevated,
+              background: colors.surfaceRaised,
               primary: activeColor,
-              onSurfaceVariant: Brand.textMuted,
+              onSurfaceVariant: colors.textMuted,
             },
           }}
           maxLength={2}
@@ -75,7 +78,8 @@ function TierRow({ icon, iconColor, activeColor, label, sublabel, value, onChang
 }
 
 export default function PaymentThresholdsScreen() {
-  const { accentPalette, theme } = useAppTheme();
+  const { accentPalette, colors, theme } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [reminder, setReminder] = useState('3');
   const [high, setHigh] = useState('10');
   const [urgent, setUrgent] = useState('15');
@@ -150,15 +154,15 @@ export default function PaymentThresholdsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Brand.backgroundDark },
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   content: { padding: Spacing.lg, gap: Spacing.md },
-  description: { ...Typography.body, color: Brand.textSecondary },
+  description: { ...Typography.body, color: colors.textSecondary },
   card: {
-    backgroundColor: Brand.surfaceDark,
+    backgroundColor: colors.surface,
     borderRadius: Radius.item,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
+    borderColor: colors.border,
     overflow: 'hidden',
   },
   tierRow: {
@@ -176,12 +180,12 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   tierBody: { flex: 1, gap: 2 },
-  tierLabel: { ...Typography.h4, color: Brand.textPrimary },
-  tierSub: { ...Typography.bodySm, color: Brand.textSecondary },
+  tierLabel: { ...Typography.h4, color: colors.textPrimary },
+  tierSub: { ...Typography.bodySm, color: colors.textSecondary },
   inputWrap: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, alignSelf: 'center' },
   input: { width: 64, maxHeight: 44 },
   inputContent: { textAlign: 'center', paddingHorizontal: 0 },
-  daysLabel: { ...Typography.bodySm, color: Brand.textMuted },
-  divider: { height: 1, backgroundColor: Brand.borderSubtle, marginHorizontal: Spacing.lg },
-  note: { ...Typography.bodySm, color: Brand.textMuted, textAlign: 'center' },
+  daysLabel: { ...Typography.bodySm, color: colors.textMuted },
+  divider: { height: 1, backgroundColor: colors.border, marginHorizontal: Spacing.lg },
+  note: { ...Typography.bodySm, color: colors.textMuted, textAlign: 'center' },
 });

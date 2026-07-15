@@ -14,7 +14,7 @@ import { useFocusEffect, useNavigation, useRoute, RouteProp } from '@react-navig
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '../../theme';
-import { Brand, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { AppThemeColors, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { ClassType, Manager, Trainee, Center, TraineePackage, RecurrenceType, LocationType, SourceType } from '../../types';
 import { getAllClassTypes } from '../../database/repositories/classTypeRepository';
@@ -57,7 +57,8 @@ const DAYS = [
 ];
 
 function ErrorText({ msg }: { msg: string }) {
-  return <Text variant="bodySmall" style={{ color: Brand.pink, marginTop: Spacing.xs }}>{msg}</Text>;
+  const { colors } = useAppTheme();
+  return <Text variant="bodySmall" style={{ color: colors.danger, marginTop: Spacing.xs }}>{msg}</Text>;
 }
 
 function packageStartDate(month: string): string {
@@ -99,7 +100,8 @@ function generateSessionDatesForCount(
 }
 
 export default function AddEditClassSeriesScreen() {
-  const { accentPalette } = useAppTheme();
+  const { accentPalette, colors, theme } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const insets = useSafeAreaInsets();
@@ -624,10 +626,10 @@ export default function AddEditClassSeriesScreen() {
                           styles.dayButton,
                           active
                             ? { backgroundColor: accentPalette.main, borderColor: accentPalette.main }
-                            : { backgroundColor: Brand.surfaceDark, borderColor: Brand.borderSubtle },
+                            : { backgroundColor: colors.surface, borderColor: colors.border },
                         ]}
                       >
-                        <Text style={[styles.dayButtonText, { color: active ? Brand.textPrimary : Brand.textSecondary }]}>
+                        <Text style={[styles.dayButtonText, { color: active ? theme.colors.onPrimary : colors.textSecondary }]}>
                           {d.label}
                         </Text>
                       </TouchableOpacity>
@@ -721,7 +723,7 @@ export default function AddEditClassSeriesScreen() {
                 label="End Series"
                 onPress={() => setEndSeriesVisible(true)}
                 fullWidth={false}
-                color={Brand.textSecondary}
+                color={colors.textSecondary}
                 style={styles.endSeriesButton}
               />
             </View>
@@ -843,7 +845,7 @@ export default function AddEditClassSeriesScreen() {
         title={modalError?.title ?? 'Error'}
         cancelLabel="OK"
       >
-        <Text variant="bodyMedium" style={{ color: Brand.textSecondary }}>
+        <Text variant="bodyMedium" style={{ color: colors.textSecondary }}>
           {modalError?.message ?? ''}
         </Text>
       </AppModal>
@@ -851,26 +853,26 @@ export default function AddEditClassSeriesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Brand.backgroundDark },
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   content: { padding: Spacing.lg },
   card: {
-    backgroundColor: Brand.surfaceDark,
+    backgroundColor: colors.surface,
     borderRadius: Radius.card,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
+    borderColor: colors.border,
     padding: Spacing.lg,
   },
   packageScheduleTitle: {
     ...Typography.body,
-    color: Brand.textPrimary,
+    color: colors.textPrimary,
     marginBottom: Spacing.xs,
   },
   packageScheduleText: {
     ...Typography.bodySm,
-    color: Brand.textSecondary,
+    color: colors.textSecondary,
   },
-  fieldLabel: { color: Brand.textSecondary, marginBottom: Spacing.xs },
+  fieldLabel: { color: colors.textSecondary, marginBottom: Spacing.xs },
   fieldGap: { height: Spacing.sm },
   daysRow: { flexDirection: 'row', gap: Spacing.xs },
   dayButton: {
@@ -892,23 +894,23 @@ const styles = StyleSheet.create({
   pickerButton: {
     borderWidth: 1,
     borderRadius: Radius.md,
-    borderColor: Brand.borderSubtle,
+    borderColor: colors.border,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     minHeight: Layout.INPUT_HEIGHT,
     justifyContent: 'center',
   },
-  pickerError: { borderColor: Brand.pink },
+  pickerError: { borderColor: colors.danger },
   lockedField: {
     borderWidth: 1,
     borderRadius: Radius.md,
-    borderColor: Brand.borderSubtle,
+    borderColor: colors.border,
     minHeight: Layout.INPUT_HEIGHT,
     justifyContent: 'center',
     paddingHorizontal: Spacing.lg,
-    backgroundColor: Brand.surfaceElevated,
+    backgroundColor: colors.surfaceRaised,
   },
-  lockedFieldText: { ...Typography.body, color: Brand.textPrimary },
+  lockedFieldText: { ...Typography.body, color: colors.textPrimary },
   endDateRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   twoColRow: { flexDirection: 'row', gap: Spacing.md },
   twoColCell: { flex: 1 },
@@ -919,15 +921,15 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.md,
-    backgroundColor: Brand.backgroundDark,
+    backgroundColor: colors.background,
     borderTopWidth: 1,
-    borderTopColor: Brand.borderSubtle,
+    borderTopColor: colors.border,
   },
   seriesStatusActions: {
     marginTop: Spacing.lg,
   },
   endSeriesButton: {
-    borderColor: Brand.borderSubtle,
+    borderColor: colors.border,
   },
   cancelBtn: { flex: 0, width: 100, justifyContent: 'center' },
   saveBtn: { flex: 1 },

@@ -61,7 +61,7 @@ const EMPTY_FORM = {
 };
 
 export default function QuickAddSessionModal({ visible, initialDate, onDismiss, onCreated }: Props) {
-  const { theme } = useAppTheme();
+  const { colors, theme } = useAppTheme();
   const [classTypes, setClassTypes] = useState<ClassType[]>([]);
   const [managers, setManagers] = useState<Manager[]>([]);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -292,7 +292,7 @@ export default function QuickAddSessionModal({ visible, initialDate, onDismiss, 
         onRequestClose={() => setClassTypePickerVisible(false)}
       >
         <TouchableOpacity
-          style={styles.modalBackdrop}
+          style={[styles.modalBackdrop, { backgroundColor: colors.scrim }]}
           onPress={() => setClassTypePickerVisible(false)}
           activeOpacity={1}
         >
@@ -326,7 +326,7 @@ export default function QuickAddSessionModal({ visible, initialDate, onDismiss, 
         onRequestClose={() => setManagerPickerVisible(false)}
       >
         <TouchableOpacity
-          style={styles.modalBackdrop}
+          style={[styles.modalBackdrop, { backgroundColor: colors.scrim }]}
           onPress={() => setManagerPickerVisible(false)}
           activeOpacity={1}
         >
@@ -371,7 +371,6 @@ const styles = StyleSheet.create({
   dateTimeCell: { flex: 1 },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
   },
   modalSheet: {

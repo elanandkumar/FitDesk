@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   KeyboardAvoidingView,
   ScrollView,
@@ -12,7 +12,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '../../theme';
-import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { AppThemeColors, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { Trainee } from '../../types';
 import { getAllTrainees } from '../../database/repositories/traineeRepository';
@@ -61,7 +61,8 @@ function describeExistingPackage(totalSessions: number, usedSessions: number, st
 }
 
 export default function AddPackageScreen() {
-  const { accentPalette, theme } = useAppTheme();
+  const { accentPalette, colors, theme } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const insets = useSafeAreaInsets();
@@ -192,15 +193,15 @@ export default function AddPackageScreen() {
                   ? 'No trainees added yet'
                   : 'Select trainee...'}
             </Text>
-            <AppIcon name="caretDown" size={20} color={Brand.textMuted} />
+            <AppIcon name="caretDown" size={20} color={colors.textMuted} />
           </TouchableOpacity>
         </View>
 
         <SectionHeader label="Month" />
         <View style={[styles.card, styles.monthCard]}>
-          <AppIconButton icon="caretLeft" size={24} onPress={() => adjustMonth(-1)} iconColor={Brand.textPrimary} />
+          <AppIconButton icon="caretLeft" size={24} onPress={() => adjustMonth(-1)} iconColor={colors.textPrimary} />
           <Text style={styles.monthText}>{formatMonth(month)}</Text>
-          <AppIconButton icon="caretRight" size={24} onPress={() => adjustMonth(1)} iconColor={Brand.textPrimary} />
+          <AppIconButton icon="caretRight" size={24} onPress={() => adjustMonth(1)} iconColor={colors.textPrimary} />
         </View>
 
         <SectionHeader label="Package Details" />
@@ -274,7 +275,7 @@ export default function AddPackageScreen() {
         confirmLabel="Schedule"
         onConfirm={handleSchedulePackage}
       >
-        <Text variant="bodyMedium" style={{ color: Brand.textSecondary }}>
+        <Text variant="bodyMedium" style={{ color: colors.textSecondary }}>
           Schedule {savedPackage?.totalSessions ?? 0} calendar sessions to create this package.
         </Text>
       </AppModal>
@@ -285,7 +286,7 @@ export default function AddPackageScreen() {
         title="Could Not Prepare Package"
         cancelLabel="OK"
       >
-        <Text variant="bodyMedium" style={{ color: Brand.textSecondary }}>
+        <Text variant="bodyMedium" style={{ color: colors.textSecondary }}>
           {errorMessage}
         </Text>
       </AppModal>
@@ -293,14 +294,14 @@ export default function AddPackageScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   container: { flex: 1 },
   content: { padding: Spacing.lg },
   card: {
-    backgroundColor: Brand.surfaceDark,
+    backgroundColor: colors.surface,
     borderRadius: Radius.card,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
+    borderColor: colors.border,
     padding: Spacing.lg,
   },
   monthCard: {
@@ -309,7 +310,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: Spacing.xs,
   },
-  monthText: { ...Typography.h3, color: Brand.textPrimary, flex: 1, textAlign: 'center' },
+  monthText: { ...Typography.h3, color: colors.textPrimary, flex: 1, textAlign: 'center' },
   pickerCard: {
     paddingVertical: Spacing.xs,
     paddingHorizontal: Spacing.md,
@@ -320,17 +321,17 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     minHeight: 44,
   },
-  pickerText: { ...Typography.h4, flex: 1, color: Brand.textPrimary },
-  pickerPlaceholder: { color: Brand.textMuted },
+  pickerText: { ...Typography.h4, flex: 1, color: colors.textPrimary },
+  pickerPlaceholder: { color: colors.textMuted },
   fieldGap: { height: Spacing.sm },
   footer: {
     flexDirection: 'row',
     gap: Spacing.md,
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.md,
-    backgroundColor: Brand.backgroundDark,
+    backgroundColor: colors.background,
     borderTopWidth: 1,
-    borderTopColor: Brand.borderSubtle,
+    borderTopColor: colors.border,
   },
   cancelBtn: {
     flex: 0,

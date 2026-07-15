@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Divider, Text } from 'react-native-paper';
 import SectionHeader from '../../components/common/SectionHeader';
@@ -8,7 +8,7 @@ import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navig
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAppTheme } from '../../theme';
-import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { AppThemeColors, BrandCore, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { Manager, EnrichedManagerPayment } from '../../types';
 import {
@@ -32,7 +32,8 @@ type Nav = StackNavigationProp<RootStackParamList, 'ManagerDetail'>;
 type Route = RouteProp<RootStackParamList, 'ManagerDetail'>;
 
 export default function ManagerDetailScreen() {
-  const { accentPalette } = useAppTheme();
+  const { accentPalette, colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
@@ -100,7 +101,7 @@ export default function ManagerDetailScreen() {
           {manager.phone ? <InfoRow label="Phone" value={manager.phone} /> : null}
           {manager.email ? <InfoRow label="Email" value={manager.email} /> : null}
           {!manager.phone && !manager.email && (
-            <Text variant="bodyMedium" style={{ color: Brand.textMuted }}>No contact info</Text>
+            <Text variant="bodyMedium" style={{ color: colors.textMuted }}>No contact info</Text>
           )}
         </View>
 
@@ -109,10 +110,10 @@ export default function ManagerDetailScreen() {
         <View style={styles.card}>
           <InfoRow label="Per class rate" value={formatCurrency(manager.per_class_rate)} />
           <View style={styles.balanceRow}>
-            <Text variant="bodyMedium" style={{ color: Brand.textSecondary }}>Outstanding balance</Text>
+            <Text variant="bodyMedium" style={{ color: colors.textSecondary }}>Outstanding balance</Text>
             <Text
               variant="bodyMedium"
-              style={[styles.balanceAmount, { color: outstanding > 0 ? Brand.orange : Brand.textMuted }]}
+              style={[styles.balanceAmount, { color: outstanding > 0 ? BrandCore.orange : colors.textMuted }]}
             >
               {formatCurrency(outstanding)}
             </Text>
@@ -133,7 +134,7 @@ export default function ManagerDetailScreen() {
                 </>
               )}
               {pendingPayments.length > 0 && paidPayments.length > 0 && (
-                <Divider style={{ backgroundColor: Brand.borderSubtle, marginVertical: Spacing.sm }} />
+                <Divider style={{ backgroundColor: colors.border, marginVertical: Spacing.sm }} />
               )}
               {paidPayments.length > 0 && (
                 <>
@@ -144,7 +145,7 @@ export default function ManagerDetailScreen() {
                     <PaymentRow key={p.id} payment={p} showDivider={i > 0} />
                   ))}
                   {paidPayments.length > 8 && (
-                    <Text variant="bodySmall" style={{ color: Brand.textMuted, marginTop: Spacing.sm, textAlign: 'center' }}>
+                    <Text variant="bodySmall" style={{ color: colors.textMuted, marginTop: Spacing.sm, textAlign: 'center' }}>
                       + {paidPayments.length - 8} more paid
                     </Text>
                   )}
@@ -159,7 +160,7 @@ export default function ManagerDetailScreen() {
           <>
             <SectionHeader label="Notes" />
             <View style={styles.card}>
-              <Text variant="bodyMedium" style={{ color: Brand.textSecondary }}>
+              <Text variant="bodyMedium" style={{ color: colors.textSecondary }}>
                 {manager.notes}
               </Text>
             </View>
@@ -213,20 +214,23 @@ function PaymentRow({
   payment: EnrichedManagerPayment;
   showDivider: boolean;
 }) {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <>
-      {showDivider && <Divider style={{ backgroundColor: Brand.borderSubtle, marginVertical: Spacing.xs }} />}
+      {showDivider && <Divider style={{ backgroundColor: colors.border, marginVertical: Spacing.xs }} />}
       <View style={styles.paymentRow}>
         <View style={[styles.colorDot, { backgroundColor: payment.class_type_color }]} />
         <View style={{ flex: 1, gap: 0 }}>
-          <Text variant="bodySmall" style={{ color: Brand.textPrimary }}>
+          <Text variant="bodySmall" style={{ color: colors.textPrimary }}>
             {payment.series_title}
           </Text>
-          <Text variant="bodySmall" style={{ color: Brand.textSecondary }}>
+          <Text variant="bodySmall" style={{ color: colors.textSecondary }}>
             {formatDisplayDate(payment.session_date)} · {formatDisplayTime(payment.class_time)}
           </Text>
           {payment.status === 'paid' && payment.paid_date && (
-            <Text variant="bodySmall" style={{ color: Brand.textMuted }}>
+            <Text variant="bodySmall" style={{ color: colors.textMuted }}>
               Paid {formatDisplayDate(payment.paid_date)}
             </Text>
           )}
@@ -234,7 +238,7 @@ function PaymentRow({
         <Text
           variant="bodySmall"
           style={{
-            color: payment.status === 'pending' ? Brand.orange : Brand.pink,
+            color: payment.status === 'pending' ? BrandCore.orange : BrandCore.pink,
             fontWeight: '600',
           }}
         >
@@ -246,36 +250,39 @@ function PaymentRow({
 }
 
 function InfoRow({ label, value }: { label: string; value: string }) {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={styles.infoRow}>
-      <Text variant="bodySmall" style={{ color: Brand.textSecondary }}>{label}</Text>
-      <Text variant="bodyMedium" style={{ color: Brand.textPrimary }}>{value}</Text>
+      <Text variant="bodySmall" style={{ color: colors.textSecondary }}>{label}</Text>
+      <Text variant="bodyMedium" style={{ color: colors.textPrimary }}>{value}</Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Brand.backgroundDark },
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   content: { padding: Spacing.lg, gap: Spacing.xs, paddingBottom: 80 },
   pendingSubLabel: {
     ...Typography.microLabel,
-    color: Brand.orange,
+    color: BrandCore.orange,
     letterSpacing: 0.5,
     marginBottom: Spacing.xs,
   },
   paidSubLabel: {
     ...Typography.microLabel,
-    color: Brand.pink,
+    color: BrandCore.pink,
     letterSpacing: 0.5,
     marginBottom: Spacing.xs,
   },
   card: {
-    backgroundColor: Brand.surfaceDark,
+    backgroundColor: colors.surface,
     borderRadius: Radius.card,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
+    borderColor: colors.border,
     elevation: 4,
-    shadowColor: '#000000',
+    shadowColor: colors.shadow,
     shadowOpacity: 0.15,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },

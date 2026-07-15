@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAppTheme } from '../../theme';
-import { Brand, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { AppThemeColors, BrandCore, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { MonthlyIncomeSummary } from '../../types';
 import { getMonthlyIncomeSummary } from '../../database/repositories/paymentRepository';
@@ -151,7 +151,8 @@ function getChartSegmentHeights(
 
 export default function IncomeSummaryScreen() {
   const navigation = useNavigation<Nav>();
-  const { accentPalette } = useAppTheme();
+  const { accentPalette, colors, theme } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [rows, setRows] = useState<MonthlyIncomeSummary[]>([]);
   const [period, setPeriod] = useState<IncomePeriod>('thisMonth');
   const [helpVisible, setHelpVisible] = useState(false);
@@ -177,7 +178,7 @@ export default function IncomeSummaryScreen() {
   );
   const totalEarned = visibleRows.reduce((s, r) => s + r.total_paid, 0);
   const totalPending = visibleRows.reduce((s, r) => s + r.total_pending, 0);
-  const heroColors = [withAlpha(accentPalette.main, 0.5), Brand.surfaceElevated, Brand.surfaceDark] as const;
+  const heroColors = [withAlpha(accentPalette.main, 0.5), colors.surfaceRaised, colors.surface] as const;
   const periodSubtitle = getPeriodSubtitle(period);
   const monthComparison = getMonthComparison(rows, period);
   const shouldShowChart = (period === 'thisYear' || period === 'allTime') && chartRows.length > 1;
@@ -266,10 +267,10 @@ export default function IncomeSummaryScreen() {
             ]}
             onPress={() => setPeriod(option)}
           >
-            <Text style={[styles.periodLabel, isSelected && styles.periodLabelSelected]}>
+            <Text style={[styles.periodLabel, isSelected && { color: theme.colors.onPrimary }]}>
               {meta.labelTop}
             </Text>
-            <Text style={[styles.periodLabel, isSelected && styles.periodLabelSelected]}>
+            <Text style={[styles.periodLabel, isSelected && { color: theme.colors.onPrimary }]}>
               {meta.labelBottom}
             </Text>
           </TouchableOpacity>
@@ -288,11 +289,11 @@ export default function IncomeSummaryScreen() {
           <Text style={styles.chartTitle}>Income by Month</Text>
           <View style={styles.chartLegend}>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: Brand.pink }]} />
+              <View style={[styles.legendDot, { backgroundColor: BrandCore.pink }]} />
               <Text style={styles.legendLabel}>Paid</Text>
             </View>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: Brand.orange }]} />
+              <View style={[styles.legendDot, { backgroundColor: BrandCore.orange }]} />
               <Text style={styles.legendLabel}>Pending</Text>
             </View>
           </View>
@@ -385,7 +386,7 @@ export default function IncomeSummaryScreen() {
               <View style={[styles.heroMetricBar, styles.heroMetricBarEarned]} />
               <View style={styles.heroMetricText}>
                 <Text style={styles.heroMetricLabel}>Earned</Text>
-                <Text style={[styles.heroMetricValue, { color: Brand.pink }]}>{formatCurrency(totalEarned)}</Text>
+                <Text style={[styles.heroMetricValue, { color: BrandCore.pink }]}>{formatCurrency(totalEarned)}</Text>
               </View>
             </View>
             <View style={styles.heroMetricDivider} />
@@ -427,13 +428,13 @@ export default function IncomeSummaryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Brand.backgroundDark },
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   periodSegment: {
     flexDirection: 'row',
     overflow: 'hidden',
-    backgroundColor: Brand.backgroundDark,
-    borderColor: Brand.borderSubtle,
+    backgroundColor: colors.background,
+    borderColor: colors.border,
     borderRadius: Radius.full,
     borderWidth: 1,
     marginHorizontal: Spacing.lg,
@@ -448,12 +449,9 @@ const styles = StyleSheet.create({
   },
   periodLabel: {
     ...Typography.labelSm,
-    color: Brand.textPrimary,
+    color: colors.textPrimary,
     lineHeight: 17,
     textAlign: 'center',
-  },
-  periodLabelSelected: {
-    color: Brand.textPrimary,
   },
   heroCard: {
     margin: Spacing.lg,
@@ -470,22 +468,22 @@ const styles = StyleSheet.create({
   heroLabel: {
     ...Typography.labelMd,
     fontFamily: 'Outfit_400Regular', // override: softer weight for hero label context
-    color: Brand.textSecondary,
+    color: colors.textSecondary,
   },
   heroAmount: {
     ...Typography.h1,
     fontSize: 32, // between h1(24) and heroNum(52) — income hero figure
     lineHeight: 40,
-    color: Brand.textPrimary,
+    color: colors.textPrimary,
   },
   heroSub: {
     ...Typography.labelSm,
-    color: Brand.textSecondary,
+    color: colors.textSecondary,
   },
   heroComparisonBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: Brand.surfaceElevated,
-    borderColor: Brand.borderSubtle,
+    backgroundColor: colors.surfaceRaised,
+    borderColor: colors.border,
     borderRadius: Radius.full,
     borderWidth: 1,
     marginTop: Spacing.xs,
@@ -502,13 +500,13 @@ const styles = StyleSheet.create({
   },
   heroComparisonText: {
     ...Typography.microLabel,
-    color: Brand.textSecondary,
+    color: colors.textSecondary,
   },
   heroComparisonPositiveText: {
-    color: '#86EFAC',
+    color: colors.success,
   },
   heroComparisonNegativeText: {
-    color: '#FF8A8A',
+    color: colors.danger,
   },
   heroRight: {
     alignItems: 'flex-end',
@@ -527,9 +525,9 @@ const styles = StyleSheet.create({
     height: 34,
     width: 3,
   },
-  heroMetricBarEarned: { backgroundColor: Brand.pink },
-  heroMetricBarPending: { backgroundColor: Brand.orange },
-  heroMetricBarMuted: { backgroundColor: Brand.borderSubtle },
+  heroMetricBarEarned: { backgroundColor: BrandCore.pink },
+  heroMetricBarPending: { backgroundColor: BrandCore.orange },
+  heroMetricBarMuted: { backgroundColor: colors.border },
   heroMetricText: {
     alignItems: 'flex-end',
     gap: 1,
@@ -537,23 +535,23 @@ const styles = StyleSheet.create({
   },
   heroMetricLabel: {
     ...Typography.caption,
-    color: Brand.textSecondary,
+    color: colors.textSecondary,
   },
   heroMetricValue: {
     ...Typography.labelLg,
   },
   heroMetricDivider: {
     alignSelf: 'flex-end',
-    backgroundColor: Brand.borderSubtle,
+    backgroundColor: colors.border,
     height: 1,
     opacity: 0.7,
     width: 112,
   },
-  pendingMetricValue: { color: Brand.orange },
-  zeroMetricValue: { color: Brand.textMuted },
+  pendingMetricValue: { color: BrandCore.orange },
+  zeroMetricValue: { color: colors.textMuted },
   chartPanel: {
-    backgroundColor: Brand.surfaceDark,
-    borderColor: Brand.borderSubtle,
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
     borderRadius: Radius.card,
     borderWidth: 1,
     marginHorizontal: Spacing.lg,
@@ -570,7 +568,7 @@ const styles = StyleSheet.create({
   },
   chartTitle: {
     ...Typography.labelLg,
-    color: Brand.textPrimary,
+    color: colors.textPrimary,
   },
   chartLegend: {
     alignItems: 'center',
@@ -589,7 +587,7 @@ const styles = StyleSheet.create({
   },
   legendLabel: {
     ...Typography.caption,
-    color: Brand.textSecondary,
+    color: colors.textSecondary,
   },
   chartScrollContent: {
     alignItems: 'flex-end',
@@ -604,8 +602,8 @@ const styles = StyleSheet.create({
     width: CHART_BAR_ITEM_WIDTH,
   },
   chartBarTrack: {
-    backgroundColor: Brand.surfaceElevated,
-    borderColor: Brand.borderSubtle,
+    backgroundColor: colors.surfaceRaised,
+    borderColor: colors.border,
     borderRadius: Radius.full,
     borderWidth: 1,
     height: CHART_BAR_HEIGHT,
@@ -624,14 +622,14 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   chartBarPaid: {
-    backgroundColor: Brand.pink,
+    backgroundColor: BrandCore.pink,
   },
   chartBarPending: {
-    backgroundColor: Brand.orange,
+    backgroundColor: BrandCore.orange,
   },
   chartMonthLabel: {
     ...Typography.caption,
-    color: Brand.textMuted,
+    color: colors.textMuted,
     lineHeight: 16,
     minHeight: 32,
     textAlign: 'center',
@@ -641,12 +639,12 @@ const styles = StyleSheet.create({
   monthCard: {
     paddingVertical: Spacing.lg,
     paddingHorizontal: Spacing.lg,
-    backgroundColor: Brand.surfaceDark,
+    backgroundColor: colors.surface,
     borderRadius: Radius.item,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
+    borderColor: colors.border,
     elevation: 4,
-    shadowColor: '#000000',
+    shadowColor: colors.shadow,
     shadowOpacity: 0.2,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
@@ -663,7 +661,7 @@ const styles = StyleSheet.create({
   },
   monthTitle: {
     ...Typography.labelLg,
-    color: Brand.textPrimary,
+    color: colors.textPrimary,
   },
   monthCategories: {
     gap: Spacing.sm,
@@ -677,11 +675,11 @@ const styles = StyleSheet.create({
   },
   monthCategorySep: {
     height: 1,
-    backgroundColor: Brand.borderSubtle,
+    backgroundColor: colors.border,
   },
   monthCategoryLabel: {
     ...Typography.bodySm,
-    color: Brand.textSecondary,
+    color: colors.textSecondary,
     flex: 1,
   },
   monthAmounts: {
@@ -693,12 +691,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     minWidth: 86,
   },
-  monthAmountLabel: { ...Typography.caption, color: Brand.textSecondary },
+  monthAmountLabel: { ...Typography.caption, color: colors.textSecondary },
   monthAmount: {
     ...Typography.h4,
     fontWeight: '700',
   },
-  monthAmountPaid: { color: Brand.pink },
-  monthAmountPending: { color: Brand.orange },
-  zeroAmount: { color: Brand.textMuted },
+  monthAmountPaid: { color: BrandCore.pink },
+  monthAmountPending: { color: BrandCore.orange },
+  zeroAmount: { color: colors.textMuted },
 });

@@ -1,4 +1,4 @@
-import React, { useCallback, useLayoutEffect, useState } from 'react';
+import React, { useCallback, useLayoutEffect, useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -15,7 +15,7 @@ import {
 } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAppTheme } from '../../theme';
-import { Brand, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { AppThemeColors, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { EnrichedSession, Trainee } from '../../types';
 import {
   getEnrichedSessionById,
@@ -54,7 +54,8 @@ type Route = RouteProp<RootStackParamList, 'ClassSessionDetail'>;
 type Nav = StackNavigationProp<RootStackParamList>;
 
 export default function ClassSessionDetailScreen() {
-  const { accentPalette } = useAppTheme();
+  const { accentPalette, colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const { sessionId } = route.params;
@@ -256,7 +257,7 @@ export default function ClassSessionDetailScreen() {
   if (!session) {
     return (
       <View style={styles.center}>
-        <Text style={{ color: Brand.textPrimary }}>Session not found.</Text>
+        <Text style={{ color: colors.textPrimary }}>Session not found.</Text>
       </View>
     );
   }
@@ -333,7 +334,7 @@ export default function ClassSessionDetailScreen() {
                       const num = sessionNums[t.id];
                       return (
                         <View key={t.id} style={styles.traineeRow}>
-                          <Text variant="bodyMedium" style={{ color: Brand.textPrimary }}>{t.name}</Text>
+                          <Text variant="bodyMedium" style={{ color: colors.textPrimary }}>{t.name}</Text>
                           {num && (
                             <Text variant="labelSmall" style={{ color: accentPalette.textAccent }}>
                               Session {num.session_number} / {num.total_sessions}
@@ -379,7 +380,7 @@ export default function ClassSessionDetailScreen() {
                 )}
               </>
             ) : (
-              <Text variant="bodyMedium" style={{ color: Brand.textSecondary }}>
+              <Text variant="bodyMedium" style={{ color: colors.textSecondary }}>
                 {session.notes}
               </Text>
             )}
@@ -398,7 +399,7 @@ export default function ClassSessionDetailScreen() {
       >
         {isManager ? (
           <>
-            <Text variant="bodySmall" style={{ color: Brand.textSecondary, marginBottom: Spacing.sm }}>
+            <Text variant="bodySmall" style={{ color: colors.textSecondary, marginBottom: Spacing.sm }}>
               How many students attended?
             </Text>
             <TextInput
@@ -413,22 +414,22 @@ export default function ClassSessionDetailScreen() {
         ) : (
           <>
             {session.guest_name ? (
-              <Text variant="bodySmall" style={{ color: Brand.textSecondary, marginBottom: Spacing.sm }}>
+              <Text variant="bodySmall" style={{ color: colors.textSecondary, marginBottom: Spacing.sm }}>
                 Completing for guest: {session.guest_name}
               </Text>
             ) : linkedTrainees.length > 0 ? (
               <View style={{ marginBottom: Spacing.sm }}>
-                <Text variant="bodySmall" style={{ color: Brand.textSecondary, marginBottom: Spacing.xs }}>
+                <Text variant="bodySmall" style={{ color: colors.textSecondary, marginBottom: Spacing.xs }}>
                   Completing for:
                 </Text>
                 {linkedTrainees.map((t) => (
-                  <Text key={t.id} variant="bodyMedium" style={{ color: Brand.textPrimary }}>
+                  <Text key={t.id} variant="bodyMedium" style={{ color: colors.textPrimary }}>
                     • {t.name}
                   </Text>
                 ))}
               </View>
             ) : (
-              <Text variant="bodySmall" style={{ color: Brand.textSecondary, marginBottom: Spacing.sm }}>
+              <Text variant="bodySmall" style={{ color: colors.textSecondary, marginBottom: Spacing.sm }}>
                 No trainees linked. Session will be marked complete.
               </Text>
             )}
@@ -486,13 +487,13 @@ export default function ClassSessionDetailScreen() {
           <View style={styles.editColCell}>
             <Text variant="labelMedium" style={styles.editFieldLabel}>Date</Text>
             <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.editPickerButton}>
-              <Text style={{ color: Brand.textPrimary }}>{formatDisplayDate(editDate)}</Text>
+              <Text style={{ color: colors.textPrimary }}>{formatDisplayDate(editDate)}</Text>
             </TouchableOpacity>
           </View>
           <View style={styles.editColCell}>
             <Text variant="labelMedium" style={styles.editFieldLabel}>Time</Text>
             <TouchableOpacity onPress={() => setShowTimePicker(true)} style={styles.editPickerButton}>
-              <Text style={{ color: Brand.textPrimary }}>{formatDisplayTime(editTime)}</Text>
+              <Text style={{ color: colors.textPrimary }}>{formatDisplayTime(editTime)}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -561,6 +562,9 @@ export default function ClassSessionDetailScreen() {
 }
 
 function DetailRow({ label, value }: { label: string; value: string }) {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={styles.detailRow}>
       <Text variant="labelMedium" style={styles.detailLabel}>{label}</Text>
@@ -569,10 +573,10 @@ function DetailRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Brand.backgroundDark },
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   scrollView: { flex: 1 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Brand.backgroundDark },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
   content: { padding: Spacing.lg, gap: Spacing.md, paddingBottom: Spacing.lg },
   contentWithFooter: { paddingBottom: Spacing.xxl },
   heroStrip: {
@@ -581,36 +585,36 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg,
     borderRadius: Radius.card,
     gap: Spacing.sm,
-    backgroundColor: Brand.surfaceDark,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
+    borderColor: colors.border,
   },
   heroTitle: {
     ...Typography.h2,
-    color: Brand.textPrimary,
+    color: colors.textPrimary,
   },
   badgeRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, flexWrap: 'wrap' },
   detailCard: {
-    backgroundColor: Brand.surfaceDark,
+    backgroundColor: colors.surface,
     borderRadius: Radius.card,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
+    borderColor: colors.border,
     padding: Spacing.lg,
     gap: Spacing.sm,
     elevation: 4,
-    shadowColor: '#000000',
+    shadowColor: colors.shadow,
     shadowOpacity: 0.15,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
   },
   cardLabel: {
-    color: Brand.textSecondary,
+    color: colors.textSecondary,
     marginBottom: Spacing.xs,
   },
-  rowDivider: { backgroundColor: Brand.borderSubtle, marginVertical: 0 },
+  rowDivider: { backgroundColor: colors.border, marginVertical: 0 },
   detailRow: { flexDirection: 'row', alignItems: 'flex-start' },
-  detailLabel: { color: Brand.textSecondary, width: 88 },
-  detailValue: { color: Brand.textPrimary, flex: 1 },
+  detailLabel: { color: colors.textSecondary, width: 88 },
+  detailValue: { color: colors.textPrimary, flex: 1 },
   traineeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   footer: {
     flexDirection: 'row',
@@ -619,23 +623,23 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.md,
-    backgroundColor: Brand.backgroundDark,
+    backgroundColor: colors.background,
     borderTopWidth: 1,
-    borderTopColor: Brand.borderSubtle,
+    borderTopColor: colors.border,
   },
   footerHint: {
     ...Typography.caption,
-    color: Brand.textMuted,
+    color: colors.textMuted,
     width: '100%',
   },
   skipBtn: { borderRadius: Radius.lg },
   editTwoCol: { flexDirection: 'row', gap: Spacing.md },
   editColCell: { flex: 1 },
-  editFieldLabel: { color: Brand.textSecondary, marginBottom: Spacing.xs },
+  editFieldLabel: { color: colors.textSecondary, marginBottom: Spacing.xs },
   editPickerButton: {
     borderWidth: 1,
     borderRadius: Radius.md,
-    borderColor: Brand.borderSubtle,
+    borderColor: colors.border,
     paddingHorizontal: Spacing.lg,
     minHeight: Layout.INPUT_HEIGHT,
     justifyContent: 'center',

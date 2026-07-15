@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { KeyboardAvoidingView, ScrollView, StyleSheet, View } from 'react-native';
 import { Text, TextInput } from 'react-native-paper';
 import SectionHeader from '../../components/common/SectionHeader';
@@ -6,7 +6,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '../../theme';
-import { Brand, Radius, Spacing } from '../../theme/brandColors';
+import { AppThemeColors, Radius, Spacing } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import {
   createManager,
@@ -20,7 +20,8 @@ type Nav = StackNavigationProp<RootStackParamList, 'AddEditManager'>;
 type Route = RouteProp<RootStackParamList, 'AddEditManager'>;
 
 export default function AddEditManagerScreen() {
-  const { theme } = useAppTheme();
+  const { colors, theme } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const insets = useSafeAreaInsets();
@@ -177,14 +178,14 @@ export default function AddEditManagerScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   container: { flex: 1 },
   content: { padding: Spacing.lg },
   card: {
-    backgroundColor: Brand.surfaceDark,
+    backgroundColor: colors.surface,
     borderRadius: Radius.card,
     borderWidth: 1,
-    borderColor: Brand.borderSubtle,
+    borderColor: colors.border,
     padding: Spacing.lg,
   },
   fieldGap: { height: Spacing.sm },
@@ -193,9 +194,9 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.md,
-    backgroundColor: Brand.backgroundDark,
+    backgroundColor: colors.background,
     borderTopWidth: 1,
-    borderTopColor: Brand.borderSubtle,
+    borderTopColor: colors.border,
   },
   cancelBtn: {
     flex: 0,
