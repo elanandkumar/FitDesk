@@ -29,6 +29,8 @@ export type RootStackParamList = {
   ManagerPaymentDetail: { managerId: number; managerName: string };
   Notifications: undefined;
   PaymentThresholds: undefined;
+  WhatsNew: undefined;
+  PrivacyPolicy: undefined;
 };
 
 export type TabParamList = {

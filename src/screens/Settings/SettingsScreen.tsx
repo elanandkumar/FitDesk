@@ -334,6 +334,21 @@ export default function SettingsScreen() {
         </View>
       </SettingsCard>
 
+      <SectionHeader label="About" />
+      <SettingsCard>
+        <NavRow
+          icon="notePencil"
+          label="What's New"
+          onPress={() => navigation.navigate('WhatsNew')}
+        />
+        <NavRow
+          icon="lock"
+          label="Privacy Policy"
+          onPress={() => navigation.navigate('PrivacyPolicy')}
+          isLast
+        />
+      </SettingsCard>
+
       <View style={styles.about}>
         <Image
           source={require('../../../assets/logo-text.png')}

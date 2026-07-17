@@ -23,12 +23,20 @@ import AddSessionScreen from '../screens/Calendar/AddSessionScreen';
 import NotificationsScreen from '../screens/Notifications/NotificationsScreen';
 import PaymentThresholdsScreen from '../screens/Settings/PaymentThresholdsScreen';
 import { getDatabase } from '../database/db';
+import PrivacyPolicyScreen from '../screens/Settings/PrivacyPolicyScreen';
+import WhatsNewScreen from '../screens/Settings/WhatsNewScreen';
+import WhatsNewModal from '../components/common/WhatsNewModal';
+import Constants from 'expo-constants';
+import { getReleaseNote } from '../constants/releases';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
   const { theme } = useAppTheme();
   const [initialRoute, setInitialRoute] = useState<'Onboarding' | 'MainTabs' | null>(null);
+  const [whatsNewVisible, setWhatsNewVisible] = useState(false);
+  const appVersion = Constants.nativeAppVersion ?? Constants.expoConfig?.version ?? null;
+  const currentRelease = getReleaseNote(appVersion);
 
   useEffect(() => {
     async function checkOnboarding() {
@@ -36,23 +44,41 @@ export default function AppNavigator() {
       const row = await db.getFirstAsync<{ value: string }>(
         "SELECT value FROM settings WHERE key = 'onboarding_done'"
       );
-      setInitialRoute(row?.value === 'true' ? 'MainTabs' : 'Onboarding');
+      const route = row?.value === 'true' ? 'MainTabs' : 'Onboarding';
+      setInitialRoute(route);
+      if (route === 'MainTabs' && currentRelease) {
+        const seen = await db.getFirstAsync<{ value: string }>(
+          "SELECT value FROM settings WHERE key = 'last_seen_whats_new_version'"
+        );
+        setWhatsNewVisible(seen?.value !== currentRelease.version);
+      }
     }
     checkOnboarding();
-  }, []);
+  }, [currentRelease]);
+
+  async function dismissWhatsNew() {
+    setWhatsNewVisible(false);
+    if (!currentRelease) return;
+    const db = await getDatabase();
+    await db.runAsync(
+      "INSERT OR REPLACE INTO settings (key, value) VALUES ('last_seen_whats_new_version', ?)",
+      [currentRelease.version]
+    );
+  }
 
   if (!initialRoute) return null;
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator
-        initialRouteName={initialRoute}
-        screenOptions={{
-          headerStyle: { backgroundColor: theme.colors.surface },
-          headerTintColor: theme.colors.onSurface,
-          cardStyle: { backgroundColor: theme.colors.background },
-        }}
-      >
+    <>
+      <NavigationContainer>
+        <Stack.Navigator
+          initialRouteName={initialRoute}
+          screenOptions={{
+            headerStyle: { backgroundColor: theme.colors.surface },
+            headerTintColor: theme.colors.onSurface,
+            cardStyle: { backgroundColor: theme.colors.background },
+          }}
+        >
         <Stack.Screen
           name="Onboarding"
           component={OnboardingScreen}
@@ -123,7 +149,11 @@ export default function AppNavigator() {
           component={PaymentThresholdsScreen}
           options={{ title: 'Payment Overdue Alerts' }}
         />
-      </Stack.Navigator>
-    </NavigationContainer>
+        <Stack.Screen name="WhatsNew" component={WhatsNewScreen} options={{ title: "What's New" }} />
+        <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} options={{ title: 'Privacy Policy' }} />
+        </Stack.Navigator>
+      </NavigationContainer>
+      <WhatsNewModal visible={whatsNewVisible} release={currentRelease} onDismiss={dismissWhatsNew} />
+    </>
   );
 }
