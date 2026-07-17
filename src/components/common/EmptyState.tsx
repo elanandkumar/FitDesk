@@ -17,7 +17,10 @@ export default function EmptyState({ title, subtitle, icon }: Props) {
       {icon && (
         <AppIcon name={icon} size={48} color={theme.colors.onSurfaceVariant} />
       )}
-      <Text variant="headlineSmall" style={{ color: theme.colors.onSurfaceVariant }}>
+      <Text
+        variant="headlineSmall"
+        style={{ color: theme.colors.onSurfaceVariant, textAlign: 'center' }}
+      >
         {title}
       </Text>
       {subtitle && (
