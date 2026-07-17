@@ -3,6 +3,8 @@ package com.elanandkumar.fitdesk
 import android.os.Build
 import android.os.Bundle
 
+import androidx.appcompat.app.AppCompatDelegate
+
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
@@ -12,6 +14,10 @@ import expo.modules.ReactActivityDelegateWrapper
 
 class MainActivity : ReactActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
+    // Keep Android's native configuration (and React Native Appearance) tied
+    // to the device setting. Without this, some OEM builds can retain a light
+    // AppCompat mode even while the system is dark.
+    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
     // Set the theme to AppTheme BEFORE onCreate to support
     // coloring the background, status bar, and navigation bar.
     // This is required for expo-splash-screen.

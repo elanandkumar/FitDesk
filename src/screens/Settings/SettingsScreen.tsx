@@ -202,51 +202,6 @@ export default function SettingsScreen() {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       contentContainerStyle={styles.content}
     >
-      <SectionHeader label="Appearance" />
-      <SettingsCard>
-        <View style={styles.themePreferenceRow}>
-          <Text style={styles.rowLabel}>Theme</Text>
-          <Text style={styles.rowSubtitle}>Use your device appearance or choose a fixed theme</Text>
-          <ThemedSegmentedButtons
-            value={themePreference}
-            onValueChange={(value) => setThemePreference(value as ThemePreference)}
-            buttons={THEME_OPTIONS}
-          />
-        </View>
-        <View style={styles.divider} />
-        <View style={styles.appearanceRow}>
-          <View style={styles.appearanceCopy}>
-            <Text style={styles.rowLabel}>Accent Color</Text>
-            <Text style={styles.rowSubtitle}>Applies to buttons, selected tabs, and highlights</Text>
-          </View>
-          <View style={styles.swatchRow}>
-            {ACCENT_OPTIONS.map(({ key, palette }) => {
-              const selected = accentKey === key;
-              return (
-                <TouchableOpacity
-                  key={key}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${palette.label} accent`}
-                  accessibilityState={{ selected }}
-                  onPress={() => setAccentKey(key)}
-                  style={[styles.swatchButton, selected && { borderColor: palette.textAccent }]}
-                  activeOpacity={0.75}
-                >
-                  <LinearGradient
-                    colors={[palette.main, palette.accent]}
-                    start={{ x: 0, y: 1 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.swatch}
-                  >
-                    {selected && <AppIcon name="check" size={15} color={theme.colors.onPrimary} weight="bold" />}
-                  </LinearGradient>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
-      </SettingsCard>
-
       <SectionHeader label="Notifications" />
       <SettingsCard>
         <View style={styles.row}>
@@ -336,6 +291,49 @@ export default function SettingsScreen() {
         />
       </SettingsCard>
 
+      <SectionHeader label="Appearance" />
+      <SettingsCard>
+        <View style={styles.themePreferenceRow}>
+          <Text style={styles.rowLabel}>Theme</Text>
+          <Text style={styles.rowSubtitle}>Use your device appearance or choose a fixed theme</Text>
+          <ThemedSegmentedButtons
+            value={themePreference}
+            onValueChange={(value) => setThemePreference(value as ThemePreference)}
+            buttons={THEME_OPTIONS}
+          />
+        </View>
+        <View style={styles.divider} />
+        <View style={styles.appearanceRow}>
+          <Text style={styles.rowLabel}>Accent Color</Text>
+          <Text style={styles.rowSubtitle}>Applies to buttons, selected tabs, and highlights</Text>
+          <View style={styles.swatchRow}>
+            {ACCENT_OPTIONS.map(({ key, palette }) => {
+              const selected = accentKey === key;
+              return (
+                <TouchableOpacity
+                  key={key}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${palette.label} accent`}
+                  accessibilityState={{ selected }}
+                  onPress={() => setAccentKey(key)}
+                  style={[styles.swatchButton, selected && { borderColor: palette.textAccent }]}
+                  activeOpacity={0.75}
+                >
+                  <LinearGradient
+                    colors={[palette.main, palette.accent]}
+                    start={{ x: 0, y: 1 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.swatch}
+                  >
+                    {selected && <AppIcon name="check" size={15} color={theme.colors.onPrimary} weight="bold" />}
+                  </LinearGradient>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+      </SettingsCard>
+
       <View style={styles.about}>
         <Image
           source={require('../../../assets/logo-text.png')}
@@ -362,18 +360,12 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
     overflow: 'hidden',
   },
   appearanceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
     padding: Spacing.lg,
-    gap: Spacing.md,
+    gap: Spacing.sm,
   },
   themePreferenceRow: {
     padding: Spacing.lg,
     gap: Spacing.sm,
-  },
-  appearanceCopy: {
-    flex: 1,
-    minWidth: 0,
   },
   swatchRow: {
     flexDirection: 'row',

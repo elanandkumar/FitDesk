@@ -31,8 +31,10 @@ export default function ThemedDatePickerModal({
   }, [visible, value]);
 
   const calTheme = {
-    backgroundColor: colors.surface,
-    calendarBackground: colors.surface,
+    // The calendar lives inside AppModal's raised surface. Keeping the same
+    // surface avoids a nested white/dark card that is unrelated to hierarchy.
+    backgroundColor: colors.surfaceRaised,
+    calendarBackground: colors.surfaceRaised,
     textSectionTitleColor: theme.colors.onSurfaceVariant,
     selectedDayBackgroundColor: theme.colors.primary,
     selectedDayTextColor: theme.colors.onPrimary,
@@ -58,7 +60,7 @@ export default function ThemedDatePickerModal({
         minDate={minDate}
         maxDate={maxDate}
         theme={calTheme}
-        style={styles.calendar}
+        style={[styles.calendar, { backgroundColor: colors.surfaceRaised }]}
       />
     </AppModal>
   );
