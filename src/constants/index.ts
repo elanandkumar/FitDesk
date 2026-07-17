@@ -1,6 +1,7 @@
 export const DEFAULT_DURATION_MINUTES = 60;
 export const SESSION_GENERATION_DAYS = 90;
 export const DEFAULT_NOTIFICATION_MINUTES = 60;
+export const PRIVACY_POLICY_URL = 'https://apps.elanandkumar.com/apps/fitdesk/privacy';
 
 export const DEFAULT_CLASS_COLORS = [
   '#6200ee',

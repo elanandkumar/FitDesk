@@ -22,6 +22,7 @@ import { getDatabase } from "../../database/db";
 import { RootStackParamList } from "../../navigation/types";
 import GradientButton from "../../components/common/GradientButton";
 import AppIcon, { AppIconName } from "../../components/common/AppIcon";
+import Constants from "expo-constants";
 
 type Nav = StackNavigationProp<RootStackParamList>;
 
@@ -87,6 +88,13 @@ export default function OnboardingScreen() {
       await db.runAsync(
         "INSERT OR REPLACE INTO settings (key, value) VALUES ('trainer_name', ?)",
         [name.trim()],
+      );
+    }
+    const appVersion = Constants.nativeAppVersion ?? Constants.expoConfig?.version;
+    if (appVersion) {
+      await db.runAsync(
+        "INSERT OR REPLACE INTO settings (key, value) VALUES ('last_seen_whats_new_version', ?)",
+        [appVersion],
       );
     }
     navigation.replace("MainTabs", undefined as never);
@@ -216,6 +224,9 @@ export default function OnboardingScreen() {
           onPress={next}
           style={styles.button}
         />
+        <TouchableOpacity onPress={() => navigation.navigate("PrivacyPolicy")} style={styles.privacyLink}>
+          <Text style={[styles.privacyText, { color: accentPalette.textAccent }]}>Privacy Policy</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -288,6 +299,8 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   dotActive: { width: 24 },
   dotInactive: { width: Spacing.sm, backgroundColor: colors.border },
   button: { width: 260 },
+  privacyLink: { paddingHorizontal: Spacing.md, paddingVertical: Spacing.xs },
+  privacyText: { ...Typography.labelMd },
   skipBtn: { paddingVertical: Spacing.sm },
   skipText: { ...Typography.body, color: colors.textMuted },
   heroLogo: {
