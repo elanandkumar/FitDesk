@@ -17,7 +17,7 @@ import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppTheme } from "../../theme";
-import { AppThemeColors, Radius, Spacing, Typography } from "../../theme/brandColors";
+import { AppThemeColors, Radius, Spacing, ThemePalettes, Typography } from "../../theme/brandColors";
 import { getDatabase } from "../../database/db";
 import { RootStackParamList } from "../../navigation/types";
 import GradientButton from "../../components/common/GradientButton";
@@ -33,43 +33,52 @@ type Slide = {
   icon: AppIconName;
   title: string;
   body: string;
-  gradient: readonly [string, string];
 };
 
-const createSlides = (colors: AppThemeColors): Slide[] => [
+const createSlides = (): Slide[] => [
   {
     key: "1",
     icon: "barbell",
     title: "Welcome to FitDesk",
     body: "Your personal fitness class companion. Manage your classes, clients, and payments — all in one place, right on your device.",
-    gradient: ["#3D1DB5", colors.background],
   },
   {
     key: "2",
     icon: "calendarCheck",
     title: "How It Works",
     body: "Manager-sourced classes: External managers assign you Zumba, Yoga, or Dance sessions — track each class and get paid per session.\n\nPersonal training: Manage your own clients with monthly session packages and automatic session tracking.",
-    gradient: [colors.surfaceRaised, colors.background],
   },
   {
     key: "3",
     icon: "lock",
     title: "Your Data, Your Device",
     body: "All data is stored locally on this device only.\n\nUninstalling the app or clearing app data will permanently erase everything. Use Settings → Export to keep regular backups.",
-    gradient: [colors.background, colors.surface],
   },
 ];
+
+function getInitials(name: string): string {
+  return name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0])
+    .join("")
+    .toUpperCase();
+}
 
 export default function OnboardingScreen() {
   const { accentPalette, colors } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const slides = useMemo(() => createSlides(colors), [colors]);
+  const slides = useMemo(() => createSlides(), []);
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
   const [activeIndex, setActiveIndex] = useState(0);
   const [phase, setPhase] = useState<"slides" | "name">("slides");
   const [trainerName, setTrainerName] = useState("");
+  const [nameInputResetKey, setNameInputResetKey] = useState(0);
   const listRef = useRef<FlatList>(null);
+  const trainerInitials = useMemo(() => getInitials(trainerName), [trainerName]);
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
@@ -111,6 +120,13 @@ export default function OnboardingScreen() {
     }
   }
 
+  function handleTrainerNameChange(nextName: string) {
+    if (nextName.length === 0 && trainerName.length > 0) {
+      setNameInputResetKey((key) => key + 1);
+    }
+    setTrainerName(nextName);
+  }
+
   const isLast = activeIndex === slides.length - 1;
 
   if (phase === "name") {
@@ -127,18 +143,25 @@ export default function OnboardingScreen() {
         >
           <View style={styles.nameContent}>
             <View style={styles.iconCircle}>
-              <AppIcon name="userCircle" size={40} color={accentPalette.main} />
+              {trainerInitials ? (
+                <Text style={[styles.initialsText, { color: accentPalette.textAccent }]}>
+                  {trainerInitials}
+                </Text>
+              ) : (
+                <AppIcon name="userCircle" size={40} color={accentPalette.main} />
+              )}
             </View>
             <Text style={styles.title}>What's your name?</Text>
             <Text style={styles.body}>
               We'll use it to personalise your dashboard greeting.
             </Text>
             <TextInput
+              key={`name-input-${nameInputResetKey}`}
               style={styles.nameInput}
               placeholder="Your name"
               placeholderTextColor={colors.textMuted}
               value={trainerName}
-              onChangeText={setTrainerName}
+              onChangeText={handleTrainerNameChange}
               autoFocus
               returnKeyType="done"
               onSubmitEditing={() => finish(trainerName)}
@@ -168,39 +191,36 @@ export default function OnboardingScreen() {
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
         renderItem={({ item, index }) => (
-          <LinearGradient
-            colors={item.gradient}
-            start={{ x: 0.3, y: 0 }}
-            end={{ x: 0.7, y: 1 }}
-            style={[styles.slide, { width }]}
-          >
-            {index === 0 ? (
-              <Image
-                source={require("../../../assets/logo.png")}
-                style={styles.heroLogo}
-                resizeMode="contain"
-              />
-            ) : (
-              <View style={styles.iconCircle}>
-                <AppIcon name={item.icon} size={40} color={accentPalette.main} />
-              </View>
-            )}
-
-            {index === 0 ? (
-              <View style={styles.welcomeRow}>
-                <Text style={styles.welcomeText}>Welcome to</Text>
+          <View style={[styles.slide, { width, paddingTop: insets.top + 80 }]}>
+            <View style={styles.heroBadge}>
+              {index === 0 ? (
                 <Image
-                  source={require("../../../assets/logo-text.png")}
-                  style={styles.logoImage}
+                  source={require("../../../assets/logo.png")}
+                  style={styles.heroLogo}
                   resizeMode="contain"
                 />
-              </View>
-            ) : (
-              <Text style={styles.title}>{item.title}</Text>
-            )}
+              ) : (
+                <AppIcon name={item.icon} size={52} color={accentPalette.textAccent} />
+              )}
+            </View>
+
+            <View style={styles.titleSlot}>
+              {index === 0 ? (
+                <View style={styles.welcomeRow}>
+                  <Text style={styles.welcomeText}>Welcome to</Text>
+                  <Image
+                    source={require("../../../assets/logo-text.png")}
+                    style={styles.logoImage}
+                    resizeMode="contain"
+                  />
+                </View>
+              ) : (
+                <Text style={styles.title}>{item.title}</Text>
+              )}
+            </View>
 
             <Text style={styles.body}>{item.body}</Text>
-          </LinearGradient>
+          </View>
         )}
       />
 
@@ -237,14 +257,13 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   slide: {
     flex: 1,
     padding: Spacing.section,
-    justifyContent: "center",
+    justifyContent: "flex-start",
     alignItems: "center",
     gap: Spacing.xxl,
   },
   logoImage: {
     width: 100,
     height: 30,
-    marginBottom: Spacing.xs,
   },
   namePhase: { flex: 1 },
   nameContent: {
@@ -262,6 +281,12 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: Spacing.sm,
+  },
+  initialsText: {
+    ...Typography.h1,
+    fontSize: 34,
+    fontWeight: "800",
+    textAlign: "center",
   },
   title: {
     ...Typography.h1,
@@ -303,18 +328,37 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   privacyText: { ...Typography.labelMd },
   skipBtn: { paddingVertical: Spacing.sm },
   skipText: { ...Typography.body, color: colors.textMuted },
-  heroLogo: {
-    width: 160,
-    height: 160,
+  heroBadge: {
+    width: 136,
+    height: 136,
+    borderRadius: Radius.full,
+    backgroundColor: ThemePalettes.dark.background,
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: Spacing.sm,
-    borderRadius: Radius.hero,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  welcomeRow: { flexDirection: "row", gap: 4 },
+  heroLogo: {
+    width: 112,
+    height: 112,
+  },
+  titleSlot: {
+    minHeight: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  welcomeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    flexWrap: "wrap",
+    gap: 4,
+  },
   welcomeText: {
     ...Typography.h1,
     color: colors.textSecondary,
     textAlign: "center",
-    letterSpacing: 1,
   },
   brandName: {
     ...Typography.h1,

@@ -40,7 +40,7 @@ export type {
 } from './brandColors';
 
 export function parseThemePreference(value: string | null | undefined): ThemePreference {
-  return value === 'system' || value === 'light' || value === 'dark' ? value : 'dark';
+  return value === 'system' || value === 'light' || value === 'dark' ? value : 'system';
 }
 
 export function resolveThemeMode(
@@ -117,7 +117,7 @@ export interface ThemeContextValue {
 }
 
 const DEFAULT_ACCENT: AccentKey = 'purple';
-const DEFAULT_THEME_PREFERENCE: ThemePreference = 'dark';
+const DEFAULT_THEME_PREFERENCE: ThemePreference = 'system';
 const DEFAULT_RESOLVED_MODE: ResolvedThemeMode = 'dark';
 
 const ThemeContext = createContext<ThemeContextValue>({

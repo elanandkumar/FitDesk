@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { getDatabase } from '../database/db';
 import { insertNotificationIfNew } from '../database/repositories/appNotificationRepository';
+import { hasBackupRelevantData } from '../database/repositories/backupRepository';
 
 const OVERDUE_DAYS = 7;
 
@@ -19,6 +20,12 @@ export function BackupProvider({ children }: { children: React.ReactNode }) {
 
   const refresh = useCallback(async () => {
     const db = await getDatabase();
+    const hasData = await hasBackupRelevantData();
+    if (!hasData) {
+      setIsBackupOverdue(false);
+      return;
+    }
+
     const row = await db.getFirstAsync<{ value: string }>(
       "SELECT value FROM settings WHERE key = 'last_backup_at'"
     );

@@ -1,6 +1,7 @@
 import Constants from 'expo-constants';
 import { getDatabase } from '../database/db';
 import { insertNotificationIfNew } from '../database/repositories/appNotificationRepository';
+import { hasBackupRelevantData } from '../database/repositories/backupRepository';
 
 const isExpoGo = Constants.appOwnership === 'expo';
 
@@ -125,6 +126,8 @@ export async function scheduleBackupReminderNotification(): Promise<void> {
   }
 
   const db = await getDatabase();
+  if (!(await hasBackupRelevantData())) return;
+
   const row = await db.getFirstAsync<{ value: string }>(
     "SELECT value FROM settings WHERE key = 'last_backup_at'"
   );

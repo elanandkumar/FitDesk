@@ -118,6 +118,18 @@ const MIGRATIONS: Migration[] = [
         WHERE status = 'pending'`,
     ],
   },
+  {
+    version: 12,
+    statements: [
+      `UPDATE settings
+        SET value = 'system'
+        WHERE key = 'theme'
+          AND value IN ('light', 'dark')
+          AND NOT EXISTS (
+            SELECT 1 FROM settings WHERE key = 'onboarding_done'
+          )`,
+    ],
+  },
 ];
 
 async function runStatement(db: SQLite.SQLiteDatabase, sql: string): Promise<void> {

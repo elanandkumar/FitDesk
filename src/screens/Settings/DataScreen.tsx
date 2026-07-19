@@ -77,7 +77,7 @@ export default function DataScreen() {
           Restore from a FitDesk backup. Older backups are still supported. All existing data will be replaced.
         </Text>
         <View style={styles.warningBox}>
-          <AppIcon name="warning" size={18} color={BrandCore.orange} />
+          <AppIcon name="warning" size={18} color={BrandCore.orange} style={styles.warningIcon} />
           <Text variant="bodySmall" style={styles.warningText}>
             Import is destructive and cannot be undone.
           </Text>
@@ -151,6 +151,10 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
   },
-  warningText: { color: BrandCore.orange },
+  warningIcon: { flexShrink: 0 },
+  warningText: {
+    flex: 1,
+    color: BrandCore.orange,
+  },
   importBtn: { marginTop: Spacing.xs },
 });
