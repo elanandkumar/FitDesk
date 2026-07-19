@@ -107,7 +107,7 @@ For Play Store uploads, use the default Android App Bundle (`.aab`) format:
 npm run release -- --version 1.2.3 --version-code 6 --update-version --commit-version --github-release
 ```
 
-This updates the app version files, commits the version bump, builds `bundleRelease`, generates notes in `dist/releases/`, creates an annotated tag like `v1.2.3`, and publishes a GitHub release when the `gh` CLI is available.
+This updates the app version files and in-app What's New notes, commits the version bump, builds `bundleRelease`, generates notes in `dist/releases/`, creates an annotated tag like `v1.2.3`, and publishes a GitHub release when the `gh` CLI is available.
 
 For a local APK build instead:
 

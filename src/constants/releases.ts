@@ -6,6 +6,16 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    version: '1.3.0',
+    title: 'A smoother FitDesk release',
+    changes: [
+      'Added the About section and in-app release notes shown after updates.',
+      'Improved onboarding, backup warnings, and Settings organization.',
+      'Refined Payments, Contacts, class screens, charts, filters, and card readability.',
+      'Replaced system alerts with app-styled dialogs and improved dashboard flows.',
+    ],
+  },
+  {
     version: '1.2.3',
     title: 'A cleaner, more personal FitDesk',
     changes: [

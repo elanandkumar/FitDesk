@@ -11,7 +11,7 @@ optionally create a GitHub release.
 Options:
   --version <x.y.z>       Release version. Defaults to package.json version.
   --version-code <n>      Android versionCode to write when --update-version is used.
-  --update-version        Update package.json, package-lock.json, app.json, and android/app/build.gradle.
+  --update-version        Update package.json, package-lock.json, app.json, android/app/build.gradle, and in-app release notes.
   --commit-version        Commit version file updates before building/tagging.
   --format <aab|apk>      Android artifact format. Defaults to aab for Play Store uploads.
   --previous-tag <tag>    Compare commits after this tag. Defaults to latest semver tag before current tag.
@@ -141,6 +141,7 @@ command -v node >/dev/null 2>&1 || die "node is required"
 [[ -f package.json ]] || die "package.json not found"
 [[ -f app.json ]] || die "app.json not found"
 [[ -f android/app/build.gradle ]] || die "android/app/build.gradle not found"
+[[ -f src/constants/releases.ts ]] || die "src/constants/releases.ts not found"
 
 if [[ -z "$version" ]]; then
   version="$(node -p "require('./package.json').version")"
@@ -158,18 +159,30 @@ if [[ "$allow_dirty" == false && -n "$(git status --porcelain)" ]]; then
   die "working tree is dirty. Commit/stash changes or pass --allow-dirty."
 fi
 
-if [[ "$commit_version" == true && -n "$(git status --porcelain -- package.json package-lock.json app.json android/app/build.gradle)" ]]; then
+if [[ "$commit_version" == true && -n "$(git status --porcelain -- package.json package-lock.json app.json android/app/build.gradle src/constants/releases.ts)" ]]; then
   die "--commit-version requires clean version files before the script edits them."
 fi
 
 run git rev-parse --verify --quiet "$target_ref^{commit}" >/dev/null
 
+if [[ -z "$previous_tag" ]]; then
+  previous_tag="$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+' | grep -v "^${tag}$" | head -n 1 || true)"
+fi
+
+if [[ -n "$previous_tag" ]]; then
+  git rev-parse --verify --quiet "$previous_tag^{commit}" >/dev/null || die "previous tag not found: $previous_tag"
+  compare_range="${previous_tag}..${target_ref}"
+else
+  compare_range="$target_ref"
+fi
+
 if [[ "$update_version" == true ]]; then
   [[ -n "$version_code" ]] || die "--update-version requires --version-code"
-  node - "$version" "$version_code" <<'NODE'
+  node - "$version" "$version_code" "$compare_range" <<'NODE'
 const fs = require('fs');
+const { execFileSync } = require('child_process');
 
-const [version, rawVersionCode] = process.argv.slice(2);
+const [version, rawVersionCode, compareRange] = process.argv.slice(2);
 const versionCode = Number(rawVersionCode);
 
 function writeJson(path, data) {
@@ -196,26 +209,66 @@ let gradle = fs.readFileSync('android/app/build.gradle', 'utf8');
 gradle = gradle.replace(/versionCode\s+\d+/, `versionCode ${versionCode}`);
 gradle = gradle.replace(/versionName\s+"[^"]+"/, `versionName "${version}"`);
 fs.writeFileSync('android/app/build.gradle', gradle);
+
+function git(args) {
+  return execFileSync('git', args, { encoding: 'utf8' }).trim();
+}
+
+function cleanSubject(subject) {
+  return subject
+    .replace(/^[a-z]+(\([^)]+\))?!?:\s*/i, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function quote(value) {
+  return `'${value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+}
+
+const commitSubjects = git(['log', '--pretty=format:%s', compareRange])
+  .split('\n')
+  .map(cleanSubject)
+  .filter(Boolean)
+  .filter((subject) => !/^bump version to v?\d+\.\d+\.\d+/i.test(subject));
+
+const changes = commitSubjects.length
+  ? [...new Set(commitSubjects)]
+  : ['Maintenance and stability improvements.'];
+
+const releaseNotesPath = 'src/constants/releases.ts';
+const releaseNotes = fs.readFileSync(releaseNotesPath, 'utf8');
+const existingEntryPattern = new RegExp(
+  `\\n  \\{\\n    version: ${quote(version).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')},[\\s\\S]*?\\n  \\},`
+);
+const withoutExistingEntry = releaseNotes.replace(existingEntryPattern, '');
+const entry = [
+  '  {',
+  `    version: ${quote(version)},`,
+  `    title: ${quote(`FitDesk ${version}`)},`,
+  '    changes: [',
+  ...changes.map((change) => `      ${quote(change)},`),
+  '    ],',
+  '  },',
+].join('\n');
+const updatedReleaseNotes = withoutExistingEntry.replace(
+  'export const RELEASE_NOTES: readonly ReleaseNote[] = [',
+  `export const RELEASE_NOTES: readonly ReleaseNote[] = [\n${entry}`
+);
+
+if (updatedReleaseNotes === withoutExistingEntry) {
+  throw new Error('Could not update src/constants/releases.ts');
+}
+
+fs.writeFileSync(releaseNotesPath, updatedReleaseNotes);
 NODE
 
   if [[ "$commit_version" == true ]]; then
-    run git add package.json package-lock.json app.json android/app/build.gradle
+    run git add package.json package-lock.json app.json android/app/build.gradle src/constants/releases.ts
     run git commit -m "chore: bump version to ${tag}"
     target_ref="HEAD"
   elif [[ "$dry_run" == false ]]; then
     die "--update-version changed files but --commit-version was not passed; commit them before tagging or use --commit-version."
   fi
-fi
-
-if [[ -z "$previous_tag" ]]; then
-  previous_tag="$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+' | grep -v "^${tag}$" | head -n 1 || true)"
-fi
-
-if [[ -n "$previous_tag" ]]; then
-  git rev-parse --verify --quiet "$previous_tag^{commit}" >/dev/null || die "previous tag not found: $previous_tag"
-  compare_range="${previous_tag}..${target_ref}"
-else
-  compare_range="$target_ref"
 fi
 
 artifact=""
