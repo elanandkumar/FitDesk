@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
-import { useColorScheme } from 'react-native';
+import { Appearance, useColorScheme } from 'react-native';
 import { MD3DarkTheme, MD3LightTheme } from 'react-native-paper';
 import { getDatabase } from '../database/db';
 import {
@@ -161,6 +161,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     loadAppearance().catch(() => {});
     return () => { mounted = false; };
   }, []);
+
+  useEffect(() => {
+    Appearance.setColorScheme(themePreference === 'system' ? 'unspecified' : themePreference);
+  }, [themePreference]);
 
   const setThemePreference = useCallback(async (nextPreference: ThemePreference) => {
     setThemePreferenceState(nextPreference);

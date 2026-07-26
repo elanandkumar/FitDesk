@@ -345,10 +345,9 @@ export default function IncomeSummaryScreen() {
     );
   };
 
-  return (
-    <View style={styles.container}>
+  const renderListHeader = () => (
+    <>
       {rows.length > 0 && renderPeriodSelector()}
-
       {visibleRows.length > 0 && (
         <LinearGradient
           colors={heroColors}
@@ -402,14 +401,18 @@ export default function IncomeSummaryScreen() {
           </View>
         </LinearGradient>
       )}
-
       {renderIncomeChart()}
+    </>
+  );
 
+  return (
+    <View style={styles.container}>
       <FlatList
         data={visibleRows}
         keyExtractor={(item) => item.month}
         renderItem={renderItem}
         contentContainerStyle={visibleRows.length === 0 ? styles.emptyContainer : styles.listContent}
+        ListHeaderComponent={renderListHeader}
         ListEmptyComponent={
           <EmptyState
             icon="chartBar"
