@@ -15,18 +15,18 @@ export type RootStackParamList = {
     };
   };
   ClassSessionDetail: { sessionId: number };
-  AddEditManager: { managerId?: number };
-  ManagerDetail: { managerId: number };
+  AddEditOrganizer: { organizerId?: number; returnToAddSession?: boolean };
+  OrganizerDetail: { organizerId: number };
   AddEditTrainee: { traineeId?: number };
   TraineeDetail: { traineeId: number };
   ClassTypes: undefined;
   Centers: undefined;
   DataScreen: undefined;
   AddPackage: { traineeId?: number };
-  AddSession: { initialDate?: string };
+  AddSession: { initialDate?: string; selectedOrganizerId?: number };
   IncomeSummary: undefined;
   IncomeMonthDetail: { month: string };
-  ManagerPaymentDetail: { managerId: number; managerName: string };
+  OrganizerPaymentDetail: { organizerId: number; organizerName: string };
   Notifications: undefined;
   PaymentThresholds: undefined;
   WhatsNew: undefined;
@@ -38,7 +38,7 @@ export type TabParamList = {
   Calendar: undefined;
   Contacts: undefined;
   Payments: {
-    initialSegment?: 'managers' | 'trainees';
+    initialSegment?: 'organizers' | 'trainees';
     pendingOnly?: boolean;
     focusKey?: number;
     notice?: string;

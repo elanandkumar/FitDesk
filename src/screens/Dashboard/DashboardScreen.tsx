@@ -161,7 +161,7 @@ export default function DashboardScreen() {
               onPress={() => navigation.navigate('MainTabs', {
                 screen: 'Payments',
                 params: {
-                  initialSegment: 'managers',
+                  initialSegment: 'organizers',
                   pendingOnly: true,
                   focusKey: Date.now(),
                 },

@@ -22,7 +22,8 @@ import {
   updateSessionStatus,
   updateSessionNotes,
   updateSessionDateTime,
-  completeManagerSession,
+  updateSessionAgreedAmount,
+  completeOrganizerSession,
   completePersonalSession,
   getSessionNumberForTrainee,
   deleteAdHocSession,
@@ -72,6 +73,7 @@ export default function ClassSessionDetailScreen() {
 
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
   const [studentCount, setStudentCount] = useState('0');
+  const [completionAmount, setCompletionAmount] = useState('');
   const [completeNotes, setCompleteNotes] = useState('');
 
   const [showSkipDialog, setShowSkipDialog] = useState(false);
@@ -83,6 +85,7 @@ export default function ClassSessionDetailScreen() {
   const [infoDialog, setInfoDialog] = useState<{ title: string; message: string } | null>(null);
   const [editDate, setEditDate] = useState('');
   const [editTime, setEditTime] = useState('');
+  const [editAgreedAmount, setEditAgreedAmount] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const insets = useSafeAreaInsets();
@@ -135,6 +138,7 @@ export default function ClassSessionDetailScreen() {
               onPress={() => {
                 setEditDate(session.session_date);
                 setEditTime(session.class_time);
+                setEditAgreedAmount(String(session.agreed_amount ?? session.per_class_rate));
                 setShowEditModal(true);
               }}
             />
@@ -156,6 +160,7 @@ export default function ClassSessionDetailScreen() {
     }
     setCompleteNotes(notes);
     setStudentCount('0');
+    setCompletionAmount(String(session.agreed_amount ?? session.per_class_rate));
     setShowCompleteDialog(true);
   }
 
@@ -168,13 +173,25 @@ export default function ClassSessionDetailScreen() {
       });
       return;
     }
+    const finalizedAmount = Number(completionAmount);
+    if (session.source_type === 'organizer' && (
+      completionAmount.trim() === '' ||
+      !Number.isFinite(finalizedAmount) ||
+      finalizedAmount < 0
+    )) {
+      setInfoDialog({
+        title: 'Invalid amount earned',
+        message: 'Enter a valid non-negative amount.',
+      });
+      return;
+    }
     setSaving(true);
     try {
-      if (session.source_type === 'manager' && session.manager_id) {
-        await completeManagerSession(
+      if (session.source_type === 'organizer' && session.organizer_id) {
+        await completeOrganizerSession(
           session.id,
-          session.manager_id,
-          session.per_class_rate,
+          session.organizer_id,
+          finalizedAmount,
           parseInt(studentCount) || 0,
           completeNotes || undefined
         );
@@ -188,7 +205,7 @@ export default function ClassSessionDetailScreen() {
       }
       setShowCompleteDialog(false);
       await load();
-      if (session.source_type === 'manager' && !isExpoGo) {
+      if (session.source_type === 'organizer' && !isExpoGo) {
         schedulePendingPaymentNotification().catch(() => {});
       }
     } catch (err) {
@@ -215,9 +232,24 @@ export default function ClassSessionDetailScreen() {
 
   async function handleSaveDateTime() {
     if (!session) return;
+    const parsedAmount = Number(editAgreedAmount);
+    if (session.source_type === 'organizer' && (
+      editAgreedAmount.trim() === '' ||
+      !Number.isFinite(parsedAmount) ||
+      parsedAmount < 0
+    )) {
+      setInfoDialog({
+        title: 'Invalid agreed amount',
+        message: 'Enter a valid non-negative amount.',
+      });
+      return;
+    }
     setSaving(true);
     try {
       await updateSessionDateTime(session.id, editDate, editTime);
+      if (session.source_type === 'organizer') {
+        await updateSessionAgreedAmount(session.id, parsedAmount);
+      }
       setShowEditModal(false);
       await load();
     } finally {
@@ -263,7 +295,7 @@ export default function ClassSessionDetailScreen() {
   }
 
   const isUpcoming = session.status === 'upcoming';
-  const isManager = session.source_type === 'manager';
+  const isOrganizer = session.source_type === 'organizer';
   const sessionInFuture = isSessionInFuture(session.session_date, session.class_time);
   const futureCompletionMessage = `Available after ${formatDisplayDate(session.session_date)} at ${formatDisplayTime(session.class_time)}.`;
 
@@ -299,15 +331,20 @@ export default function ClassSessionDetailScreen() {
           value={session.location ? session.location : 'Offline'}
         />
         <Divider style={styles.rowDivider} />
-        {isManager ? (
+        {isOrganizer ? (
           <>
             <DetailRow
-              label="Manager"
-              value={
-                session.manager_name
-                  ? `${session.manager_name} | ${formatCurrency(session.per_class_rate)}/class`
-                  : '—'
-              }
+              label="Organizer"
+              value={session.organizer_name ?? '—'}
+            />
+            <Divider style={styles.rowDivider} />
+            <DetailRow
+              label="Agreed amount"
+              value={formatCurrency(
+                session.finalized_payment_amount ??
+                session.agreed_amount ??
+                session.per_class_rate
+              )}
             />
             {session.status === 'completed' && (
               <>
@@ -397,7 +434,7 @@ export default function ClassSessionDetailScreen() {
         onConfirm={handleComplete}
         loading={saving}
       >
-        {isManager ? (
+        {isOrganizer ? (
           <>
             <Text variant="bodySmall" style={{ color: colors.textSecondary, marginBottom: Spacing.sm }}>
               How many students attended?
@@ -408,6 +445,16 @@ export default function ClassSessionDetailScreen() {
               value={studentCount}
               onChangeText={setStudentCount}
               keyboardType="number-pad"
+              dense
+            />
+            <TextInput
+              mode="outlined"
+              label="Amount earned"
+              value={completionAmount}
+              onChangeText={(value) => setCompletionAmount(value.replace(/[^0-9.]/g, ''))}
+              keyboardType="decimal-pad"
+              left={<TextInput.Affix text="₹" />}
+              style={{ marginTop: Spacing.md }}
               dense
             />
           </>
@@ -478,7 +525,7 @@ export default function ClassSessionDetailScreen() {
       <AppModal
         visible={showEditModal}
         onDismiss={() => setShowEditModal(false)}
-        title="Edit Date & Time"
+        title="Edit Session"
         confirmLabel="Save"
         onConfirm={handleSaveDateTime}
         loading={saving}
@@ -497,6 +544,18 @@ export default function ClassSessionDetailScreen() {
             </TouchableOpacity>
           </View>
         </View>
+        {isOrganizer && (
+          <TextInput
+            mode="outlined"
+            label="Agreed amount *"
+            value={editAgreedAmount}
+            onChangeText={(value) => setEditAgreedAmount(value.replace(/[^0-9.]/g, ''))}
+            keyboardType="decimal-pad"
+            left={<TextInput.Affix text="₹" />}
+            style={{ marginTop: Spacing.md }}
+            dense
+          />
+        )}
       </AppModal>
 
       <ThemedDatePickerModal

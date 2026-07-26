@@ -5,8 +5,8 @@ import { useAppTheme } from '../theme';
 import { RootStackParamList } from './types';
 import TabNavigator from './TabNavigator';
 import OnboardingScreen from '../screens/Onboarding/OnboardingScreen';
-import AddEditManagerScreen from '../screens/Managers/AddEditManagerScreen';
-import ManagerDetailScreen from '../screens/Managers/ManagerDetailScreen';
+import AddEditOrganizerScreen from '../screens/Organizers/AddEditOrganizerScreen';
+import OrganizerDetailScreen from '../screens/Organizers/OrganizerDetailScreen';
 import AddEditTraineeScreen from '../screens/Trainees/AddEditTraineeScreen';
 import TraineeDetailScreen from '../screens/Trainees/TraineeDetailScreen';
 import ClassSeriesListScreen from '../screens/Classes/ClassSeriesListScreen';
@@ -18,7 +18,7 @@ import IncomeSummaryScreen from '../screens/Reports/IncomeSummaryScreen';
 import IncomeMonthDetailScreen from '../screens/Reports/IncomeMonthDetailScreen';
 import DataScreen from '../screens/Settings/DataScreen';
 import AddPackageScreen from '../screens/Payments/AddPackageScreen';
-import ManagerPaymentDetailScreen from '../screens/Payments/ManagerPaymentDetailScreen';
+import OrganizerPaymentDetailScreen from '../screens/Payments/OrganizerPaymentDetailScreen';
 import AddSessionScreen from '../screens/Calendar/AddSessionScreen';
 import NotificationsScreen from '../screens/Notifications/NotificationsScreen';
 import PaymentThresholdsScreen from '../screens/Settings/PaymentThresholdsScreen';
@@ -89,8 +89,8 @@ export default function AppNavigator() {
           component={TabNavigator}
           options={{ headerShown: false }}
         />
-        <Stack.Screen name="AddEditManager" component={AddEditManagerScreen} />
-        <Stack.Screen name="ManagerDetail" component={ManagerDetailScreen} />
+        <Stack.Screen name="AddEditOrganizer" component={AddEditOrganizerScreen} />
+        <Stack.Screen name="OrganizerDetail" component={OrganizerDetailScreen} />
         <Stack.Screen name="AddEditTrainee" component={AddEditTraineeScreen} />
         <Stack.Screen name="TraineeDetail" component={TraineeDetailScreen} />
         <Stack.Screen
@@ -131,8 +131,8 @@ export default function AppNavigator() {
           options={{ title: 'Add Package' }}
         />
         <Stack.Screen
-          name="ManagerPaymentDetail"
-          component={ManagerPaymentDetailScreen}
+          name="OrganizerPaymentDetail"
+          component={OrganizerPaymentDetailScreen}
         />
         <Stack.Screen
           name="AddSession"

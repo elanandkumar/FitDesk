@@ -5,10 +5,10 @@ import { useFocusEffect, useNavigation, useRoute, RouteProp } from '@react-navig
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAppTheme } from '../../theme';
 import { AppThemeColors, BrandCore, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
-import { EnrichedManagerPayment } from '../../types';
+import { EnrichedOrganizerPayment } from '../../types';
 import {
-  getEnrichedManagerPaymentsByManager,
-  markManagerPaymentPaid,
+  getEnrichedOrganizerPaymentsByOrganizer,
+  markOrganizerPaymentPaid,
 } from '../../database/repositories/paymentRepository';
 import { formatCurrency } from '../../utils/currencyUtils';
 import { formatDisplayDate, formatDisplayTime, todayISO } from '../../utils/dateUtils';
@@ -22,18 +22,18 @@ import AppIcon from '../../components/common/AppIcon';
 
 const isExpoGo = Constants.appOwnership === 'expo';
 
-type Nav = StackNavigationProp<RootStackParamList, 'ManagerPaymentDetail'>;
-type Route = RouteProp<RootStackParamList, 'ManagerPaymentDetail'>;
+type Nav = StackNavigationProp<RootStackParamList, 'OrganizerPaymentDetail'>;
+type Route = RouteProp<RootStackParamList, 'OrganizerPaymentDetail'>;
 
-export default function ManagerPaymentDetailScreen() {
+export default function OrganizerPaymentDetailScreen() {
   const { accentPalette, colors, theme } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
-  const { managerId, managerName } = route.params;
+  const { organizerId, organizerName } = route.params;
 
-  const [payments, setPayments] = useState<EnrichedManagerPayment[]>([]);
-  const [confirmPayment, setConfirmPayment] = useState<EnrichedManagerPayment | null>(null);
+  const [payments, setPayments] = useState<EnrichedOrganizerPayment[]>([]);
+  const [confirmPayment, setConfirmPayment] = useState<EnrichedOrganizerPayment | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
 
   const pendingTotal = payments.filter(p => p.status === 'pending').reduce((s, p) => s + p.amount, 0);
@@ -41,24 +41,24 @@ export default function ManagerPaymentDetailScreen() {
   const sessionCount = payments.length;
 
   useLayoutEffect(() => {
-    navigation.setOptions({ title: managerName });
-  }, [navigation, managerName]);
+    navigation.setOptions({ title: organizerName });
+  }, [navigation, organizerName]);
 
   const load = useCallback(async () => {
     try {
-      const data = await getEnrichedManagerPaymentsByManager(managerId);
+      const data = await getEnrichedOrganizerPaymentsByOrganizer(organizerId);
       setPayments(data);
     } catch {
       // list stays empty on DB error
     }
-  }, [managerId]);
+  }, [organizerId]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const handleMarkPaid = async () => {
     if (!confirmPayment) return;
     try {
-      await markManagerPaymentPaid(confirmPayment.id, todayISO());
+      await markOrganizerPaymentPaid(confirmPayment.id, todayISO());
       setConfirmPayment(null);
       load();
       if (!isExpoGo) schedulePendingPaymentNotification().catch(() => {});
@@ -68,7 +68,7 @@ export default function ManagerPaymentDetailScreen() {
     }
   };
 
-  const renderItem = ({ item }: { item: EnrichedManagerPayment }) => (
+  const renderItem = ({ item }: { item: EnrichedOrganizerPayment }) => (
     <View style={styles.item}>
       <View style={styles.itemMainRow}>
         <View style={[styles.dot, { backgroundColor: item.class_type_color }]} />
@@ -136,7 +136,7 @@ export default function ManagerPaymentDetailScreen() {
           <EmptyState
             icon="handCoins"
             title="No payments"
-            subtitle="No payments found for this manager."
+            subtitle="No payments found for this organizer."
           />
         }
         contentContainerStyle={payments.length === 0 ? styles.emptyContainer : styles.listContent}

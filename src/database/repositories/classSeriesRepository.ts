@@ -28,7 +28,7 @@ export async function createClassSeries(data: ClassSeriesInput): Promise<ClassSe
   const db = await getDatabase();
   const now = new Date().toISOString();
   const result = await db.runAsync(
-    `INSERT INTO class_series (title, class_type_id, source_type, manager_id, recurrence_type,
+    `INSERT INTO class_series (title, class_type_id, source_type, organizer_id, recurrence_type,
       recurrence_days, start_date, end_date, class_time, duration_minutes, location_type,
       location, notes, is_active, center_id, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -36,7 +36,7 @@ export async function createClassSeries(data: ClassSeriesInput): Promise<ClassSe
       data.title,
       data.class_type_id,
       data.source_type,
-      data.manager_id ?? null,
+      data.organizer_id ?? null,
       data.recurrence_type,
       data.recurrence_days ?? null,
       data.start_date,
@@ -57,14 +57,14 @@ export async function createClassSeries(data: ClassSeriesInput): Promise<ClassSe
 export async function updateClassSeries(id: number, data: ClassSeriesInput): Promise<void> {
   const db = await getDatabase();
   await db.runAsync(
-    `UPDATE class_series SET title=?, class_type_id=?, source_type=?, manager_id=?,
+    `UPDATE class_series SET title=?, class_type_id=?, source_type=?, organizer_id=?,
       recurrence_type=?, recurrence_days=?, start_date=?, end_date=?, class_time=?,
       duration_minutes=?, location_type=?, location=?, notes=?, is_active=?, center_id=? WHERE id=?`,
     [
       data.title,
       data.class_type_id,
       data.source_type,
-      data.manager_id ?? null,
+      data.organizer_id ?? null,
       data.recurrence_type,
       data.recurrence_days ?? null,
       data.start_date,
@@ -134,7 +134,7 @@ export async function hasSeriesHistory(id: number): Promise<boolean> {
   );
   if ((completed?.cnt ?? 0) > 0) return true;
   const payments = await db.getFirstAsync<{ cnt: number }>(
-    `SELECT COUNT(*) AS cnt FROM manager_payments mp
+    `SELECT COUNT(*) AS cnt FROM organizer_payments mp
      JOIN class_sessions cs ON mp.session_id = cs.id
      WHERE cs.series_id = ?`,
     [id]
@@ -146,7 +146,7 @@ export async function hardDeleteClassSeries(id: number): Promise<void> {
   const db = await getDatabase();
   await db.withTransactionAsync(async () => {
     await db.runAsync(
-      `DELETE FROM manager_payments WHERE session_id IN (SELECT id FROM class_sessions WHERE series_id = ?)`,
+      `DELETE FROM organizer_payments WHERE session_id IN (SELECT id FROM class_sessions WHERE series_id = ?)`,
       [id]
     );
     await db.runAsync(

@@ -200,27 +200,27 @@ export default function IncomeSummaryScreen() {
           </View>
 
           <View style={styles.monthCategories}>
-            {(item.manager_paid > 0 || item.manager_pending > 0) && (
+            {(item.organizer_paid > 0 || item.organizer_pending > 0) && (
               <View style={styles.monthCategory}>
-                <Text style={styles.monthCategoryLabel}>Manager classes</Text>
+                <Text style={styles.monthCategoryLabel}>Organizer sessions</Text>
                 <View style={styles.monthAmounts}>
                   <View style={styles.monthAmountStatus}>
                     <Text style={styles.monthAmountLabel}>Paid</Text>
-                    <Text style={[styles.monthAmount, item.manager_paid > 0 ? styles.monthAmountPaid : styles.zeroAmount]}>
-                      {formatCurrency(item.manager_paid)}
+                    <Text style={[styles.monthAmount, item.organizer_paid > 0 ? styles.monthAmountPaid : styles.zeroAmount]}>
+                      {formatCurrency(item.organizer_paid)}
                     </Text>
                   </View>
                   <View style={styles.monthAmountStatus}>
                     <Text style={styles.monthAmountLabel}>Pending</Text>
-                    <Text style={[styles.monthAmount, item.manager_pending > 0 ? styles.monthAmountPending : styles.zeroAmount]}>
-                      {formatCurrency(item.manager_pending)}
+                    <Text style={[styles.monthAmount, item.organizer_pending > 0 ? styles.monthAmountPending : styles.zeroAmount]}>
+                      {formatCurrency(item.organizer_pending)}
                     </Text>
                   </View>
                 </View>
               </View>
             )}
 
-            {(item.manager_paid > 0 || item.manager_pending > 0) && (item.trainee_paid > 0 || item.trainee_pending > 0) && (
+            {(item.organizer_paid > 0 || item.organizer_pending > 0) && (item.trainee_paid > 0 || item.trainee_pending > 0) && (
               <View style={styles.monthCategorySep} />
             )}
 

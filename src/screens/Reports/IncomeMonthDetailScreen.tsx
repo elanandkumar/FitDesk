@@ -7,8 +7,8 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { AppThemeColors, BrandCore, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { useAppTheme } from '../../theme';
 import { RootStackParamList } from '../../navigation/types';
-import { ManagerMonthIncome, TraineeMonthPackage } from '../../types';
-import { getManagerIncomeForMonth, getTraineePackagesForMonth } from '../../database/repositories/paymentRepository';
+import { OrganizerMonthIncome, TraineeMonthPackage } from '../../types';
+import { getOrganizerIncomeForMonth, getTraineePackagesForMonth } from '../../database/repositories/paymentRepository';
 import { formatCurrency } from '../../utils/currencyUtils';
 import EmptyState from '../../components/common/EmptyState';
 import SectionHeader from '../../components/common/SectionHeader';
@@ -45,7 +45,7 @@ export default function IncomeMonthDetailScreen() {
   const insets = useSafeAreaInsets();
   const route = useRoute<Route>();
   const { month } = route.params;
-  const [managers, setManagers] = useState<ManagerMonthIncome[]>([]);
+  const [organizers, setOrganizers] = useState<OrganizerMonthIncome[]>([]);
   const [packages, setPackages] = useState<TraineeMonthPackage[]>([]);
 
   useLayoutEffect(() => {
@@ -54,16 +54,16 @@ export default function IncomeMonthDetailScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      getManagerIncomeForMonth(month).then(setManagers);
+      getOrganizerIncomeForMonth(month).then(setOrganizers);
       getTraineePackagesForMonth(month).then(setPackages);
     }, [month])
   );
 
-  const hasData = managers.length > 0 || packages.length > 0;
+  const hasData = organizers.length > 0 || packages.length > 0;
 
-  const managerTotal = managers.reduce((s, m) => s + m.paid + m.pending, 0);
+  const organizerTotal = organizers.reduce((s, m) => s + m.paid + m.pending, 0);
   const packageTotal = packages.reduce((s, p) => s + p.amount, 0);
-  const grandTotal = managerTotal + packageTotal;
+  const grandTotal = organizerTotal + packageTotal;
 
   return (
     <View style={styles.container}>
@@ -78,13 +78,13 @@ export default function IncomeMonthDetailScreen() {
           <EmptyState icon="chartBar" title="No data for this month" subtitle="" />
         )}
 
-        {managers.length > 0 && (
+        {organizers.length > 0 && (
           <>
-            <SectionHeader label="Manager Classes" />
-            {managers.map((m) => (
-              <View key={`manager-${m.manager_id}`} style={styles.itemCard}>
+            <SectionHeader label="Organizer Sessions" />
+            {organizers.map((m) => (
+              <View key={`organizer-${m.organizer_id}`} style={styles.itemCard}>
                 <View style={styles.itemRow}>
-                  <Text variant="bodyMedium" style={styles.itemName}>{m.manager_name}</Text>
+                  <Text variant="bodyMedium" style={styles.itemName}>{m.organizer_name}</Text>
                   <View style={styles.amounts}>
                     {m.paid > 0 && <AmountStatus amount={m.paid} status="paid" />}
                     {m.pending > 0 && <AmountStatus amount={m.pending} status="pending" />}
@@ -122,7 +122,7 @@ export default function IncomeMonthDetailScreen() {
           <View style={styles.totalCard}>
             <View style={styles.totalText}>
               <Text style={styles.totalLabel}>Month Total</Text>
-              <Text style={styles.totalSub}>Manager classes + trainee packages</Text>
+              <Text style={styles.totalSub}>Organizer sessions + trainee packages</Text>
             </View>
             <Text style={styles.totalAmount}>{formatCurrency(grandTotal)}</Text>
           </View>

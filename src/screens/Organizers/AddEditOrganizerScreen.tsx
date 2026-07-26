@@ -9,54 +9,62 @@ import { useAppTheme } from '../../theme';
 import { AppThemeColors, Radius, Spacing } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import {
-  createManager,
-  updateManager,
-  getManagerById,
-} from '../../database/repositories/managerRepository';
+  createOrganizer,
+  updateOrganizer,
+  getOrganizerById,
+} from '../../database/repositories/organizerRepository';
 import GradientButton from '../../components/common/GradientButton';
 import AppButton from '../../components/common/AppButton';
+import ThemedSegmentedButtons from '../../components/common/ThemedSegmentedButtons';
+import { OrganizerContactType } from '../../types';
 
-type Nav = StackNavigationProp<RootStackParamList, 'AddEditManager'>;
-type Route = RouteProp<RootStackParamList, 'AddEditManager'>;
+type Nav = StackNavigationProp<RootStackParamList, 'AddEditOrganizer'>;
+type Route = RouteProp<RootStackParamList, 'AddEditOrganizer'>;
 
-export default function AddEditManagerScreen() {
+export default function AddEditOrganizerScreen() {
   const { colors, theme } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const insets = useSafeAreaInsets();
-  const { managerId } = route.params ?? {};
+  const { organizerId, returnToAddSession } = route.params ?? {};
 
   const [name, setName] = useState('');
+  const [contactPerson, setContactPerson] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [rate, setRate] = useState('');
   const [notes, setNotes] = useState('');
+  const [contactType, setContactType] = useState<OrganizerContactType>('regular');
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<{ name?: string; rate?: string }>({});
 
   useEffect(() => {
-    if (managerId) {
-      navigation.setOptions({ title: 'Edit Manager' });
-      getManagerById(managerId).then((m) => {
+    if (organizerId) {
+      navigation.setOptions({ title: 'Edit Organizer' });
+      getOrganizerById(organizerId).then((m) => {
         if (m) {
           setName(m.name);
+          setContactPerson(m.contact_person ?? '');
           setPhone(m.phone ?? '');
           setEmail(m.email ?? '');
           setRate(String(m.per_class_rate));
           setNotes(m.notes ?? '');
+          setContactType(m.contact_type);
         }
       });
     } else {
-      navigation.setOptions({ title: 'Add Manager' });
+      navigation.setOptions({ title: 'Add Organizer' });
     }
-  }, [managerId, navigation]);
+  }, [organizerId, navigation]);
 
   function validate(): boolean {
     const errs: typeof errors = {};
     if (!name.trim()) errs.name = 'Name is required';
-    const rateNum = parseFloat(rate);
-    if (!rate.trim() || isNaN(rateNum) || rateNum < 0) errs.rate = 'Enter a valid rate';
+    const rateNum = rate.trim() ? parseFloat(rate) : 0;
+    if (contactType === 'regular' && (isNaN(rateNum) || rateNum < 0)) {
+      errs.rate = 'Enter a valid rate';
+    }
     setErrors(errs);
     return Object.keys(errs).length === 0;
   }
@@ -67,16 +75,22 @@ export default function AddEditManagerScreen() {
     try {
       const data = {
         name: name.trim(),
+        contact_person: contactPerson.trim() || undefined,
         phone: phone.trim() || undefined,
         email: email.trim() || undefined,
-        per_class_rate: parseFloat(rate),
+        per_class_rate: rate.trim() ? parseFloat(rate) : 0,
         currency: 'INR',
         notes: notes.trim() || undefined,
+        contact_type: contactType,
       };
-      if (managerId) {
-        await updateManager(managerId, data);
+      if (organizerId) {
+        await updateOrganizer(organizerId, data);
       } else {
-        await createManager(data);
+        const created = await createOrganizer(data);
+        if (returnToAddSession) {
+          navigation.popTo('AddSession', { selectedOrganizerId: created.id });
+          return;
+        }
       }
       navigation.goBack();
     } finally {
@@ -90,10 +104,31 @@ export default function AddEditManagerScreen() {
       behavior="padding"
     >
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <SectionHeader label="Basic Info" />
+        <SectionHeader label="Organizer Info" />
         <View style={styles.card}>
+          <Text variant="labelMedium" style={styles.fieldLabel}>Contact type</Text>
+          <ThemedSegmentedButtons
+            value={contactType}
+            onValueChange={(value: string) => {
+              setContactType(value as OrganizerContactType);
+              setErrors({});
+            }}
+            buttons={[
+              { value: 'regular', label: 'Regular' },
+              { value: 'one_time', label: 'One-time' },
+            ]}
+          />
+          <View style={styles.fieldGap} />
           <TextInput
-            label="Name *"
+            label="Contact person (optional)"
+            value={contactPerson}
+            onChangeText={setContactPerson}
+            mode="outlined"
+            dense
+          />
+          <View style={styles.fieldGap} />
+          <TextInput
+            label="Organizer / company name *"
             value={name}
             onChangeText={setName}
             mode="outlined"
@@ -127,23 +162,27 @@ export default function AddEditManagerScreen() {
           />
         </View>
 
-        <SectionHeader label="Payment" />
-        <View style={styles.card}>
-          <TextInput
-            label="Per Class Rate (₹) *"
-            value={rate}
-            onChangeText={setRate}
-            mode="outlined"
-            keyboardType="numeric"
-            dense
-            error={!!errors.rate}
-          />
-          {errors.rate && (
-            <Text variant="bodySmall" style={{ color: theme.colors.error, marginTop: Spacing.xs }}>
-              {errors.rate}
-            </Text>
-          )}
-        </View>
+        {contactType === 'regular' && (
+          <>
+            <SectionHeader label="Payment" />
+            <View style={styles.card}>
+              <TextInput
+                label="Default session rate (₹) (optional)"
+                value={rate}
+                onChangeText={setRate}
+                mode="outlined"
+                keyboardType="numeric"
+                dense
+                error={!!errors.rate}
+              />
+              {errors.rate && (
+                <Text variant="bodySmall" style={{ color: theme.colors.error, marginTop: Spacing.xs }}>
+                  {errors.rate}
+                </Text>
+              )}
+            </View>
+          </>
+        )}
 
         <SectionHeader label="Notes" />
         <View style={styles.card}>
@@ -189,6 +228,7 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
     padding: Spacing.lg,
   },
   fieldGap: { height: Spacing.sm },
+  fieldLabel: { color: colors.textSecondary, marginBottom: Spacing.xs },
   footer: {
     flexDirection: 'row',
     gap: Spacing.md,

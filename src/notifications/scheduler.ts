@@ -56,9 +56,9 @@ export async function schedulePendingPaymentNotification(): Promise<void> {
   const thresholdHigh = parseInt(highRow?.value ?? '10', 10);
   const thresholdUrgent = parseInt(urgentRow?.value ?? '15', 10);
 
-  const managerDays = await db.getAllAsync<{ days: number }>(
+  const organizerDays = await db.getAllAsync<{ days: number }>(
     `SELECT CAST(julianday('now') - julianday(cs.session_date) AS INTEGER) AS days
-     FROM manager_payments mp
+     FROM organizer_payments mp
      JOIN class_sessions cs ON mp.session_id = cs.id
      WHERE mp.status = 'pending'`
   );
@@ -68,7 +68,7 @@ export async function schedulePendingPaymentNotification(): Promise<void> {
      WHERE status = 'pending'`
   );
 
-  const allDays = [...managerDays, ...traineeDays].map((r) => r.days);
+  const allDays = [...organizerDays, ...traineeDays].map((r) => r.days);
 
   const reminderCount = allDays.filter((d) => d >= thresholdReminder && d < thresholdHigh).length;
   const highCount = allDays.filter((d) => d >= thresholdHigh && d < thresholdUrgent).length;

@@ -7,9 +7,9 @@ import ThemedSegmentedButtons from './ThemedSegmentedButtons';
 import AppButton from './AppButton';
 import { useAppTheme } from '../../theme';
 import { Radius, Spacing } from '../../theme/brandColors';
-import { ClassType, LocationType, Manager, SourceType } from '../../types';
+import { ClassType, LocationType, Organizer, SourceType } from '../../types';
 import { getAllClassTypes } from '../../database/repositories/classTypeRepository';
-import { getAllManagers } from '../../database/repositories/managerRepository';
+import { getAllOrganizers } from '../../database/repositories/organizerRepository';
 import {
   AdHocSessionInput,
   createAdHocSession,
@@ -50,8 +50,9 @@ function displayDate(iso: string): string {
 const EMPTY_FORM = {
   title: '',
   classTypeId: null as number | null,
-  sourceType: 'manager' as SourceType,
-  managerId: null as number | null,
+  sourceType: 'organizer' as SourceType,
+  organizerId: null as number | null,
+  agreedAmount: '',
   sessionDate: todayISO(),
   classTime: '09:00',
   duration: String(DEFAULT_DURATION_MINUTES),
@@ -63,18 +64,18 @@ const EMPTY_FORM = {
 export default function QuickAddSessionModal({ visible, initialDate, onDismiss, onCreated }: Props) {
   const { colors, theme } = useAppTheme();
   const [classTypes, setClassTypes] = useState<ClassType[]>([]);
-  const [managers, setManagers] = useState<Manager[]>([]);
+  const [organizers, setOrganizers] = useState<Organizer[]>([]);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [classTypePickerVisible, setClassTypePickerVisible] = useState(false);
-  const [managerPickerVisible, setManagerPickerVisible] = useState(false);
+  const [organizerPickerVisible, setOrganizerPickerVisible] = useState(false);
 
   const load = useCallback(async () => {
-    const [types, mgrs] = await Promise.all([getAllClassTypes(), getAllManagers()]);
+    const [types, mgrs] = await Promise.all([getAllClassTypes(), getAllOrganizers()]);
     setClassTypes(types);
-    setManagers(mgrs);
+    setOrganizers(mgrs);
   }, []);
 
   useEffect(() => {
@@ -85,13 +86,18 @@ export default function QuickAddSessionModal({ visible, initialDate, onDismiss, 
   }, [visible, initialDate, load]);
 
   const selectedClassType = classTypes.find((ct) => ct.id === form.classTypeId);
-  const selectedManager = managers.find((m) => m.id === form.managerId);
+  const selectedOrganizer = organizers.find((m) => m.id === form.organizerId);
 
   const isValid =
     form.classTypeId !== null &&
     form.sessionDate.length === 10 &&
     form.classTime.length === 5 &&
-    (form.sourceType === 'personal' || form.managerId !== null);
+    (form.sourceType === 'personal' || (
+      form.organizerId !== null &&
+      form.agreedAmount.trim() !== '' &&
+      Number.isFinite(Number(form.agreedAmount)) &&
+      Number(form.agreedAmount) >= 0
+    ));
 
   const handleSave = async () => {
     if (!isValid) return;
@@ -101,7 +107,8 @@ export default function QuickAddSessionModal({ visible, initialDate, onDismiss, 
         title: form.title.trim() || `${selectedClassType?.name ?? 'Class'} (Ad-hoc)`,
         classTypeId: form.classTypeId!,
         sourceType: form.sourceType,
-        managerId: form.sourceType === 'manager' ? (form.managerId ?? undefined) : undefined,
+        organizerId: form.sourceType === 'organizer' ? (form.organizerId ?? undefined) : undefined,
+        agreedAmount: form.sourceType === 'organizer' ? Number(form.agreedAmount) : undefined,
         sessionDate: form.sessionDate,
         classTime: form.classTime,
         durationMinutes: parseInt(form.duration, 10) || DEFAULT_DURATION_MINUTES,
@@ -164,33 +171,55 @@ export default function QuickAddSessionModal({ visible, initialDate, onDismiss, 
           <ThemedSegmentedButtons
             value={form.sourceType}
             onValueChange={(v: string) =>
-              setForm((f) => ({ ...f, sourceType: v as SourceType, managerId: null }))
+              setForm((f) => ({
+                ...f,
+                sourceType: v as SourceType,
+                organizerId: null,
+                agreedAmount: '',
+              }))
             }
             buttons={[
-              { value: 'manager', label: 'Manager', style: { borderRadius: Radius.sm } },
+              { value: 'organizer', label: 'Organizer', style: { borderRadius: Radius.sm } },
               { value: 'personal', label: 'Personal', style: { borderRadius: Radius.sm } },
             ]}
             style={{ marginBottom: 8, borderRadius: Radius.sm }}
           />
 
-          {/* Manager picker */}
-          {form.sourceType === 'manager' && (
+          {/* Organizer picker */}
+          {form.sourceType === 'organizer' && (
             <>
               <Text variant="labelMedium" style={[styles.label, { color: theme.colors.onSurfaceVariant }]}>
-                Manager *
+                Organizer *
               </Text>
               <TouchableOpacity
-                onPress={() => setManagerPickerVisible(true)}
+                onPress={() => setOrganizerPickerVisible(true)}
                 style={[styles.pickerButton, { borderColor: theme.colors.outline }]}
               >
-                {selectedManager ? (
-                  <Text style={{ color: theme.colors.onSurface }}>{selectedManager.name}</Text>
-                ) : managers.length === 0 ? (
-                  <Text style={{ color: theme.colors.onSurfaceVariant }}>No managers added yet</Text>
+                {selectedOrganizer ? (
+                  <Text style={{ color: theme.colors.onSurface }}>{selectedOrganizer.name}</Text>
+                ) : organizers.length === 0 ? (
+                  <Text style={{ color: theme.colors.onSurfaceVariant }}>No organizers added yet</Text>
                 ) : (
-                  <Text style={{ color: theme.colors.onSurfaceVariant }}>Select manager...</Text>
+                  <Text style={{ color: theme.colors.onSurfaceVariant }}>Select organizer...</Text>
                 )}
               </TouchableOpacity>
+              <TextInput
+                label="Agreed amount *"
+                value={form.agreedAmount}
+                onChangeText={(value) => setForm((current) => ({
+                  ...current,
+                  agreedAmount: value.replace(/[^0-9.]/g, ''),
+                }))}
+                keyboardType="decimal-pad"
+                mode="outlined"
+                left={<TextInput.Affix text="₹" />}
+                style={styles.input}
+              />
+              {selectedOrganizer !== undefined && selectedOrganizer.per_class_rate > 0 && (
+                <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                  Default rate: ₹{selectedOrganizer.per_class_rate}
+                </Text>
+              )}
             </>
           )}
 
@@ -318,30 +347,39 @@ export default function QuickAddSessionModal({ visible, initialDate, onDismiss, 
         </TouchableOpacity>
       </RNModal>
 
-      {/* Manager Picker */}
+      {/* Organizer Picker */}
       <RNModal
-        visible={managerPickerVisible}
+        visible={organizerPickerVisible}
         transparent
         animationType="slide"
-        onRequestClose={() => setManagerPickerVisible(false)}
+        onRequestClose={() => setOrganizerPickerVisible(false)}
       >
         <TouchableOpacity
           style={[styles.modalBackdrop, { backgroundColor: colors.scrim }]}
-          onPress={() => setManagerPickerVisible(false)}
+          onPress={() => setOrganizerPickerVisible(false)}
           activeOpacity={1}
         >
           <Surface style={[styles.modalSheet, { backgroundColor: theme.colors.surface }]}>
             <Text variant="titleMedium" style={[styles.modalTitle, { color: theme.colors.onSurface }]}>
-              Select Manager
+              Select Organizer
             </Text>
-            {managers.map((m) => (
+            {organizers.map((m) => (
               <List.Item
                 key={m.id}
                 title={m.name}
+                description={m.contact_type === 'one_time'
+                  ? 'One-time'
+                  : m.per_class_rate > 0
+                    ? `Regular · Default ₹${m.per_class_rate}`
+                    : 'Regular'}
                 titleStyle={{ color: theme.colors.onSurface }}
                 onPress={() => {
-                  setForm((f) => ({ ...f, managerId: m.id }));
-                  setManagerPickerVisible(false);
+                  setForm((f) => ({
+                    ...f,
+                    organizerId: m.id,
+                    agreedAmount: m.per_class_rate > 0 ? String(m.per_class_rate) : '',
+                  }));
+                  setOrganizerPickerVisible(false);
                 }}
               />
             ))}

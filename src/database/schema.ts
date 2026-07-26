@@ -8,16 +8,19 @@ export const CREATE_CLASS_TYPES = `
   );
 `;
 
-export const CREATE_MANAGERS = `
-  CREATE TABLE IF NOT EXISTS managers (
+export const CREATE_ORGANIZERS = `
+  CREATE TABLE IF NOT EXISTS organizers (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     name            TEXT NOT NULL,
+    contact_person  TEXT,
     phone           TEXT,
     email           TEXT,
     per_class_rate  REAL NOT NULL DEFAULT 0,
     currency        TEXT NOT NULL DEFAULT 'INR',
     notes           TEXT,
     is_active       INTEGER NOT NULL DEFAULT 1,
+    contact_type    TEXT NOT NULL DEFAULT 'regular'
+                      CHECK(contact_type IN ('regular','one_time')),
     created_at      TEXT NOT NULL
   );
 `;
@@ -39,8 +42,8 @@ export const CREATE_CLASS_SERIES = `
     id                INTEGER PRIMARY KEY AUTOINCREMENT,
     title             TEXT NOT NULL,
     class_type_id     INTEGER NOT NULL REFERENCES class_types(id),
-    source_type       TEXT NOT NULL CHECK(source_type IN ('manager','personal')),
-    manager_id        INTEGER REFERENCES managers(id),
+    source_type       TEXT NOT NULL CHECK(source_type IN ('organizer','personal')),
+    organizer_id        INTEGER REFERENCES organizers(id),
     recurrence_type   TEXT NOT NULL CHECK(recurrence_type IN ('daily','weekly','custom')),
     recurrence_days   TEXT,
     start_date        TEXT NOT NULL,
@@ -68,6 +71,7 @@ export const CREATE_CLASS_SESSIONS = `
     notes         TEXT,
     guest_name    TEXT,
     center_id     INTEGER REFERENCES centers(id) ON DELETE SET NULL,
+    agreed_amount REAL,
     created_at    TEXT NOT NULL
   );
 `;
@@ -100,11 +104,11 @@ export const CREATE_SESSION_TRAINEES = `
   );
 `;
 
-export const CREATE_MANAGER_PAYMENTS = `
-  CREATE TABLE IF NOT EXISTS manager_payments (
+export const CREATE_ORGANIZER_PAYMENTS = `
+  CREATE TABLE IF NOT EXISTS organizer_payments (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     session_id INTEGER NOT NULL REFERENCES class_sessions(id),
-    manager_id INTEGER NOT NULL REFERENCES managers(id),
+    organizer_id INTEGER NOT NULL REFERENCES organizers(id),
     amount     REAL NOT NULL,
     status     TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','paid')),
     paid_date  TEXT,
@@ -145,13 +149,13 @@ export const CREATE_SETTINGS = `
 export const ALL_TABLES = [
   CREATE_CLASS_TYPES,
   CREATE_CENTERS,
-  CREATE_MANAGERS,
+  CREATE_ORGANIZERS,
   CREATE_TRAINEES,
   CREATE_CLASS_SERIES,
   CREATE_CLASS_SESSIONS,
   CREATE_SERIES_TRAINEES,
   CREATE_SESSION_TRAINEES,
-  CREATE_MANAGER_PAYMENTS,
+  CREATE_ORGANIZER_PAYMENTS,
   CREATE_TRAINEE_PACKAGES,
   CREATE_TRAINEE_PACKAGES_PENDING_INDEX,
   CREATE_SETTINGS,

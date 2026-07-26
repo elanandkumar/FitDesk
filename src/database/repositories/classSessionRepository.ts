@@ -5,13 +5,20 @@ import { isSessionInFuture } from '../../utils/dateUtils';
 const ENRICHED_SELECT = `
   SELECT
     cs.id, cs.series_id, cs.session_date, cs.class_time, cs.status,
-    cs.student_count, cs.notes, cs.guest_name, cs.center_id, cs.created_at,
+    cs.student_count, cs.notes, cs.guest_name, cs.center_id, cs.agreed_amount,
+    (SELECT mp.amount
+     FROM organizer_payments mp
+     WHERE mp.session_id = cs.id
+     ORDER BY mp.id DESC
+     LIMIT 1) AS finalized_payment_amount,
+    cs.created_at,
     ser.title AS series_title,
     ct.name AS class_type_name,
     ct.color AS class_type_color,
     ser.source_type,
-    ser.manager_id,
-    m.name AS manager_name,
+    ser.organizer_id,
+    m.name AS organizer_name,
+    m.contact_type AS organizer_contact_type,
     COALESCE(m.per_class_rate, 0) AS per_class_rate,
     COALESCE(m.currency, 'INR') AS currency,
     ser.duration_minutes,
@@ -30,7 +37,7 @@ const ENRICHED_SELECT = `
   FROM class_sessions cs
   JOIN class_series ser ON cs.series_id = ser.id
   JOIN class_types ct ON ser.class_type_id = ct.id
-  LEFT JOIN managers m ON ser.manager_id = m.id
+  LEFT JOIN organizers m ON ser.organizer_id = m.id
 `;
 
 export async function getSessionsBySeriesId(seriesId: number): Promise<ClassSession[]> {
@@ -66,7 +73,8 @@ export async function getLastSessionDateForSeries(seriesId: number): Promise<str
 export async function createSessionsBatch(
   seriesId: number,
   dates: string[],
-  classTime: string
+  classTime: string,
+  agreedAmount?: number
 ): Promise<void> {
   if (dates.length === 0) return;
   const db = await getDatabase();
@@ -74,8 +82,8 @@ export async function createSessionsBatch(
   await db.withTransactionAsync(async () => {
     for (const date of dates) {
       await db.runAsync(
-        'INSERT OR IGNORE INTO class_sessions (series_id, session_date, class_time, status, student_count, created_at) VALUES (?, ?, ?, "upcoming", 0, ?)',
-        [seriesId, date, classTime, now]
+        'INSERT OR IGNORE INTO class_sessions (series_id, session_date, class_time, status, student_count, agreed_amount, created_at) VALUES (?, ?, ?, "upcoming", 0, ?, ?)',
+        [seriesId, date, classTime, agreedAmount ?? null, now]
       );
     }
   });
@@ -121,6 +129,14 @@ export async function updateSessionDateTime(id: number, date: string, time: stri
   await db.runAsync('UPDATE class_sessions SET session_date=?, class_time=? WHERE id=?', [date, time, id]);
 }
 
+export async function updateSessionAgreedAmount(id: number, agreedAmount: number): Promise<void> {
+  const db = await getDatabase();
+  await db.runAsync(
+    'UPDATE class_sessions SET agreed_amount=? WHERE id=? AND status="upcoming"',
+    [agreedAmount, id]
+  );
+}
+
 export async function getEnrichedSessionsByDateRange(
   startDate: string,
   endDate: string
@@ -139,13 +155,16 @@ export async function getEnrichedSessionById(id: number): Promise<EnrichedSessio
   );
 }
 
-export async function completeManagerSession(
+export async function completeOrganizerSession(
   sessionId: number,
-  managerId: number,
+  organizerId: number,
   amount: number,
   studentCount: number,
   notes?: string
 ): Promise<void> {
+  if (!Number.isFinite(amount) || amount < 0) {
+    throw new Error('Enter a valid non-negative amount.');
+  }
   const db = await getDatabase();
   const now = new Date().toISOString();
   await db.withTransactionAsync(async () => {
@@ -154,17 +173,27 @@ export async function completeManagerSession(
       [sessionId]
     );
     if (!session) throw new Error('Session not found.');
+    if (session.status !== 'upcoming') {
+      throw new Error('Only upcoming sessions can be completed.');
+    }
     if (isSessionInFuture(session.session_date, session.class_time)) {
       throw new Error('Future sessions cannot be marked complete.');
     }
+    const existingPayment = await db.getFirstAsync<{ id: number }>(
+      'SELECT id FROM organizer_payments WHERE session_id = ? LIMIT 1',
+      [sessionId]
+    );
+    if (existingPayment) {
+      throw new Error('A payment already exists for this session.');
+    }
 
     await db.runAsync(
-      'UPDATE class_sessions SET status=?, student_count=?, notes=? WHERE id=?',
-      ['completed', studentCount, notes ?? null, sessionId]
+      'UPDATE class_sessions SET status=?, student_count=?, notes=?, agreed_amount=? WHERE id=?',
+      ['completed', studentCount, notes ?? null, amount, sessionId]
     );
     await db.runAsync(
-      'INSERT INTO manager_payments (session_id, manager_id, amount, status, created_at) VALUES (?, ?, ?, "pending", ?)',
-      [sessionId, managerId, amount, now]
+      'INSERT INTO organizer_payments (session_id, organizer_id, amount, status, created_at) VALUES (?, ?, ?, "pending", ?)',
+      [sessionId, organizerId, amount, now]
     );
   });
 }
@@ -241,7 +270,7 @@ export interface AdHocSessionInput {
   title: string;
   classTypeId: number;
   sourceType: SourceType;
-  managerId?: number;
+  organizerId?: number;
   sessionDate: string;
   classTime: string;
   durationMinutes: number;
@@ -252,6 +281,7 @@ export interface AdHocSessionInput {
   guestName?: string;
   centerId?: number;
   traineeIds?: number[];
+  agreedAmount?: number;
 }
 
 export async function createAdHocSession(input: AdHocSessionInput): Promise<number> {
@@ -260,7 +290,7 @@ export async function createAdHocSession(input: AdHocSessionInput): Promise<numb
   let sessionId = 0;
   await db.withTransactionAsync(async () => {
     const seriesResult = await db.runAsync(
-      `INSERT INTO class_series (title, class_type_id, source_type, manager_id, recurrence_type,
+      `INSERT INTO class_series (title, class_type_id, source_type, organizer_id, recurrence_type,
         recurrence_days, start_date, end_date, class_time, duration_minutes, location_type,
         location, notes, is_active, center_id, created_at)
        VALUES (?, ?, ?, ?, 'daily', NULL, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)`,
@@ -268,7 +298,7 @@ export async function createAdHocSession(input: AdHocSessionInput): Promise<numb
         input.title,
         input.classTypeId,
         input.sourceType,
-        input.managerId ?? null,
+        input.organizerId ?? null,
         input.sessionDate,
         input.sessionDate,
         input.classTime,
@@ -282,9 +312,9 @@ export async function createAdHocSession(input: AdHocSessionInput): Promise<numb
     );
     const seriesId = seriesResult.lastInsertRowId;
     const sessionResult = await db.runAsync(
-      `INSERT INTO class_sessions (series_id, session_date, class_time, status, student_count, notes, guest_name, center_id, created_at)
-       VALUES (?, ?, ?, 'upcoming', ?, ?, ?, ?, ?)`,
-      [seriesId, input.sessionDate, input.classTime, input.studentCount ?? 0, input.notes ?? null, input.guestName ?? null, input.centerId ?? null, now]
+      `INSERT INTO class_sessions (series_id, session_date, class_time, status, student_count, notes, guest_name, center_id, agreed_amount, created_at)
+       VALUES (?, ?, ?, 'upcoming', ?, ?, ?, ?, ?, ?)`,
+      [seriesId, input.sessionDate, input.classTime, input.studentCount ?? 0, input.notes ?? null, input.guestName ?? null, input.centerId ?? null, input.agreedAmount ?? null, now]
     );
     sessionId = sessionResult.lastInsertRowId;
     if (input.traineeIds && input.traineeIds.length > 0) {

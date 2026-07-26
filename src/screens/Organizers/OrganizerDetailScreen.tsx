@@ -10,15 +10,16 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useAppTheme } from '../../theme';
 import { AppThemeColors, BrandCore, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
-import { Manager, EnrichedManagerPayment } from '../../types';
+import { Organizer, EnrichedOrganizerPayment } from '../../types';
 import {
-  getManagerById,
-  getUpcomingSessionCountForManager,
-  softDeleteManager,
-} from '../../database/repositories/managerRepository';
+  getOrganizerById,
+  getUpcomingSessionCountForOrganizer,
+  makeOrganizerRegular,
+  softDeleteOrganizer,
+} from '../../database/repositories/organizerRepository';
 import {
-  getManagerOutstandingBalance,
-  getEnrichedManagerPaymentsByManager,
+  getOrganizerOutstandingBalance,
+  getEnrichedOrganizerPaymentsByOrganizer,
 } from '../../database/repositories/paymentRepository';
 import { formatCurrency } from '../../utils/currencyUtils';
 import { formatDisplayDate, formatDisplayTime } from '../../utils/dateUtils';
@@ -28,65 +29,77 @@ import AppIconButton from '../../components/common/AppIconButton';
 import InfoDialog from '../../components/common/InfoDialog';
 import { HELP } from '../../constants/helpContent';
 
-type Nav = StackNavigationProp<RootStackParamList, 'ManagerDetail'>;
-type Route = RouteProp<RootStackParamList, 'ManagerDetail'>;
+type Nav = StackNavigationProp<RootStackParamList, 'OrganizerDetail'>;
+type Route = RouteProp<RootStackParamList, 'OrganizerDetail'>;
 
-export default function ManagerDetailScreen() {
+export default function OrganizerDetailScreen() {
   const { accentPalette, colors } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
-  const { managerId } = route.params;
+  const { organizerId } = route.params;
 
-  const [manager, setManager] = useState<Manager | null>(null);
+  const [organizer, setOrganizer] = useState<Organizer | null>(null);
   const [outstanding, setOutstanding] = useState(0);
-  const [payments, setPayments] = useState<EnrichedManagerPayment[]>([]);
+  const [payments, setPayments] = useState<EnrichedOrganizerPayment[]>([]);
   const [upcomingCount, setUpcomingCount] = useState(0);
   const [deleteVisible, setDeleteVisible] = useState(false);
+  const [makeRegularVisible, setMakeRegularVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [helpVisible, setHelpVisible] = useState(false);
 
   const load = useCallback(async () => {
     try {
       const [m, bal, pmts, cnt] = await Promise.all([
-        getManagerById(managerId),
-        getManagerOutstandingBalance(managerId),
-        getEnrichedManagerPaymentsByManager(managerId),
-        getUpcomingSessionCountForManager(managerId),
+        getOrganizerById(organizerId),
+        getOrganizerOutstandingBalance(organizerId),
+        getEnrichedOrganizerPaymentsByOrganizer(organizerId),
+        getUpcomingSessionCountForOrganizer(organizerId),
       ]);
-      setManager(m);
+      setOrganizer(m);
       setOutstanding(bal);
       setPayments(pmts);
       setUpcomingCount(cnt);
     } catch {
       // screen shows nothing on DB error
     }
-  }, [managerId]);
+  }, [organizerId]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
   useEffect(() => {
-    if (manager) {
+    if (organizer) {
       navigation.setOptions({
-        title: manager.name,
+        title: organizer.name,
         headerRight: () => (
           <AppIconButton icon="question" iconColor={accentPalette.textAccent} onPress={() => setHelpVisible(true)} />
         ),
       });
     }
-  }, [accentPalette.textAccent, manager, navigation]);
+  }, [accentPalette.textAccent, organizer, navigation]);
 
   async function handleDelete() {
     try {
-      await softDeleteManager(managerId);
+      await softDeleteOrganizer(organizerId);
       navigation.goBack();
     } catch {
-      setErrorMessage('Could not remove manager. Please try again.');
+      setErrorMessage('Could not remove organizer. Please try again.');
     }
   }
 
-  if (!manager) return null;
+  async function handleMakeRegular() {
+    try {
+      await makeOrganizerRegular(organizerId);
+      setMakeRegularVisible(false);
+      await load();
+    } catch {
+      setMakeRegularVisible(false);
+      setErrorMessage('Could not make organizer regular. Please try again.');
+    }
+  }
+
+  if (!organizer) return null;
 
   const pendingPayments = payments.filter((p) => p.status === 'pending');
   const paidPayments = payments.filter((p) => p.status === 'paid');
@@ -98,9 +111,11 @@ export default function ManagerDetailScreen() {
         {/* Contact */}
         <SectionHeader label="Contact" />
         <View style={styles.card}>
-          {manager.phone ? <InfoRow label="Phone" value={manager.phone} /> : null}
-          {manager.email ? <InfoRow label="Email" value={manager.email} /> : null}
-          {!manager.phone && !manager.email && (
+          <InfoRow label="Type" value={organizer.contact_type === 'one_time' ? 'One-time' : 'Regular'} />
+          {organizer.contact_person ? <InfoRow label="Contact person" value={organizer.contact_person} /> : null}
+          {organizer.phone ? <InfoRow label="Phone" value={organizer.phone} /> : null}
+          {organizer.email ? <InfoRow label="Email" value={organizer.email} /> : null}
+          {!organizer.phone && !organizer.email && (
             <Text variant="bodyMedium" style={{ color: colors.textMuted }}>No contact info</Text>
           )}
         </View>
@@ -108,7 +123,9 @@ export default function ManagerDetailScreen() {
         {/* Payment Summary */}
         <SectionHeader label="Payment" />
         <View style={styles.card}>
-          <InfoRow label="Per class rate" value={formatCurrency(manager.per_class_rate)} />
+          {organizer.contact_type === 'regular' ? (
+            <InfoRow label="Default session rate" value={formatCurrency(organizer.per_class_rate)} />
+          ) : null}
           <View style={styles.balanceRow}>
             <Text variant="bodyMedium" style={{ color: colors.textSecondary }}>Outstanding balance</Text>
             <Text
@@ -156,39 +173,59 @@ export default function ManagerDetailScreen() {
         )}
 
         {/* Notes */}
-        {manager.notes ? (
+        {organizer.notes ? (
           <>
             <SectionHeader label="Notes" />
             <View style={styles.card}>
               <Text variant="bodyMedium" style={{ color: colors.textSecondary }}>
-                {manager.notes}
+                {organizer.notes}
               </Text>
             </View>
           </>
         ) : null}
 
+        {organizer.contact_type === 'one_time' && (
+          <AppButton
+            variant="secondary"
+            label="Make Regular"
+            onPress={() => setMakeRegularVisible(true)}
+            style={{ marginTop: Spacing.sm }}
+            fullWidth={false}
+          />
+        )}
+
         <AppButton
           variant="danger"
-          label="Remove Manager"
+          label="Remove Organizer"
           onPress={() => setDeleteVisible(true)}
           style={{ marginTop: Spacing.sm }}
           fullWidth={false}
         />
 
         <ConfirmDialog
+          visible={makeRegularVisible}
+          title="Make Organizer Regular?"
+          message={`Convert "${organizer.name}" to a Regular organizer? Existing sessions and payments will remain unchanged.`}
+          confirmLabel="Make Regular"
+          destructive={false}
+          onConfirm={handleMakeRegular}
+          onDismiss={() => setMakeRegularVisible(false)}
+        />
+
+        <ConfirmDialog
           visible={deleteVisible}
-          title="Remove Manager"
+          title="Remove Organizer"
           message={
             upcomingCount > 0
-              ? `"${manager.name}" has ${upcomingCount} upcoming session${upcomingCount > 1 ? 's' : ''}. They will be archived but their history and payments will remain.`
-              : `Archive "${manager.name}"? Their history and payments will remain.`
+              ? `"${organizer.name}" has ${upcomingCount} upcoming session${upcomingCount > 1 ? 's' : ''}. They will be archived but their history and payments will remain.`
+              : `Archive "${organizer.name}"? Their history and payments will remain.`
           }
           confirmLabel="Remove"
           onConfirm={handleDelete}
           onDismiss={() => setDeleteVisible(false)}
         />
 
-        <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP.managerDetail} />
+        <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP.organizerDetail} />
 
         <InfoDialog
           visible={errorMessage.length > 0}
@@ -201,7 +238,7 @@ export default function ManagerDetailScreen() {
       <GradientFAB
         icon="pencil"
         style={[styles.fab, { bottom: Spacing.lg + insets.bottom }]}
-        onPress={() => navigation.navigate('AddEditManager', { managerId })}
+        onPress={() => navigation.navigate('AddEditOrganizer', { organizerId })}
       />
     </View>
   );
@@ -211,7 +248,7 @@ function PaymentRow({
   payment,
   showDivider,
 }: {
-  payment: EnrichedManagerPayment;
+  payment: EnrichedOrganizerPayment;
   showDivider: boolean;
 }) {
   const { colors } = useAppTheme();

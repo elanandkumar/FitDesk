@@ -1,8 +1,9 @@
-export type SourceType = 'manager' | 'personal';
+export type SourceType = 'organizer' | 'personal';
 export type RecurrenceType = 'daily' | 'weekly' | 'custom';
 export type SessionStatus = 'upcoming' | 'completed' | 'cancelled' | 'skipped';
 export type PaymentStatus = 'pending' | 'paid';
 export type LocationType = 'offline' | 'online';
+export type OrganizerContactType = 'regular' | 'one_time';
 
 export interface ClassType {
   id: number;
@@ -20,15 +21,17 @@ export interface Center {
   created_at: string;
 }
 
-export interface Manager {
+export interface Organizer {
   id: number;
   name: string;
+  contact_person?: string;
   phone?: string;
   email?: string;
   per_class_rate: number;
   currency: string;
   notes?: string;
   is_active: number;
+  contact_type: OrganizerContactType;
   created_at: string;
 }
 
@@ -53,7 +56,7 @@ export interface ClassSeries {
   title: string;
   class_type_id: number;
   source_type: SourceType;
-  manager_id?: number;
+  organizer_id?: number;
   recurrence_type: RecurrenceType;
   recurrence_days?: string; // JSON array
   start_date: string;
@@ -78,6 +81,7 @@ export interface ClassSession {
   notes?: string;
   guest_name?: string;
   center_id?: number;
+  agreed_amount: number | null;
   created_at: string;
 }
 
@@ -87,10 +91,10 @@ export interface SessionTrainee {
   trainee_id: number;
 }
 
-export interface ManagerPayment {
+export interface OrganizerPayment {
   id: number;
   session_id: number;
-  manager_id: number;
+  organizer_id: number;
   amount: number;
   status: PaymentStatus;
   paid_date?: string;
@@ -128,11 +132,11 @@ export interface AppNotification {
   read_at: string | null;
 }
 
-export interface EnrichedManagerPayment {
+export interface EnrichedOrganizerPayment {
   id: number;
   session_id: number;
-  manager_id: number;
-  manager_name: string;
+  organizer_id: number;
+  organizer_name: string;
   amount: number;
   currency: string;
   status: PaymentStatus;
@@ -163,17 +167,17 @@ export interface EnrichedTraineePackage {
 
 export interface MonthlyIncomeSummary {
   month: string;
-  manager_paid: number;
-  manager_pending: number;
+  organizer_paid: number;
+  organizer_pending: number;
   trainee_paid: number;
   trainee_pending: number;
   total_paid: number;
   total_pending: number;
 }
 
-export interface ManagerMonthIncome {
-  manager_id: number;
-  manager_name: string;
+export interface OrganizerMonthIncome {
+  organizer_id: number;
+  organizer_name: string;
   paid: number;
   pending: number;
 }
@@ -205,14 +209,17 @@ export interface EnrichedSession {
   notes?: string;
   guest_name?: string;
   center_id?: number;
+  agreed_amount: number | null;
+  finalized_payment_amount: number | null;
   trainee_names?: string; // comma-joined names from series_trainees, populated by specific queries
   created_at: string;
   series_title: string;
   class_type_name: string;
   class_type_color: string;
   source_type: SourceType;
-  manager_id: number | null;
-  manager_name: string | null;
+  organizer_id: number | null;
+  organizer_name: string | null;
+  organizer_contact_type: OrganizerContactType | null;
   per_class_rate: number;
   currency: string;
   duration_minutes: number;

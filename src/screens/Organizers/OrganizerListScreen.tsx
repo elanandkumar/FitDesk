@@ -9,12 +9,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAppTheme } from '../../theme';
 import { AppThemeColors, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
-import { Manager } from '../../types';
-import { getAllManagers } from '../../database/repositories/managerRepository';
+import { Organizer } from '../../types';
+import { getAllOrganizers } from '../../database/repositories/organizerRepository';
 import { formatCurrency } from '../../utils/currencyUtils';
 import EmptyState from '../../components/common/EmptyState';
 import { RootStackParamList } from '../../navigation/types';
 import { listItemEntering } from '../../animations/listItemEntering';
+import ThemedSegmentedButtons from '../../components/common/ThemedSegmentedButtons';
+import { OrganizerContactType } from '../../types';
 
 type Nav = StackNavigationProp<RootStackParamList>;
 
@@ -27,20 +29,21 @@ function initials(name: string): string {
     .toUpperCase();
 }
 
-export default function ManagerListScreen() {
+export default function OrganizerListScreen() {
   const { accentPalette, colors, theme } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
-  const [managers, setManagers] = useState<Manager[]>([]);
+  const [organizers, setOrganizers] = useState<Organizer[]>([]);
   const [loading, setLoading] = useState(true);
   const [animationCycle, setAnimationCycle] = useState(0);
   const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState<'all' | OrganizerContactType>('all');
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      setManagers(await getAllManagers());
+      setOrganizers(await getAllOrganizers());
     } finally {
       setLoading(false);
     }
@@ -52,18 +55,31 @@ export default function ManagerListScreen() {
   }, [load]));
 
   const filtered = useMemo(() => {
-    if (!query.trim()) return managers;
     const q = query.toLowerCase();
-    return managers.filter((m) => m.name.toLowerCase().includes(q));
-  }, [managers, query]);
+    return organizers.filter(
+      (m) =>
+        (filter === 'all' || m.contact_type === filter) &&
+        (!query.trim() || m.name.toLowerCase().includes(q))
+    );
+  }, [filter, organizers, query]);
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <AppSearchbar
-        placeholder="Search managers"
+        placeholder="Search organizers"
         value={query}
         onChangeText={setQuery}
         style={[styles.searchbar, { backgroundColor: colors.surface }]}
+      />
+      <ThemedSegmentedButtons
+        value={filter}
+        onValueChange={(value: string) => setFilter(value as 'all' | OrganizerContactType)}
+        buttons={[
+          { value: 'all', label: 'All' },
+          { value: 'regular', label: 'Regular' },
+          { value: 'one_time', label: 'One-time' },
+        ]}
+        style={styles.filters}
       />
       <FlatList
         data={filtered}
@@ -72,8 +88,8 @@ export default function ManagerListScreen() {
         ListEmptyComponent={
           !loading ? (
             <EmptyState
-              title={query ? 'No matches' : 'No managers'}
-              subtitle={query ? 'Try a different search' : 'Tap + to add a manager'}
+              title={query || filter !== 'all' ? 'No matches' : 'No organizers'}
+              subtitle={query || filter !== 'all' ? 'Try a different search or filter' : 'Tap + to add an organizer'}
             />
           ) : null
         }
@@ -82,10 +98,10 @@ export default function ManagerListScreen() {
             <Animated.View entering={listItemEntering(index)}>
               <TouchableOpacity
                 accessibilityRole="button"
-                accessibilityLabel={`${item.name} manager details`}
-                accessibilityHint="Opens manager details"
+                accessibilityLabel={`${item.name} organizer details`}
+                accessibilityHint="Opens organizer details"
                 style={styles.card}
-                onPress={() => navigation.navigate('ManagerDetail', { managerId: item.id })}
+                onPress={() => navigation.navigate('OrganizerDetail', { organizerId: item.id })}
                 activeOpacity={0.75}
               >
                 <View style={[styles.avatar, { backgroundColor: `${accentPalette.main}22`, borderColor: `${accentPalette.main}55` }]}>
@@ -94,7 +110,13 @@ export default function ManagerListScreen() {
                 <View style={styles.cardContent}>
                   <Text style={styles.cardTitle}>{item.name}</Text>
                 </View>
-                <Text style={styles.cardRate}>{formatCurrency(item.per_class_rate)}/class</Text>
+                <Text style={styles.cardRate}>
+                  {item.contact_type === 'one_time'
+                    ? 'One-time'
+                    : item.per_class_rate > 0
+                      ? `Regular · Default ${formatCurrency(item.per_class_rate)}`
+                      : 'Regular'}
+                </Text>
               </TouchableOpacity>
             </Animated.View>
           </View>
@@ -103,7 +125,7 @@ export default function ManagerListScreen() {
       <GradientFAB
         icon="plus"
         style={[styles.fab, { bottom: Layout.FAB_BOTTOM + insets.bottom }]}
-        onPress={() => navigation.navigate('AddEditManager', {})}
+        onPress={() => navigation.navigate('AddEditOrganizer', {})}
       />
 
     </View>
@@ -113,6 +135,7 @@ export default function ManagerListScreen() {
 const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   container: { flex: 1 },
   searchbar: { margin: Spacing.md, borderRadius: Radius.lg, elevation: 0, borderWidth: 1, borderColor: colors.border },
+  filters: { marginHorizontal: Spacing.md, marginBottom: Spacing.md },
   listContent: { paddingHorizontal: Spacing.md, paddingBottom: Layout.LIST_PAD_WITH_FAB },
   cardShadow: {
     backgroundColor: colors.surface,

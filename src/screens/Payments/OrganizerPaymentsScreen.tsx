@@ -6,8 +6,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAppTheme } from '../../theme';
 import { AppThemeColors, BrandCore, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
-import { EnrichedManagerPayment } from '../../types';
-import { getAllEnrichedManagerPayments } from '../../database/repositories/paymentRepository';
+import { EnrichedOrganizerPayment } from '../../types';
+import { getAllEnrichedOrganizerPayments } from '../../database/repositories/paymentRepository';
 import { formatCurrency } from '../../utils/currencyUtils';
 import { RootStackParamList } from '../../navigation/types';
 import EmptyState from '../../components/common/EmptyState';
@@ -15,56 +15,56 @@ import AppIconButton from '../../components/common/AppIconButton';
 
 type Nav = StackNavigationProp<RootStackParamList>;
 type PaymentStatusFilter = 'pending' | 'all';
-type ManagerSortOrder = 'pending' | 'az' | 'za';
+type OrganizerSortOrder = 'pending' | 'az' | 'za';
 
-type ManagerSummary = {
-  managerId: number;
-  managerName: string;
+type OrganizerSummary = {
+  organizerId: number;
+  organizerName: string;
   sessionCount: number;
   paidTotal: number;
   pendingTotal: number;
 };
 
-interface ManagerPaymentsScreenProps {
+interface OrganizerPaymentsScreenProps {
   initialPendingOnly?: boolean;
   focusKey?: number;
 }
 
-function buildSummaries(payments: EnrichedManagerPayment[], sortOrder: ManagerSortOrder): ManagerSummary[] {
-  const map = new Map<number, ManagerSummary>();
+function buildSummaries(payments: EnrichedOrganizerPayment[], sortOrder: OrganizerSortOrder): OrganizerSummary[] {
+  const map = new Map<number, OrganizerSummary>();
   for (const p of payments) {
-    if (!map.has(p.manager_id)) {
-      map.set(p.manager_id, {
-        managerId: p.manager_id,
-        managerName: p.manager_name,
+    if (!map.has(p.organizer_id)) {
+      map.set(p.organizer_id, {
+        organizerId: p.organizer_id,
+        organizerName: p.organizer_name,
         sessionCount: 0,
         paidTotal: 0,
         pendingTotal: 0,
       });
     }
-    const s = map.get(p.manager_id)!;
+    const s = map.get(p.organizer_id)!;
     s.sessionCount += 1;
     if (p.status === 'paid') s.paidTotal += p.amount;
     else s.pendingTotal += p.amount;
   }
   return Array.from(map.values()).sort((a, b) => {
-    if (sortOrder === 'az') return a.managerName.localeCompare(b.managerName);
-    if (sortOrder === 'za') return b.managerName.localeCompare(a.managerName);
+    if (sortOrder === 'az') return a.organizerName.localeCompare(b.organizerName);
+    if (sortOrder === 'za') return b.organizerName.localeCompare(a.organizerName);
     return b.pendingTotal !== a.pendingTotal
       ? b.pendingTotal - a.pendingTotal
-      : a.managerName.localeCompare(b.managerName);
+      : a.organizerName.localeCompare(b.organizerName);
   });
 }
 
-export default function ManagerPaymentsScreen({ initialPendingOnly, focusKey }: ManagerPaymentsScreenProps) {
+export default function OrganizerPaymentsScreen({ initialPendingOnly, focusKey }: OrganizerPaymentsScreenProps) {
   const { accentPalette, colors, theme } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
-  const [summaries, setSummaries] = useState<ManagerSummary[]>([]);
-  const [allPayments, setAllPayments] = useState<EnrichedManagerPayment[]>([]);
+  const [summaries, setSummaries] = useState<OrganizerSummary[]>([]);
+  const [allPayments, setAllPayments] = useState<EnrichedOrganizerPayment[]>([]);
   const [statusFilter, setStatusFilter] = useState<PaymentStatusFilter>('pending');
-  const [sortOrder, setSortOrder] = useState<ManagerSortOrder>('pending');
+  const [sortOrder, setSortOrder] = useState<OrganizerSortOrder>('pending');
   const [filtersVisible, setFiltersVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const pendingOnly = statusFilter === 'pending';
@@ -84,7 +84,7 @@ export default function ManagerPaymentsScreen({ initialPendingOnly, focusKey }: 
   const load = useCallback(async () => {
     setIsLoading(true);
     try {
-      const payments = await getAllEnrichedManagerPayments(pendingOnly);
+      const payments = await getAllEnrichedOrganizerPayments(pendingOnly);
       setAllPayments(payments);
       setSummaries(buildSummaries(payments, sortOrder));
     } catch {
@@ -99,21 +99,21 @@ export default function ManagerPaymentsScreen({ initialPendingOnly, focusKey }: 
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
-  const renderItem = ({ item }: { item: ManagerSummary }) => (
+  const renderItem = ({ item }: { item: OrganizerSummary }) => (
     <TouchableOpacity
       accessibilityRole="button"
-      accessibilityLabel={`${item.managerName} payment details`}
-      accessibilityHint="Shows manager payment details"
+      accessibilityLabel={`${item.organizerName} payment details`}
+      accessibilityHint="Shows organizer payment details"
       style={styles.card}
-      onPress={() => navigation.navigate('ManagerPaymentDetail', {
-        managerId: item.managerId,
-        managerName: item.managerName,
+      onPress={() => navigation.navigate('OrganizerPaymentDetail', {
+        organizerId: item.organizerId,
+        organizerName: item.organizerName,
       })}
       activeOpacity={0.75}
     >
       <View style={styles.cardTop}>
         <View style={styles.cardTitleBlock}>
-          <Text style={styles.managerName}>{item.managerName}</Text>
+          <Text style={styles.organizerName}>{item.organizerName}</Text>
           <Text style={styles.sessionCount}>
             {item.sessionCount} session{item.sessionCount !== 1 ? 's' : ''}
           </Text>
@@ -217,7 +217,7 @@ export default function ManagerPaymentsScreen({ initialPendingOnly, focusKey }: 
 
       <FlatList
         data={summaries}
-        keyExtractor={(item) => String(item.managerId)}
+        keyExtractor={(item) => String(item.organizerId)}
         renderItem={renderItem}
         ListEmptyComponent={isLoading ? null : (
           <EmptyState
@@ -225,7 +225,7 @@ export default function ManagerPaymentsScreen({ initialPendingOnly, focusKey }: 
             title={pendingOnly ? 'No pending payments' : 'No payments yet'}
             subtitle={
               pendingOnly
-                ? 'All manager payments are settled.'
+                ? 'All organizer payments are settled.'
                 : 'Payments appear when sessions are marked completed.'
             }
           />
@@ -268,7 +268,7 @@ export default function ManagerPaymentsScreen({ initialPendingOnly, focusKey }: 
             </View>
 
             <View style={styles.sheetSection}>
-              {renderSheetTitle('Sort managers')}
+              {renderSheetTitle('Sort organizers')}
               <View style={styles.sheetChipRow}>
                 {renderFilterChip('Pending first', sortOrder === 'pending', () => setSortOrder('pending'))}
                 {renderFilterChip('A-Z', sortOrder === 'az', () => setSortOrder('az'))}
@@ -339,7 +339,7 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
     gap: Spacing.md,
   },
   cardTitleBlock: { flex: 1 },
-  managerName: { ...Typography.h4, color: colors.textPrimary },
+  organizerName: { ...Typography.h4, color: colors.textPrimary },
   sessionCount: { ...Typography.bodySm, color: colors.textSecondary, marginTop: Spacing.xs },
   amountRow: {
     flexDirection: 'row',

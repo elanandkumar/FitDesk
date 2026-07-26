@@ -16,9 +16,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '../../theme';
 import { AppThemeColors, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
-import { ClassType, Manager, Trainee, Center, TraineePackage, RecurrenceType, LocationType, SourceType } from '../../types';
+import { ClassType, Organizer, Trainee, Center, TraineePackage, RecurrenceType, LocationType, SourceType } from '../../types';
 import { getAllClassTypes } from '../../database/repositories/classTypeRepository';
-import { getAllManagers } from '../../database/repositories/managerRepository';
+import {
+  getAllOrganizers,
+  makeOrganizerRegular,
+} from '../../database/repositories/organizerRepository';
 import { getAllTrainees } from '../../database/repositories/traineeRepository';
 import { getAllCenters } from '../../database/repositories/centerRepository';
 import { createTraineePackage, getActivePackageForTrainee } from '../../database/repositories/paymentRepository';
@@ -112,14 +115,14 @@ export default function AddEditClassSeriesScreen() {
   const plannedSessionCount = !isEdit ? prefillPackage?.totalSessions : undefined;
 
   const [classTypes, setClassTypes] = useState<ClassType[]>([]);
-  const [managers, setManagers] = useState<Manager[]>([]);
+  const [organizers, setOrganizers] = useState<Organizer[]>([]);
   const [trainees, setTrainees] = useState<Trainee[]>([]);
   const [centers, setCenters] = useState<Center[]>([]);
 
   const [title, setTitle] = useState('');
   const [selectedClassTypeId, setSelectedClassTypeId] = useState<number | null>(null);
-  const [sourceType, setSourceType] = useState<SourceType>('manager');
-  const [selectedManagerId, setSelectedManagerId] = useState<number | null>(null);
+  const [sourceType, setSourceType] = useState<SourceType>('organizer');
+  const [selectedOrganizerId, setSelectedOrganizerId] = useState<number | null>(null);
   const [selectedCenterId, setSelectedCenterId] = useState<number | null>(null);
   const [selectedTraineeIds, setSelectedTraineeIds] = useState<number[]>([]);
   const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>('weekly');
@@ -135,7 +138,8 @@ export default function AddEditClassSeriesScreen() {
   const [saving, setSaving] = useState(false);
   const [endSeriesVisible, setEndSeriesVisible] = useState(false);
   const [classTypePickerVisible, setClassTypePickerVisible] = useState(false);
-  const [managerPickerVisible, setManagerPickerVisible] = useState(false);
+  const [organizerPickerVisible, setOrganizerPickerVisible] = useState(false);
+  const [oneTimeOrganizerId, setOneTimeOrganizerId] = useState<number | null>(null);
   const [traineePickerVisible, setTraineePickerVisible] = useState(false);
   const [centerPickerVisible, setCenterPickerVisible] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -147,12 +151,12 @@ export default function AddEditClassSeriesScreen() {
   const loadPickerData = useCallback(async () => {
     const [types, mgrs, traineeList, centerList] = await Promise.all([
       getAllClassTypes(),
-      getAllManagers(),
+      getAllOrganizers(),
       getAllTrainees(),
       getAllCenters(),
     ]);
     setClassTypes(types);
-    setManagers(mgrs);
+    setOrganizers(mgrs);
     setTrainees(traineeList);
     setCenters(centerList);
     return { types, mgrs, traineeList, centerList };
@@ -172,7 +176,7 @@ export default function AddEditClassSeriesScreen() {
           setTitle(s.title);
           setSelectedClassTypeId(s.class_type_id);
           setSourceType(s.source_type);
-          setSelectedManagerId(s.manager_id ?? null);
+          setSelectedOrganizerId(s.organizer_id ?? null);
           setSelectedCenterId(s.center_id ?? null);
           setRecurrenceType(s.recurrence_type);
           setSelectedDays(s.recurrence_days ? (JSON.parse(s.recurrence_days) as number[]) : []);
@@ -193,7 +197,7 @@ export default function AddEditClassSeriesScreen() {
           const initialStartDate = packageStartDate(prefillPackage.month);
           setTitle(trainee ? `${trainee.name} Training` : 'Personal Training');
           setSourceType('personal');
-          setSelectedManagerId(null);
+          setSelectedOrganizerId(null);
           setSelectedCenterId(null);
           setSelectedTraineeIds([prefillPackage.traineeId]);
           setRecurrenceType('weekly');
@@ -254,7 +258,7 @@ export default function AddEditClassSeriesScreen() {
     const errs: Record<string, string> = {};
     if (!title.trim()) errs.title = 'Title is required';
     if (!selectedClassTypeId) errs.classType = 'Select a class type';
-    if (sourceType === 'manager' && !selectedManagerId) errs.manager = 'Select a manager';
+    if (sourceType === 'organizer' && !selectedOrganizerId) errs.organizer = 'Select an organizer';
     if (recurrenceType !== 'daily' && selectedDays.length === 0) {
       errs.days = 'Select at least one day';
     }
@@ -283,8 +287,8 @@ export default function AddEditClassSeriesScreen() {
         title: title.trim(),
         class_type_id: selectedClassTypeId!,
         source_type: sourceType,
-        manager_id: sourceType === 'manager' ? selectedManagerId ?? undefined : undefined,
-        center_id: sourceType === 'manager' ? selectedCenterId ?? undefined : undefined,
+        organizer_id: sourceType === 'organizer' ? selectedOrganizerId ?? undefined : undefined,
+        center_id: sourceType === 'organizer' ? selectedCenterId ?? undefined : undefined,
         recurrence_type: recurrenceType,
         recurrence_days: recurrenceDays ?? undefined,
         start_date: startDate,
@@ -463,17 +467,52 @@ export default function AddEditClassSeriesScreen() {
   }
 
   const selectedClassType = classTypes.find((ct) => ct.id === selectedClassTypeId);
-  const selectedManager = managers.find((m) => m.id === selectedManagerId);
+  const selectedOrganizer = organizers.find((m) => m.id === selectedOrganizerId);
   const selectedCenter = centers.find((c) => c.id === selectedCenterId);
 
   const classTypePickerItems = useMemo(
     () => classTypes.map((ct) => ({ id: ct.id, label: ct.name, leftColor: ct.color })),
     [classTypes]
   );
-  const managerPickerItems = useMemo(
-    () => managers.map((m) => ({ id: m.id, label: m.name })),
-    [managers]
+  const organizerPickerItems = useMemo(
+    () => [...organizers]
+      .sort((a, b) => {
+        if (a.contact_type !== b.contact_type) {
+          return a.contact_type === 'regular' ? -1 : 1;
+        }
+        return a.name.localeCompare(b.name);
+      })
+      .map((m) => ({
+      id: m.id,
+      label: m.name,
+      hint: m.contact_type === 'one_time'
+        ? 'One-time'
+        : m.per_class_rate > 0
+          ? `Regular · Default ₹${m.per_class_rate}`
+          : 'Regular',
+      })),
+    [organizers]
   );
+
+  async function handleMakeSelectedOrganizerRegular() {
+    if (oneTimeOrganizerId === null) return;
+    try {
+      await makeOrganizerRegular(oneTimeOrganizerId);
+      setOrganizers((current) => current.map((organizer) =>
+        organizer.id === oneTimeOrganizerId
+          ? { ...organizer, contact_type: 'regular' }
+          : organizer
+      ));
+      setSelectedOrganizerId(oneTimeOrganizerId);
+      setOneTimeOrganizerId(null);
+    } catch {
+      setOneTimeOrganizerId(null);
+      setModalError({
+        title: 'Could not update organizer',
+        message: 'Please try again.',
+      });
+    }
+  }
   const traineePickerItems = useMemo(
     () => trainees.map((t) => ({ id: t.id, label: t.name })),
     [trainees]
@@ -542,23 +581,23 @@ export default function AddEditClassSeriesScreen() {
                 value={sourceType}
                 onValueChange={(v: string) => setSourceType(v as SourceType)}
                 buttons={[
-                  { value: 'manager', label: 'Manager' },
+                  { value: 'organizer', label: 'Organizer' },
                   { value: 'personal', label: 'Personal' },
                 ]}
               />
             )}
 
-            {sourceType === 'manager' && (
+            {sourceType === 'organizer' && (
               <>
                 <View style={styles.fieldGap} />
-                <Text variant="labelMedium" style={styles.fieldLabel}>Manager *</Text>
+                <Text variant="labelMedium" style={styles.fieldLabel}>Organizer *</Text>
                 <PickerField
-                  placeholder="Select manager..."
-                  value={selectedManager?.name}
-                  onPress={() => setManagerPickerVisible(true)}
-                  error={!!errors.manager}
+                  placeholder="Select organizer..."
+                  value={selectedOrganizer?.name}
+                  onPress={() => setOrganizerPickerVisible(true)}
+                  error={!!errors.organizer}
                 />
-                {errors.manager ? <ErrorText msg={errors.manager} /> : null}
+                {errors.organizer ? <ErrorText msg={errors.organizer} /> : null}
 
                 <View style={styles.fieldGap} />
                 <Text variant="labelMedium" style={styles.fieldLabel}>Center (optional)</Text>
@@ -792,14 +831,24 @@ export default function AddEditClassSeriesScreen() {
       />
 
       <PickerModal
-        visible={managerPickerVisible}
-        onDismiss={() => setManagerPickerVisible(false)}
-        title="Select Manager"
-        items={managerPickerItems}
-        selectedIds={selectedManagerId ? [selectedManagerId] : []}
-        onSelect={(ids) => { if (ids[0] !== undefined) setSelectedManagerId(ids[0]); }}
-        onAddNew={() => { setManagerPickerVisible(false); navigation.navigate('AddEditManager', {}); }}
-        addNewLabel="Add New Manager"
+        visible={organizerPickerVisible}
+        onDismiss={() => setOrganizerPickerVisible(false)}
+        title="Select Organizer"
+        items={organizerPickerItems}
+        selectedIds={selectedOrganizerId ? [selectedOrganizerId] : []}
+        onSelect={(ids) => {
+          const organizerId = ids[0];
+          if (organizerId === undefined) return;
+          const organizer = organizers.find((organizer) => organizer.id === organizerId);
+          setOrganizerPickerVisible(false);
+          if (organizer?.contact_type === 'one_time') {
+            setOneTimeOrganizerId(organizerId);
+          } else {
+            setSelectedOrganizerId(organizerId);
+          }
+        }}
+        onAddNew={() => { setOrganizerPickerVisible(false); navigation.navigate('AddEditOrganizer', {}); }}
+        addNewLabel="Add New Organizer"
         showAvatar
       />
 
@@ -829,6 +878,16 @@ export default function AddEditClassSeriesScreen() {
       />
 
       <LoadingOverlay visible={saving} />
+
+      <ConfirmDialog
+        visible={oneTimeOrganizerId !== null}
+        title="Make Organizer Regular?"
+        message="Recurring series are intended for regular organizers. Convert this organizer to Regular and continue?"
+        confirmLabel="Make Regular"
+        destructive={false}
+        onConfirm={handleMakeSelectedOrganizerRegular}
+        onDismiss={() => setOneTimeOrganizerId(null)}
+      />
 
       <ConfirmDialog
         visible={endSeriesVisible}

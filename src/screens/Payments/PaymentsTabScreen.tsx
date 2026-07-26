@@ -8,7 +8,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useAppTheme } from '../../theme';
 import { Spacing } from '../../theme/brandColors';
 import { RootStackParamList, TabParamList } from '../../navigation/types';
-import ManagerPaymentsScreen from './ManagerPaymentsScreen';
+import OrganizerPaymentsScreen from './OrganizerPaymentsScreen';
 import TraineePackagesScreen from './TraineePackagesScreen';
 import HelpSheet from '../../components/common/HelpSheet';
 import { HELP } from '../../constants/helpContent';
@@ -21,7 +21,7 @@ export default function PaymentsTabScreen() {
   const { accentPalette, colors, theme } = useAppTheme();
   const navigation = useNavigation<Nav>();
   const route = useRoute<PaymentsRoute>();
-  const [segment, setSegment] = useState<'managers' | 'trainees'>('managers');
+  const [segment, setSegment] = useState<'organizers' | 'trainees'>('organizers');
   const [helpVisible, setHelpVisible] = useState(false);
   const [noticeMessage, setNoticeMessage] = useState('');
   const handledNoticeKey = useRef<number | undefined>(undefined);
@@ -66,15 +66,15 @@ export default function PaymentsTabScreen() {
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ThemedSegmentedButtons
         value={segment}
-        onValueChange={(v: string) => setSegment(v as 'managers' | 'trainees')}
+        onValueChange={(v: string) => setSegment(v as 'organizers' | 'trainees')}
         buttons={[
-          { value: 'managers', label: 'Managers' },
+          { value: 'organizers', label: 'Organizers' },
           { value: 'trainees', label: 'Trainees' },
         ]}
         style={styles.segment}
       />
-      {segment === 'managers' ? (
-        <ManagerPaymentsScreen
+      {segment === 'organizers' ? (
+        <OrganizerPaymentsScreen
           initialPendingOnly={route.params?.pendingOnly}
           focusKey={route.params?.focusKey}
         />
@@ -84,7 +84,7 @@ export default function PaymentsTabScreen() {
       <HelpSheet
         visible={helpVisible}
         onDismiss={() => setHelpVisible(false)}
-        content={segment === 'managers' ? HELP.paymentsManagers : HELP.paymentsTrainees}
+        content={segment === 'organizers' ? HELP.paymentsOrganizers : HELP.paymentsTrainees}
       />
       <AppModal
         visible={noticeMessage.length > 0}

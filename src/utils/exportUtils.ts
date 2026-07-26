@@ -4,31 +4,29 @@ import * as Sharing from 'expo-sharing';
 import { getDatabase } from '../database/db';
 import { runMigrations } from '../database/migrations';
 import { getAllClassTypes } from '../database/repositories/classTypeRepository';
-import { getAllManagers } from '../database/repositories/managerRepository';
+import { getAllOrganizers } from '../database/repositories/organizerRepository';
 import { getAllTrainees } from '../database/repositories/traineeRepository';
 import { getAllClassSeries } from '../database/repositories/classSeriesRepository';
 import {
-  Center, ClassType, Manager, Trainee, ClassSeries, SeriesTrainee,
-  ClassSession, SessionTrainee, ManagerPayment, TraineePackage, Setting,
+  Center, ClassType, Organizer, Trainee, ClassSeries, SeriesTrainee,
+  ClassSession, SessionTrainee, OrganizerPayment, TraineePackage, Setting,
 } from '../types';
 
-const BACKUP_VERSION = 2;
+const BACKUP_VERSION = 4;
 const SQLITE_BACKUP_MIME_TYPES = [
   'application/vnd.sqlite3',
   'application/x-sqlite3',
   'application/octet-stream',
   'application/json',
 ];
-const REQUIRED_SQLITE_TABLES = [
+const REQUIRED_COMMON_SQLITE_TABLES = [
   'centers',
   'class_types',
-  'managers',
   'trainees',
   'class_series',
   'series_trainees',
   'class_sessions',
   'session_trainees',
-  'manager_payments',
   'trainee_packages',
   'settings',
 ];
@@ -49,15 +47,49 @@ export interface FitDeskBackup {
   exported_at: string;
   centers: Center[];
   class_types: ClassType[];
-  managers: Manager[];
+  organizers: Organizer[];
   trainees: Trainee[];
   class_series: ClassSeries[];
   series_trainees: SeriesTrainee[];
   class_sessions: ClassSession[];
   session_trainees: SessionTrainee[];
-  manager_payments: ManagerPayment[];
+  organizer_payments: OrganizerPayment[];
   trainee_packages: TraineePackage[];
   settings: Setting[];
+}
+
+type LegacyClassSeries = Omit<ClassSeries, 'source_type' | 'organizer_id'> & {
+  source_type: 'manager' | 'personal';
+  manager_id?: number;
+};
+
+type LegacyOrganizerPayment = Omit<OrganizerPayment, 'organizer_id'> & {
+  manager_id: number;
+};
+
+type LegacyFitDeskBackup = Omit<
+  FitDeskBackup,
+  'organizers' | 'class_series' | 'organizer_payments'
+> & {
+  managers: Organizer[];
+  class_series: LegacyClassSeries[];
+  manager_payments: LegacyOrganizerPayment[];
+};
+
+function normalizeLegacyBackup(backup: LegacyFitDeskBackup): FitDeskBackup {
+  return {
+    ...backup,
+    organizers: backup.managers,
+    class_series: backup.class_series.map((series) => ({
+      ...series,
+      source_type: series.source_type === 'manager' ? 'organizer' : 'personal',
+      organizer_id: series.manager_id,
+    })),
+    organizer_payments: backup.manager_payments.map((payment) => ({
+      ...payment,
+      organizer_id: payment.manager_id,
+    })),
+  };
 }
 
 export async function exportData(): Promise<void> {
@@ -103,25 +135,25 @@ export async function exportJsonData(): Promise<void> {
   const [
     centers,
     class_types,
-    managers,
+    organizers,
     trainees,
     class_series,
     series_trainees,
     class_sessions,
     session_trainees,
-    manager_payments,
+    organizer_payments,
     trainee_packages,
     settings,
   ] = await Promise.all([
     db.getAllAsync<Center>('SELECT * FROM centers'),
     getAllClassTypes(),
-    getAllManagers(),
+    getAllOrganizers(),
     getAllTrainees(),
     getAllClassSeries(),
     db.getAllAsync<SeriesTrainee>('SELECT * FROM series_trainees'),
     db.getAllAsync<ClassSession>('SELECT * FROM class_sessions'),
     db.getAllAsync<SessionTrainee>('SELECT * FROM session_trainees'),
-    db.getAllAsync<ManagerPayment>('SELECT * FROM manager_payments'),
+    db.getAllAsync<OrganizerPayment>('SELECT * FROM organizer_payments'),
     db.getAllAsync<TraineePackage>('SELECT * FROM trainee_packages'),
     db.getAllAsync<Setting>('SELECT * FROM settings'),
   ]);
@@ -131,13 +163,13 @@ export async function exportJsonData(): Promise<void> {
     exported_at: new Date().toISOString(),
     centers,
     class_types,
-    managers,
+    organizers,
     trainees,
     class_series,
     series_trainees,
     class_sessions,
     session_trainees,
-    manager_payments,
+    organizer_payments,
     trainee_packages,
     settings,
   };
@@ -221,8 +253,12 @@ async function validateSqliteBackup(db: SQLite.SQLiteDatabase): Promise<void> {
     "SELECT name FROM sqlite_master WHERE type = 'table'"
   );
   const tableNames = new Set(rows.map((row) => row.name));
-  const missingTables = REQUIRED_SQLITE_TABLES.filter((table) => !tableNames.has(table));
-  if (missingTables.length > 0) {
+  const missingCommonTables = REQUIRED_COMMON_SQLITE_TABLES.filter((table) => !tableNames.has(table));
+  const hasOrganizerTables =
+    tableNames.has('organizers') && tableNames.has('organizer_payments');
+  const hasLegacyTables =
+    tableNames.has('managers') && tableNames.has('manager_payments');
+  if (missingCommonTables.length > 0 || (!hasOrganizerTables && !hasLegacyTables)) {
     throw new Error('Invalid backup: not a FitDesk backup file');
   }
 }
@@ -230,19 +266,21 @@ async function validateSqliteBackup(db: SQLite.SQLiteDatabase): Promise<void> {
 async function importJsonFile(pickedFile: File): Promise<void> {
   const raw = await pickedFile.text();
 
-  let backup: FitDeskBackup;
+  let parsed: FitDeskBackup | LegacyFitDeskBackup;
   try {
-    backup = JSON.parse(raw);
+    parsed = JSON.parse(raw) as FitDeskBackup | LegacyFitDeskBackup;
   } catch {
     throw new Error('Invalid file: could not parse JSON');
   }
 
-  if (backup.version === 1) {
-    await importDataV1(backup);
-  } else if (backup.version === 2) {
-    await importData(backup);
+  if (parsed.version === 1) {
+    await importDataV1(normalizeLegacyBackup(parsed as LegacyFitDeskBackup));
+  } else if (parsed.version === 2 || parsed.version === 3) {
+    await importData(normalizeLegacyBackup(parsed as LegacyFitDeskBackup));
+  } else if (parsed.version === 4) {
+    await importData(parsed as FitDeskBackup);
   } else {
-    throw new Error(`Unsupported backup version: ${backup.version}`);
+    throw new Error(`Unsupported backup version: ${parsed.version}`);
   }
 }
 
@@ -252,12 +290,12 @@ async function importData(backup: FitDeskBackup): Promise<void> {
   await db.withExclusiveTransactionAsync(async (txn) => {
     await txn.execAsync('DELETE FROM series_trainees');
     await txn.execAsync('DELETE FROM session_trainees');
-    await txn.execAsync('DELETE FROM manager_payments');
+    await txn.execAsync('DELETE FROM organizer_payments');
     await txn.execAsync('DELETE FROM trainee_packages');
     await txn.execAsync('DELETE FROM class_sessions');
     await txn.execAsync('DELETE FROM class_series');
     await txn.execAsync('DELETE FROM trainees');
-    await txn.execAsync('DELETE FROM managers');
+    await txn.execAsync('DELETE FROM organizers');
     await txn.execAsync('DELETE FROM class_types');
     await txn.execAsync('DELETE FROM centers');
     await txn.execAsync('DELETE FROM settings');
@@ -274,10 +312,10 @@ async function importData(backup: FitDeskBackup): Promise<void> {
         [r.id, r.name, r.color, r.is_active ?? 1, r.created_at]
       );
     }
-    for (const r of backup.managers) {
+    for (const r of backup.organizers) {
       await txn.runAsync(
-        'INSERT INTO managers (id, name, phone, email, per_class_rate, currency, notes, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [r.id, r.name, r.phone ?? null, r.email ?? null, r.per_class_rate, r.currency, r.notes ?? null, r.is_active ?? 1, r.created_at]
+        'INSERT INTO organizers (id, name, contact_person, phone, email, per_class_rate, currency, notes, is_active, contact_type, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [r.id, r.name, r.contact_person ?? null, r.phone ?? null, r.email ?? null, r.per_class_rate, r.currency, r.notes ?? null, r.is_active ?? 1, r.contact_type ?? 'regular', r.created_at]
       );
     }
     for (const r of backup.trainees) {
@@ -288,8 +326,8 @@ async function importData(backup: FitDeskBackup): Promise<void> {
     }
     for (const r of backup.class_series) {
       await txn.runAsync(
-        'INSERT INTO class_series (id, title, class_type_id, source_type, manager_id, recurrence_type, recurrence_days, start_date, end_date, class_time, duration_minutes, location_type, location, notes, is_active, center_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [r.id, r.title, r.class_type_id, r.source_type, r.manager_id ?? null, r.recurrence_type, r.recurrence_days ?? null, r.start_date, r.end_date ?? null, r.class_time, r.duration_minutes, r.location_type, r.location ?? null, r.notes ?? null, r.is_active, r.center_id ?? null, r.created_at]
+        'INSERT INTO class_series (id, title, class_type_id, source_type, organizer_id, recurrence_type, recurrence_days, start_date, end_date, class_time, duration_minutes, location_type, location, notes, is_active, center_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [r.id, r.title, r.class_type_id, r.source_type, r.organizer_id ?? null, r.recurrence_type, r.recurrence_days ?? null, r.start_date, r.end_date ?? null, r.class_time, r.duration_minutes, r.location_type, r.location ?? null, r.notes ?? null, r.is_active, r.center_id ?? null, r.created_at]
       );
     }
     for (const r of backup.series_trainees ?? []) {
@@ -300,8 +338,8 @@ async function importData(backup: FitDeskBackup): Promise<void> {
     }
     for (const r of backup.class_sessions) {
       await txn.runAsync(
-        'INSERT INTO class_sessions (id, series_id, session_date, class_time, status, student_count, notes, guest_name, center_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [r.id, r.series_id, r.session_date, r.class_time, r.status, r.student_count, r.notes ?? null, r.guest_name ?? null, r.center_id ?? null, r.created_at]
+        'INSERT INTO class_sessions (id, series_id, session_date, class_time, status, student_count, notes, guest_name, center_id, agreed_amount, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [r.id, r.series_id, r.session_date, r.class_time, r.status, r.student_count, r.notes ?? null, r.guest_name ?? null, r.center_id ?? null, r.agreed_amount ?? null, r.created_at]
       );
     }
     for (const r of backup.session_trainees) {
@@ -310,10 +348,10 @@ async function importData(backup: FitDeskBackup): Promise<void> {
         [r.id, r.session_id, r.trainee_id]
       );
     }
-    for (const r of backup.manager_payments) {
+    for (const r of backup.organizer_payments) {
       await txn.runAsync(
-        'INSERT INTO manager_payments (id, session_id, manager_id, amount, status, paid_date, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [r.id, r.session_id, r.manager_id, r.amount, r.status, r.paid_date ?? null, r.notes ?? null, r.created_at]
+        'INSERT INTO organizer_payments (id, session_id, organizer_id, amount, status, paid_date, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [r.id, r.session_id, r.organizer_id, r.amount, r.status, r.paid_date ?? null, r.notes ?? null, r.created_at]
       );
     }
     for (const r of backup.trainee_packages) {
@@ -338,12 +376,12 @@ async function importDataV1(backup: FitDeskBackup): Promise<void> {
   await db.withExclusiveTransactionAsync(async (txn) => {
     await txn.execAsync('DELETE FROM series_trainees');
     await txn.execAsync('DELETE FROM session_trainees');
-    await txn.execAsync('DELETE FROM manager_payments');
+    await txn.execAsync('DELETE FROM organizer_payments');
     await txn.execAsync('DELETE FROM trainee_packages');
     await txn.execAsync('DELETE FROM class_sessions');
     await txn.execAsync('DELETE FROM class_series');
     await txn.execAsync('DELETE FROM trainees');
-    await txn.execAsync('DELETE FROM managers');
+    await txn.execAsync('DELETE FROM organizers');
     await txn.execAsync('DELETE FROM class_types');
     await txn.execAsync('DELETE FROM centers');
     await txn.execAsync('DELETE FROM settings');
@@ -354,10 +392,10 @@ async function importDataV1(backup: FitDeskBackup): Promise<void> {
         [r.id, r.name, r.color, r.created_at]
       );
     }
-    for (const r of backup.managers) {
+    for (const r of backup.organizers) {
       await txn.runAsync(
-        'INSERT INTO managers (id, name, phone, email, per_class_rate, currency, notes, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)',
-        [r.id, r.name, r.phone ?? null, r.email ?? null, r.per_class_rate, r.currency, r.notes ?? null, r.created_at]
+        'INSERT INTO organizers (id, name, contact_person, phone, email, per_class_rate, currency, notes, is_active, contact_type, created_at) VALUES (?, ?, NULL, ?, ?, ?, ?, ?, 1, ?, ?)',
+        [r.id, r.name, r.phone ?? null, r.email ?? null, r.per_class_rate, r.currency, r.notes ?? null, 'regular', r.created_at]
       );
     }
     for (const r of backup.trainees) {
@@ -368,13 +406,13 @@ async function importDataV1(backup: FitDeskBackup): Promise<void> {
     }
     for (const r of backup.class_series) {
       await txn.runAsync(
-        'INSERT INTO class_series (id, title, class_type_id, source_type, manager_id, recurrence_type, recurrence_days, start_date, end_date, class_time, duration_minutes, location_type, location, notes, is_active, center_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)',
-        [r.id, r.title, r.class_type_id, r.source_type, r.manager_id ?? null, r.recurrence_type, r.recurrence_days ?? null, r.start_date, r.end_date ?? null, r.class_time, r.duration_minutes, r.location_type, r.location ?? null, r.notes ?? null, r.is_active, r.created_at]
+        'INSERT INTO class_series (id, title, class_type_id, source_type, organizer_id, recurrence_type, recurrence_days, start_date, end_date, class_time, duration_minutes, location_type, location, notes, is_active, center_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)',
+        [r.id, r.title, r.class_type_id, r.source_type, r.organizer_id ?? null, r.recurrence_type, r.recurrence_days ?? null, r.start_date, r.end_date ?? null, r.class_time, r.duration_minutes, r.location_type, r.location ?? null, r.notes ?? null, r.is_active, r.created_at]
       );
     }
     for (const r of backup.class_sessions) {
       await txn.runAsync(
-        'INSERT INTO class_sessions (id, series_id, session_date, class_time, status, student_count, notes, guest_name, center_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?)',
+        'INSERT INTO class_sessions (id, series_id, session_date, class_time, status, student_count, notes, guest_name, center_id, agreed_amount, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NULL, NULL, NULL, ?)',
         [r.id, r.series_id, r.session_date, r.class_time, r.status, r.student_count, r.notes ?? null, r.created_at]
       );
     }
@@ -384,10 +422,10 @@ async function importDataV1(backup: FitDeskBackup): Promise<void> {
         [r.id, r.session_id, r.trainee_id]
       );
     }
-    for (const r of backup.manager_payments) {
+    for (const r of backup.organizer_payments) {
       await txn.runAsync(
-        'INSERT INTO manager_payments (id, session_id, manager_id, amount, status, paid_date, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [r.id, r.session_id, r.manager_id, r.amount, r.status, r.paid_date ?? null, r.notes ?? null, r.created_at]
+        'INSERT INTO organizer_payments (id, session_id, organizer_id, amount, status, paid_date, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [r.id, r.session_id, r.organizer_id, r.amount, r.status, r.paid_date ?? null, r.notes ?? null, r.created_at]
       );
     }
     for (const r of backup.trainee_packages) {

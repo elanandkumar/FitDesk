@@ -13,9 +13,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppThemeColors, Layout, Radius, Spacing } from '../../theme/brandColors';
 import { useAppTheme } from '../../theme';
 import { RootStackParamList } from '../../navigation/types';
-import { ClassType, Center, LocationType, Manager, SourceType, Trainee } from '../../types';
+import { ClassType, Center, LocationType, Organizer, SourceType, Trainee } from '../../types';
 import { getAllClassTypes } from '../../database/repositories/classTypeRepository';
-import { getAllManagers } from '../../database/repositories/managerRepository';
+import { getAllOrganizers } from '../../database/repositories/organizerRepository';
 import { getAllTrainees } from '../../database/repositories/traineeRepository';
 import { getAllCenters } from '../../database/repositories/centerRepository';
 import {
@@ -56,12 +56,12 @@ export default function AddSessionScreen() {
   const insets = useSafeAreaInsets();
 
   const [classTypes, setClassTypes] = useState<ClassType[]>([]);
-  const [managers, setManagers] = useState<Manager[]>([]);
+  const [organizers, setOrganizers] = useState<Organizer[]>([]);
   const [trainees, setTrainees] = useState<Trainee[]>([]);
   const [centers, setCenters] = useState<Center[]>([]);
 
   const [classTypePickerVisible, setClassTypePickerVisible] = useState(false);
-  const [managerPickerVisible, setManagerPickerVisible] = useState(false);
+  const [organizerPickerVisible, setOrganizerPickerVisible] = useState(false);
   const [traineePickerVisible, setTraineePickerVisible] = useState(false);
   const [centerPickerVisible, setCenterPickerVisible] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -70,8 +70,8 @@ export default function AddSessionScreen() {
 
   const [classTypeId, setClassTypeId] = useState<number | null>(null);
   const [title, setTitle] = useState('');
-  const [sourceType, setSourceType] = useState<SourceType>('manager');
-  const [managerId, setManagerId] = useState<number | null>(null);
+  const [sourceType, setSourceType] = useState<SourceType>('organizer');
+  const [organizerId, setOrganizerId] = useState<number | null>(null);
   const [selectedCenterId, setSelectedCenterId] = useState<number | null>(null);
   const [selectedTraineeIds, setSelectedTraineeIds] = useState<number[]>([]);
   const [guestMode, setGuestMode] = useState(false);
@@ -82,18 +82,27 @@ export default function AddSessionScreen() {
   const [locationType, setLocationType] = useState<LocationType>('offline');
   const [location, setLocation] = useState('');
   const [notes, setNotes] = useState('');
+  const [agreedAmount, setAgreedAmount] = useState('');
 
   const selectedClassType = classTypes.find((ct) => ct.id === classTypeId);
-  const selectedManager = managers.find((m) => m.id === managerId);
+  const selectedOrganizer = organizers.find((m) => m.id === organizerId);
   const selectedCenter = centers.find((c) => c.id === selectedCenterId);
 
   const classTypePickerItems = useMemo(
     () => classTypes.map((ct) => ({ id: ct.id, label: ct.name, leftColor: ct.color })),
     [classTypes]
   );
-  const managerPickerItems = useMemo(
-    () => managers.map((m) => ({ id: m.id, label: m.name })),
-    [managers]
+  const organizerPickerItems = useMemo(
+    () => organizers.map((m) => ({
+      id: m.id,
+      label: m.name,
+      hint: m.contact_type === 'one_time'
+        ? 'One-time'
+        : m.per_class_rate > 0
+          ? `Regular · Default ₹${m.per_class_rate}`
+          : 'Regular',
+    })),
+    [organizers]
   );
   const traineePickerItems = useMemo(
     () => trainees.map((t) => ({ id: t.id, label: t.name })),
@@ -104,17 +113,18 @@ export default function AddSessionScreen() {
     [centers]
   );
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (): Promise<Organizer[]> => {
     const [types, mgrs, traineeList, centerList] = await Promise.all([
       getAllClassTypes(),
-      getAllManagers(),
+      getAllOrganizers(),
       getAllTrainees(),
       getAllCenters(),
     ]);
     setClassTypes(types);
-    setManagers(mgrs);
+    setOrganizers(mgrs);
     setTrainees(traineeList);
     setCenters(centerList);
+    return mgrs;
   }, []);
 
   useEffect(() => {
@@ -122,14 +132,29 @@ export default function AddSessionScreen() {
   }, [navigation]);
 
   useFocusEffect(useCallback(() => {
-    load();
-  }, [load]));
+    load().then((loadedOrganizers) => {
+      if (route.params?.selectedOrganizerId !== undefined) {
+        const organizerId = route.params.selectedOrganizerId;
+        const organizer = loadedOrganizers.find((organizer) => organizer.id === organizerId);
+        setOrganizerId(organizerId);
+        setAgreedAmount(
+          organizer && organizer.per_class_rate > 0 ? String(organizer.per_class_rate) : ''
+        );
+        navigation.setParams({ selectedOrganizerId: undefined });
+      }
+    });
+  }, [load, navigation, route.params?.selectedOrganizerId]));
 
   const isValid =
     classTypeId !== null &&
     sessionDate.length === 10 &&
     classTime.length === 5 &&
-    (sourceType === 'personal' || managerId !== null);
+    (sourceType === 'personal' || (
+      organizerId !== null &&
+      agreedAmount.trim() !== '' &&
+      Number.isFinite(Number(agreedAmount)) &&
+      Number(agreedAmount) >= 0
+    ));
 
   const handleSave = async () => {
     if (!isValid) return;
@@ -139,7 +164,7 @@ export default function AddSessionScreen() {
         title: title.trim() || `${selectedClassType?.name ?? 'Class'} (Ad-hoc)`,
         classTypeId: classTypeId!,
         sourceType,
-        managerId: sourceType === 'manager' ? (managerId ?? undefined) : undefined,
+        organizerId: sourceType === 'organizer' ? (organizerId ?? undefined) : undefined,
         sessionDate,
         classTime,
         durationMinutes: parseInt(duration, 10) || DEFAULT_DURATION_MINUTES,
@@ -148,7 +173,8 @@ export default function AddSessionScreen() {
         notes: notes.trim() || undefined,
         traineeIds: sourceType === 'personal' && !guestMode ? selectedTraineeIds : undefined,
         guestName: sourceType === 'personal' && guestMode ? guestName.trim() || undefined : undefined,
-        centerId: sourceType === 'manager' ? selectedCenterId ?? undefined : undefined,
+        centerId: sourceType === 'organizer' ? selectedCenterId ?? undefined : undefined,
+        agreedAmount: sourceType === 'organizer' ? Number(agreedAmount) : undefined,
       };
       await createAdHocSession(input);
       await scheduleUpcomingNotifications();
@@ -187,27 +213,45 @@ export default function AddSessionScreen() {
             value={sourceType}
             onValueChange={(v: string) => {
               setSourceType(v as SourceType);
-              setManagerId(null);
+              setOrganizerId(null);
               setSelectedCenterId(null);
               setSelectedTraineeIds([]);
               setGuestMode(false);
               setGuestName('');
+              setAgreedAmount('');
             }}
             buttons={[
-              { value: 'manager', label: 'Manager' },
+              { value: 'organizer', label: 'Organizer' },
               { value: 'personal', label: 'Personal' },
             ]}
           />
 
-          {sourceType === 'manager' && (
+          {sourceType === 'organizer' && (
             <>
               <View style={styles.fieldGap} />
-              <Text variant="labelMedium" style={styles.fieldLabel}>Manager *</Text>
+              <Text variant="labelMedium" style={styles.fieldLabel}>Organizer *</Text>
               <PickerField
-                placeholder={managers.length === 0 ? 'No managers added yet' : 'Select manager...'}
-                value={selectedManager?.name}
-                onPress={() => setManagerPickerVisible(true)}
+                placeholder={organizers.length === 0 ? 'No organizers added yet' : 'Select organizer...'}
+                value={selectedOrganizer?.name}
+                onPress={() => setOrganizerPickerVisible(true)}
               />
+
+              <View style={styles.fieldGap} />
+              <TextInput
+                label="Agreed amount *"
+                value={agreedAmount}
+                onChangeText={(value) => setAgreedAmount(value.replace(/[^0-9.]/g, ''))}
+                keyboardType="decimal-pad"
+                mode="outlined"
+                dense
+                style={styles.textInput}
+                left={<TextInput.Affix text="₹" />}
+              />
+              {selectedOrganizer !== undefined && selectedOrganizer.per_class_rate > 0 && (
+                <Text variant="bodySmall" style={styles.fieldHint}>
+                  Default rate: ₹{selectedOrganizer.per_class_rate}
+                </Text>
+              )}
 
               <View style={styles.fieldGap} />
               <Text variant="labelMedium" style={styles.fieldLabel}>Center (optional)</Text>
@@ -363,14 +407,25 @@ export default function AddSessionScreen() {
       />
 
       <PickerModal
-        visible={managerPickerVisible}
-        onDismiss={() => setManagerPickerVisible(false)}
-        title="Select Manager"
-        items={managerPickerItems}
-        selectedIds={managerId !== null ? [managerId] : []}
-        onSelect={(ids) => { if (ids[0] !== undefined) setManagerId(ids[0]); }}
-        onAddNew={() => { setManagerPickerVisible(false); navigation.navigate('AddEditManager', {}); }}
-        addNewLabel="Add New Manager"
+        visible={organizerPickerVisible}
+        onDismiss={() => setOrganizerPickerVisible(false)}
+        title="Select Organizer"
+        items={organizerPickerItems}
+        selectedIds={organizerId !== null ? [organizerId] : []}
+        onSelect={(ids) => {
+          const organizerId = ids[0];
+          if (organizerId === undefined) return;
+          const organizer = organizers.find((organizer) => organizer.id === organizerId);
+          setOrganizerId(organizerId);
+          setAgreedAmount(
+            organizer && organizer.per_class_rate > 0 ? String(organizer.per_class_rate) : ''
+          );
+        }}
+        onAddNew={() => {
+          setOrganizerPickerVisible(false);
+          navigation.navigate('AddEditOrganizer', { returnToAddSession: true });
+        }}
+        addNewLabel="Add New Organizer"
         showAvatar
       />
 
@@ -413,6 +468,7 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
     padding: Spacing.lg,
   },
   fieldLabel: { color: colors.textSecondary, marginBottom: Spacing.xs },
+  fieldHint: { color: colors.textSecondary, marginTop: Spacing.xs },
   fieldGap: { height: Spacing.sm },
   textInput: { height: Layout.INPUT_HEIGHT },
   pickerButton: {

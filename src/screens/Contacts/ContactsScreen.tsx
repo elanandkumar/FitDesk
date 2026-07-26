@@ -5,7 +5,7 @@ import AppIconButton from '../../components/common/AppIconButton';
 import { useNavigation } from '@react-navigation/native';
 import { useAppTheme } from '../../theme';
 import { Spacing } from '../../theme/brandColors';
-import ManagerListScreen from '../Managers/ManagerListScreen';
+import OrganizerListScreen from '../Organizers/OrganizerListScreen';
 import TraineeListScreen from '../Trainees/TraineeListScreen';
 import HelpSheet from '../../components/common/HelpSheet';
 import { HELP } from '../../constants/helpContent';
@@ -13,7 +13,7 @@ import { HELP } from '../../constants/helpContent';
 export default function ContactsScreen() {
   const { accentPalette, theme } = useAppTheme();
   const navigation = useNavigation();
-  const [segment, setSegment] = useState<'managers' | 'trainees'>('managers');
+  const [segment, setSegment] = useState<'organizers' | 'trainees'>('organizers');
   const [helpVisible, setHelpVisible] = useState(false);
 
   useLayoutEffect(() => {
@@ -32,18 +32,18 @@ export default function ContactsScreen() {
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ThemedSegmentedButtons
         value={segment}
-        onValueChange={(v: string) => setSegment(v as 'managers' | 'trainees')}
+        onValueChange={(v: string) => setSegment(v as 'organizers' | 'trainees')}
         buttons={[
-          { value: 'managers', label: 'Managers' },
+            { value: 'organizers', label: 'Organizers' },
           { value: 'trainees', label: 'Trainees' },
         ]}
         style={styles.segment}
       />
-      {segment === 'managers' ? <ManagerListScreen /> : <TraineeListScreen />}
+      {segment === 'organizers' ? <OrganizerListScreen /> : <TraineeListScreen />}
       <HelpSheet
         visible={helpVisible}
         onDismiss={() => setHelpVisible(false)}
-        content={segment === 'managers' ? HELP.contactsManagers : HELP.contactsTrainees}
+        content={segment === 'organizers' ? HELP.contactsOrganizers : HELP.contactsTrainees}
       />
     </View>
   );

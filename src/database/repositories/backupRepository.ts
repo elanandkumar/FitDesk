@@ -5,11 +5,11 @@ export async function hasBackupRelevantData(): Promise<boolean> {
   const row = await db.getFirstAsync<{ count: number }>(
     `SELECT (
       (SELECT COUNT(*) FROM centers) +
-      (SELECT COUNT(*) FROM managers) +
+      (SELECT COUNT(*) FROM organizers) +
       (SELECT COUNT(*) FROM trainees) +
       (SELECT COUNT(*) FROM class_series) +
       (SELECT COUNT(*) FROM class_sessions) +
-      (SELECT COUNT(*) FROM manager_payments) +
+      (SELECT COUNT(*) FROM organizer_payments) +
       (SELECT COUNT(*) FROM trainee_packages)
     ) AS count`
   );

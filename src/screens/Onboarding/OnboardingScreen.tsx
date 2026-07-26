@@ -46,7 +46,7 @@ const createSlides = (): Slide[] => [
     key: "2",
     icon: "calendarCheck",
     title: "How It Works",
-    body: "Manager-sourced classes: External managers assign you Zumba, Yoga, or Dance sessions — track each class and get paid per session.\n\nPersonal training: Manage your own clients with monthly session packages and automatic session tracking.",
+    body: "Organizer sessions: Studios, companies, event planners, or individuals arrange sessions — track each class and get paid per session.\n\nPersonal training: Manage your own clients with monthly session packages and automatic session tracking.",
   },
   {
     key: "3",

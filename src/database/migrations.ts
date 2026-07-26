@@ -130,7 +130,112 @@ const MIGRATIONS: Migration[] = [
           )`,
     ],
   },
+  {
+    version: 13,
+    statements: [
+      `ALTER TABLE managers ADD COLUMN contact_type TEXT NOT NULL DEFAULT 'regular'
+        CHECK(contact_type IN ('regular','one_time'))`,
+      `ALTER TABLE class_sessions ADD COLUMN agreed_amount REAL`,
+    ],
+  },
+  {
+    version: 14,
+    statements: [
+      `ALTER TABLE managers ADD COLUMN contact_person TEXT`,
+    ],
+  },
+  {
+    version: 15,
+    statements: [],
+  },
 ];
+
+async function migrateOrganizerTerminology(db: SQLite.SQLiteDatabase): Promise<void> {
+  const legacyTable = await db.getFirstAsync<{ name: string }>(
+    "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'managers'"
+  );
+  if (!legacyTable) return;
+
+  await db.execAsync(`
+    PRAGMA foreign_keys = OFF;
+    DROP TABLE IF EXISTS organizer_payments;
+    DROP TABLE IF EXISTS organizers;
+    DROP TABLE IF EXISTS organizer_payments_next;
+    DROP TABLE IF EXISTS class_series_next;
+    DROP TABLE IF EXISTS organizers_next;
+
+    CREATE TABLE organizers_next (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      contact_person TEXT,
+      phone TEXT,
+      email TEXT,
+      per_class_rate REAL NOT NULL DEFAULT 0,
+      currency TEXT NOT NULL DEFAULT 'INR',
+      notes TEXT,
+      is_active INTEGER NOT NULL DEFAULT 1,
+      contact_type TEXT NOT NULL DEFAULT 'regular'
+        CHECK(contact_type IN ('regular','one_time')),
+      created_at TEXT NOT NULL
+    );
+    INSERT INTO organizers_next
+      SELECT id, name, contact_person, phone, email, per_class_rate, currency,
+             notes, is_active, contact_type, created_at
+      FROM managers;
+
+    CREATE TABLE class_series_next (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      class_type_id INTEGER NOT NULL REFERENCES class_types(id),
+      source_type TEXT NOT NULL CHECK(source_type IN ('organizer','personal')),
+      organizer_id INTEGER REFERENCES organizers(id),
+      recurrence_type TEXT NOT NULL CHECK(recurrence_type IN ('daily','weekly','custom')),
+      recurrence_days TEXT,
+      start_date TEXT NOT NULL,
+      end_date TEXT,
+      class_time TEXT NOT NULL,
+      duration_minutes INTEGER NOT NULL DEFAULT 60,
+      location_type TEXT NOT NULL CHECK(location_type IN ('offline','online')),
+      location TEXT,
+      notes TEXT,
+      is_active INTEGER NOT NULL DEFAULT 1,
+      center_id INTEGER REFERENCES centers(id) ON DELETE SET NULL,
+      created_at TEXT NOT NULL
+    );
+    INSERT INTO class_series_next
+      SELECT id, title, class_type_id,
+             CASE source_type WHEN 'manager' THEN 'organizer' ELSE source_type END,
+             manager_id, recurrence_type, recurrence_days, start_date, end_date,
+             class_time, duration_minutes, location_type, location, notes,
+             is_active, center_id, created_at
+      FROM class_series;
+
+    CREATE TABLE organizer_payments_next (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      session_id INTEGER NOT NULL REFERENCES class_sessions(id),
+      organizer_id INTEGER NOT NULL REFERENCES organizers(id),
+      amount REAL NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','paid')),
+      paid_date TEXT,
+      notes TEXT,
+      created_at TEXT NOT NULL
+    );
+    INSERT INTO organizer_payments_next
+      SELECT id, session_id, manager_id, amount, status, paid_date, notes, created_at
+      FROM manager_payments;
+
+    DROP TABLE manager_payments;
+    DROP TABLE class_series;
+    DROP TABLE managers;
+    ALTER TABLE organizers_next RENAME TO organizers;
+    ALTER TABLE class_series_next RENAME TO class_series;
+    ALTER TABLE organizer_payments_next RENAME TO organizer_payments;
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_sessions_series_date
+      ON class_sessions(series_id, session_date);
+
+    PRAGMA foreign_keys = ON;
+  `);
+}
 
 async function runStatement(db: SQLite.SQLiteDatabase, sql: string): Promise<void> {
   try {
@@ -139,6 +244,7 @@ async function runStatement(db: SQLite.SQLiteDatabase, sql: string): Promise<voi
     const msg = e instanceof Error ? e.message : String(e);
     // Ignore "duplicate column" — column already added by base schema on fresh install
     if (msg.includes('duplicate column name')) return;
+    if (msg.includes('no such table: managers')) return;
     throw e;
   }
 }
@@ -155,6 +261,9 @@ export async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
 
   const pending = MIGRATIONS.filter((m) => m.version > currentVersion);
   for (const migration of pending) {
+    if (migration.version === 15) {
+      await migrateOrganizerTerminology(db);
+    }
     for (const sql of migration.statements) {
       await runStatement(db, sql);
     }
