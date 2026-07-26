@@ -6,6 +6,14 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    version: '1.4.0',
+    title: 'FitDesk 1.4.0',
+    changes: [
+      'add variable session pricing',
+      'theme fix and scroll fix in income summary',
+    ],
+  },
+  {
     version: '1.3.0',
     title: 'A smoother FitDesk release',
     changes: [
