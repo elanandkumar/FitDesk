@@ -160,7 +160,7 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   description: { ...Typography.body, color: colors.textSecondary },
   card: {
     backgroundColor: colors.surface,
-    borderRadius: Radius.item,
+    borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: colors.border,
     overflow: 'hidden',

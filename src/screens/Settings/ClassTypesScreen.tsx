@@ -7,7 +7,7 @@ import {
 import AppModal from '../../components/common/AppModal';
 import GradientFAB from '../../components/common/GradientFAB';
 import AppIconButton from '../../components/common/AppIconButton';
-import { AppThemeColors, Layout, Radius, Spacing, useAppTheme } from '../../theme';
+import { AppThemeColors, Elevation, Layout, Radius, Spacing, useAppTheme } from '../../theme';
 import { ClassType } from '../../types';
 import {
   getAllClassTypes,
@@ -162,6 +162,7 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   listContent: { padding: Spacing.lg, paddingBottom: Layout.LIST_PAD_NO_FAB },
   itemCard: {
+    ...Elevation.flat,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.md,
@@ -170,11 +171,6 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
     borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: colors.border,
-    elevation: 4,
-    shadowColor: colors.shadow,
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
     gap: Spacing.md,
   },
   itemName: { flex: 1, color: colors.textPrimary },

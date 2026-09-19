@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  GestureResponderEvent,
   StyleProp,
   StyleSheet,
   TextStyle,
@@ -11,81 +10,72 @@ import {
 import { Text } from 'react-native-paper';
 import { Radius, Typography, useAppTheme } from '../../theme';
 
-type Density = 'regular' | 'small' | 'medium' | 'high';
+type SegmentValue = string | number;
 
-interface SegmentButton {
-  value: string;
+interface SegmentButton<T extends SegmentValue> {
+  value: T;
   label: string;
   accessibilityLabel?: string;
   disabled?: boolean;
-  onPress?: (event: GestureResponderEvent) => void;
+}
+
+interface Props<T extends SegmentValue> {
+  value: readonly T[];
+  onValueChange: (value: T[]) => void;
+  buttons: readonly SegmentButton<T>[];
   style?: StyleProp<ViewStyle>;
   labelStyle?: StyleProp<TextStyle>;
-  testID?: string;
 }
 
-interface Props {
-  value: string;
-  onValueChange: (value: string) => void;
-  buttons: SegmentButton[];
-  density?: Density;
-  style?: StyleProp<ViewStyle>;
-}
-
-const HEIGHT_BY_DENSITY: Record<Density, number> = {
-  regular: 48,
-  small: 44,
-  medium: 40,
-  high: 36,
-};
-
-export default function ThemedSegmentedButtons({
+export default function ThemedMultiSegmentedButtons<T extends SegmentValue>({
   value,
   onValueChange,
   buttons,
-  density = 'regular',
   style,
-}: Props) {
+  labelStyle,
+}: Props<T>) {
   const { accentPalette, colors } = useAppTheme();
+
+  const toggleValue = (nextValue: T) => {
+    onValueChange(
+      value.includes(nextValue)
+        ? value.filter((currentValue) => currentValue !== nextValue)
+        : [...value, nextValue]
+    );
+  };
 
   return (
     <View style={[styles.container, { borderColor: colors.border }, style]}>
       {buttons.map((button, index) => {
-        const selected = value === button.value;
+        const selected = value.includes(button.value);
 
         return (
           <TouchableOpacity
             key={button.value}
-            accessibilityLabel={button.accessibilityLabel ?? button.label.replace(/\s+/g, ' ')}
-            accessibilityRole="button"
-            accessibilityState={{ disabled: button.disabled, selected }}
+            accessibilityLabel={button.accessibilityLabel ?? button.label}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: selected, disabled: button.disabled }}
             activeOpacity={0.78}
             disabled={button.disabled}
-            onPress={(event) => {
-              button.onPress?.(event);
-              onValueChange(button.value);
-            }}
+            onPress={() => toggleValue(button.value)}
             style={[
               styles.segment,
               {
                 backgroundColor: selected ? accentPalette.main : 'transparent',
                 borderRightColor: colors.border,
-                minHeight: HEIGHT_BY_DENSITY[density],
               },
               index < buttons.length - 1 && styles.segmentDivider,
               button.disabled && styles.disabled,
-              button.style,
             ]}
-            testID={button.testID}
           >
             <Text
               adjustsFontSizeToFit
-              minimumFontScale={0.78}
-              numberOfLines={2}
+              minimumFontScale={0.85}
+              numberOfLines={1}
               style={[
                 styles.label,
-                { color: selected ? '#FFFFFF' : colors.textPrimary },
-                button.labelStyle,
+                { color: selected ? '#FFFFFF' : colors.textSecondary },
+                labelStyle,
               ]}
             >
               {button.label}
@@ -108,8 +98,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
     justifyContent: 'center',
+    minHeight: 44,
     minWidth: 0,
-    paddingHorizontal: 4,
+    paddingHorizontal: 2,
   },
   segmentDivider: {
     borderRightWidth: 1,
@@ -118,7 +109,7 @@ const styles = StyleSheet.create({
     opacity: 0.45,
   },
   label: {
-    ...Typography.labelMd,
+    ...Typography.labelSm,
     textAlign: 'center',
   },
 });

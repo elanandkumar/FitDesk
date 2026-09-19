@@ -23,7 +23,7 @@ type TabConfig = {
   icon: AppIconName;
 };
 
-const TAB_HEIGHT = 72;
+const TAB_HEIGHT = 64;
 
 function TabItem({
   tab,
@@ -54,13 +54,15 @@ function TabItem({
               style={[styles.iconPill, { borderColor: accentPalette.warm + '40' }]}
             />
           )}
-          <AppIcon
-            name={tab.icon}
-            size={22}
-            color={isActive ? accentPalette.textAccent : colors.textMuted}
-            weight={isActive ? 'duotone' : 'regular'}
-          />
-          {showDot && <View style={styles.dot} />}
+          <View style={styles.iconAnchor}>
+            <AppIcon
+              name={tab.icon}
+              size={22}
+              color={isActive ? accentPalette.textAccent : colors.textMuted}
+              weight={isActive ? 'duotone' : 'regular'}
+            />
+            {showDot && <View style={styles.dot} />}
+          </View>
         </View>
         <Text
           style={[styles.label, { color: isActive ? accentPalette.textAccent : colors.textMuted }]}
@@ -152,6 +154,10 @@ const styles = StyleSheet.create({
     borderRadius: Radius.full,
     borderWidth: 1,
   },
+  iconAnchor: {
+    width: 22,
+    height: 22,
+  },
   label: {
     fontSize: 11,
     lineHeight: 14,
@@ -160,11 +166,11 @@ const styles = StyleSheet.create({
   },
   dot: {
     position: 'absolute',
-    top: 1,
-    right: 1,
+    top: 0,
+    right: 0,
     width: 8,
     height: 8,
-    borderRadius: 4,
+    borderRadius: Radius.full,
     backgroundColor: BrandCore.orange,
   },
 });

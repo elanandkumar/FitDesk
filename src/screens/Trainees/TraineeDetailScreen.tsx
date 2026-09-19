@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { Divider, Text } from 'react-native-paper';
 import SectionHeader from '../../components/common/SectionHeader';
 import GradientFAB from '../../components/common/GradientFAB';
@@ -7,7 +7,7 @@ import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navig
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAppTheme } from '../../theme';
-import { AppThemeColors, BrandCore, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { AppThemeColors, BrandCore, Elevation, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { Trainee, TraineePackage, EnrichedSession } from '../../types';
 import {
@@ -24,6 +24,7 @@ import HelpSheet from '../../components/common/HelpSheet';
 import AppIconButton from '../../components/common/AppIconButton';
 import SessionCard from '../../components/common/SessionCard';
 import InfoDialog from '../../components/common/InfoDialog';
+import ThemedSegmentedButtons from '../../components/common/ThemedSegmentedButtons';
 import { HELP } from '../../constants/helpContent';
 
 type Nav = StackNavigationProp<RootStackParamList, 'TraineeDetail'>;
@@ -126,32 +127,21 @@ export default function TraineeDetailScreen() {
         </View>
 
         {/* Tabs */}
-        <View style={styles.tabBar}>
-          <TouchableOpacity
-            style={[
-              styles.tabButton,
-              activeTab === 'packages' && { backgroundColor: accentPalette.main + '33' },
-            ]}
-            onPress={() => setActiveTab('packages')}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.tabLabel, activeTab === 'packages' && { color: accentPalette.textAccent }]}>
-              Packages {packages.length > 0 ? `(${packages.length})` : ''}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.tabButton,
-              activeTab === 'sessions' && { backgroundColor: accentPalette.main + '33' },
-            ]}
-            onPress={() => setActiveTab('sessions')}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.tabLabel, activeTab === 'sessions' && { color: accentPalette.textAccent }]}>
-              Sessions {sessions.length > 0 ? `(${sessions.length})` : ''}
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <ThemedSegmentedButtons
+          value={activeTab}
+          onValueChange={(value) => setActiveTab(value as 'packages' | 'sessions')}
+          buttons={[
+            {
+              value: 'packages',
+              label: `Packages${packages.length > 0 ? ` (${packages.length})` : ''}`,
+            },
+            {
+              value: 'sessions',
+              label: `Sessions${sessions.length > 0 ? ` (${sessions.length})` : ''}`,
+            },
+          ]}
+          style={styles.segmentedControl}
+        />
 
         {/* Packages Tab */}
         {activeTab === 'packages' && (
@@ -299,27 +289,12 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   content: { padding: Spacing.lg, gap: Spacing.xs, paddingBottom: 80 },
-  tabBar: {
-    flexDirection: 'row',
-    backgroundColor: colors.surface,
-    borderRadius: Radius.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: Spacing.xs,
+  segmentedControl: {
     marginTop: Spacing.lg,
     marginBottom: Spacing.sm,
   },
-  tabButton: {
-    flex: 1,
-    paddingVertical: Spacing.sm,
-    alignItems: 'center',
-    borderRadius: Radius.sm,
-  },
-  tabLabel: {
-    ...Typography.labelSm,
-    color: colors.textMuted,
-  },
   summaryCard: {
+    ...Elevation.flat,
     alignItems: 'center',
     backgroundColor: colors.surfaceRaised,
     borderColor: colors.border,
@@ -329,26 +304,17 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
     marginBottom: Spacing.sm,
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.lg,
-    elevation: 4,
-    shadowColor: colors.shadow,
-    shadowOpacity: 0.12,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
   },
   summaryItem: { flex: 1, alignItems: 'center' },
   summaryLabel: { ...Typography.bodySm, fontWeight: '500', color: colors.textSecondary, marginBottom: Spacing.xs },
   summaryAmount: { ...Typography.h2 },
   summarySep: { width: 1, backgroundColor: colors.border, marginVertical: 4 },
   card: {
+    ...Elevation.flat,
     backgroundColor: colors.surface,
     borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: colors.border,
-    elevation: 4,
-    shadowColor: colors.shadow,
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
     padding: Spacing.lg,
   },
   infoRow: { gap: 0, marginBottom: Spacing.xs },
@@ -358,7 +324,7 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.xs,
   },
-  packageRight: { alignItems: 'flex-end' },
+  packageRight: { alignItems: 'center' },
   packageStatusLabel: {
     ...Typography.caption,
     color: colors.textSecondary,

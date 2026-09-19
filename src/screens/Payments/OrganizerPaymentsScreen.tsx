@@ -5,7 +5,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAppTheme } from '../../theme';
-import { AppThemeColors, BrandCore, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { AppThemeColors, BrandCore, Elevation, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { EnrichedOrganizerPayment } from '../../types';
 import { getAllEnrichedOrganizerPayments } from '../../database/repositories/paymentRepository';
 import { formatCurrency } from '../../utils/currencyUtils';
@@ -108,29 +108,34 @@ export default function OrganizerPaymentsScreen({ initialPendingOnly, focusKey }
       onPress={() => navigation.navigate('OrganizerPaymentDetail', {
         organizerId: item.organizerId,
         organizerName: item.organizerName,
+        pendingOnly,
+        sortOrder,
       })}
       activeOpacity={0.75}
     >
-      <View style={styles.cardTop}>
-        <View style={styles.cardTitleBlock}>
-          <Text style={styles.organizerName}>{item.organizerName}</Text>
-          <Text style={styles.sessionCount}>
-            {item.sessionCount} session{item.sessionCount !== 1 ? 's' : ''}
+      <Text style={styles.organizerName}>{item.organizerName}</Text>
+      <View style={styles.cardDetailsRow}>
+        <View style={styles.metricColumn}>
+          <Text style={styles.amountLabel} numberOfLines={1}>Sessions</Text>
+          <Text style={styles.sessionCount} numberOfLines={1}>{item.sessionCount}</Text>
+        </View>
+        <View style={styles.metricColumn}>
+          <Text style={styles.amountLabel} numberOfLines={1}>Paid</Text>
+          <Text
+            style={[styles.cardAmount, item.paidTotal > 0 ? styles.paidAmount : styles.zeroAmount]}
+            numberOfLines={1}
+          >
+            {formatCurrency(item.paidTotal)}
           </Text>
         </View>
-        <View style={styles.amountRow}>
-          <View style={styles.amountStatus}>
-            <Text style={styles.amountLabel}>Paid</Text>
-            <Text style={[styles.cardAmount, item.paidTotal > 0 ? styles.paidAmount : styles.zeroAmount]}>
-              {formatCurrency(item.paidTotal)}
-            </Text>
-          </View>
-          <View style={styles.amountStatus}>
-            <Text style={styles.amountLabel}>Pending</Text>
-            <Text style={[styles.cardAmount, item.pendingTotal > 0 ? styles.pendingAmount : styles.zeroAmount]}>
-              {formatCurrency(item.pendingTotal)}
-            </Text>
-          </View>
+        <View style={styles.metricColumn}>
+          <Text style={styles.amountLabel} numberOfLines={1}>Pending</Text>
+          <Text
+            style={[styles.cardAmount, item.pendingTotal > 0 ? styles.pendingAmount : styles.zeroAmount]}
+            numberOfLines={1}
+          >
+            {formatCurrency(item.pendingTotal)}
+          </Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -293,6 +298,8 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   },
   filterSummary: { ...Typography.bodySm, color: colors.textSecondary, flex: 1 },
   filterButton: {
+    width: 36,
+    height: 36,
     borderWidth: 1,
     borderRadius: Radius.md,
     backgroundColor: colors.surface,
@@ -301,6 +308,7 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
     borderWidth: 1.5,
   },
   summaryCard: {
+    ...Elevation.flat,
     flexDirection: 'row',
     backgroundColor: colors.surfaceRaised,
     borderRadius: Radius.card,
@@ -310,11 +318,6 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
     marginBottom: Spacing.sm,
     paddingVertical: Spacing.lg,
     paddingHorizontal: Spacing.xl,
-    elevation: 4,
-    shadowColor: colors.shadow,
-    shadowOpacity: 0.12,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
   },
   summaryCardSingle: { justifyContent: 'center' },
   summaryItem: { flex: 1, alignItems: 'center' },
@@ -332,21 +335,15 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
     paddingVertical: Spacing.md,
     marginBottom: Spacing.sm,
   },
-  cardTop: {
+  cardDetailsRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    gap: Spacing.md,
+    marginTop: Spacing.xs,
   },
-  cardTitleBlock: { flex: 1 },
+  metricColumn: { alignItems: 'center' },
   organizerName: { ...Typography.h4, color: colors.textPrimary },
-  sessionCount: { ...Typography.bodySm, color: colors.textSecondary, marginTop: Spacing.xs },
-  amountRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: Spacing.sm,
-  },
-  amountStatus: { alignItems: 'center', minWidth: 86 },
+  sessionCount: { ...Typography.h4, fontWeight: '700', color: colors.textPrimary },
   amountLabel: { ...Typography.caption, color: colors.textSecondary },
   cardAmount: { ...Typography.h4, fontWeight: '700' },
   paidAmount: { color: BrandCore.pink },
@@ -359,8 +356,8 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   },
   sheet: {
     backgroundColor: colors.surfaceRaised,
-    borderTopLeftRadius: Radius.item,
-    borderTopRightRadius: Radius.item,
+    borderTopLeftRadius: Radius.card,
+    borderTopRightRadius: Radius.card,
     borderTopWidth: 1,
     borderTopColor: colors.border,
     paddingHorizontal: Spacing.lg,

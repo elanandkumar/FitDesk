@@ -6,7 +6,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '../../theme';
-import { AppThemeColors, Radius, Spacing } from '../../theme/brandColors';
+import { AppThemeColors, Layout, Radius, Spacing } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import {
   createOrganizer,
@@ -16,6 +16,8 @@ import {
 import GradientButton from '../../components/common/GradientButton';
 import AppButton from '../../components/common/AppButton';
 import ThemedSegmentedButtons from '../../components/common/ThemedSegmentedButtons';
+import AppNotesInput from '../../components/common/AppNotesInput';
+import CurrencyInput from '../../components/common/CurrencyInput';
 import { OrganizerContactType } from '../../types';
 
 type Nav = StackNavigationProp<RootStackParamList, 'AddEditOrganizer'>;
@@ -119,22 +121,28 @@ export default function AddEditOrganizerScreen() {
             ]}
           />
           <View style={styles.fieldGap} />
+          <Text variant="labelMedium" style={styles.fieldLabel}>Contact Person (optional)</Text>
           <TextInput
-            label="Contact person (optional)"
+            accessibilityLabel="Contact Person"
+            placeholder="Enter contact name"
             value={contactPerson}
             onChangeText={setContactPerson}
             mode="outlined"
             dense
+            style={styles.textInput}
           />
           <View style={styles.fieldGap} />
+          <Text variant="labelMedium" style={styles.fieldLabel}>Organizer / Company Name *</Text>
           <TextInput
-            label="Organizer / company name *"
+            accessibilityLabel="Organizer or Company Name"
+            placeholder="Enter organizer or company name"
             value={name}
             onChangeText={setName}
             mode="outlined"
             dense
             error={!!errors.name}
             autoFocus
+            style={styles.textInput}
           />
           {errors.name && (
             <Text variant="bodySmall" style={{ color: theme.colors.error, marginTop: Spacing.xs }}>
@@ -142,23 +150,29 @@ export default function AddEditOrganizerScreen() {
             </Text>
           )}
           <View style={styles.fieldGap} />
+          <Text variant="labelMedium" style={styles.fieldLabel}>Phone (optional)</Text>
           <TextInput
-            label="Phone (optional)"
+            accessibilityLabel="Phone"
+            placeholder="Enter phone number"
             value={phone}
             onChangeText={setPhone}
             mode="outlined"
             keyboardType="phone-pad"
             dense
+            style={styles.textInput}
           />
           <View style={styles.fieldGap} />
+          <Text variant="labelMedium" style={styles.fieldLabel}>Email (optional)</Text>
           <TextInput
-            label="Email (optional)"
+            accessibilityLabel="Email"
+            placeholder="Enter email address"
             value={email}
             onChangeText={setEmail}
             mode="outlined"
             keyboardType="email-address"
             autoCapitalize="none"
             dense
+            style={styles.textInput}
           />
         </View>
 
@@ -166,13 +180,12 @@ export default function AddEditOrganizerScreen() {
           <>
             <SectionHeader label="Payment" />
             <View style={styles.card}>
-              <TextInput
-                label="Default session rate (₹) (optional)"
+              <Text variant="labelMedium" style={styles.fieldLabel}>Default Session Rate</Text>
+              <CurrencyInput
+                accessibilityLabel="Default Session Rate"
+                placeholder="Enter amount"
                 value={rate}
                 onChangeText={setRate}
-                mode="outlined"
-                keyboardType="numeric"
-                dense
                 error={!!errors.rate}
               />
               {errors.rate && (
@@ -186,12 +199,9 @@ export default function AddEditOrganizerScreen() {
 
         <SectionHeader label="Notes" />
         <View style={styles.card}>
-          <TextInput
-            label="Notes (optional)"
+          <AppNotesInput
             value={notes}
             onChangeText={setNotes}
-            mode="outlined"
-            multiline
             numberOfLines={3}
           />
         </View>
@@ -229,6 +239,7 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   },
   fieldGap: { height: Spacing.sm },
   fieldLabel: { color: colors.textSecondary, marginBottom: Spacing.xs },
+  textInput: { height: Layout.INPUT_HEIGHT },
   footer: {
     flexDirection: 'row',
     gap: Spacing.md,

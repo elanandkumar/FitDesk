@@ -2,10 +2,11 @@ import React from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
 import { Text } from 'react-native-paper';
 import { EnrichedSession } from '../../types';
-import { BrandCore, useAppTheme } from '../../theme';
+import { BrandCore, Spacing, useAppTheme } from '../../theme';
 import { formatDisplayDate, formatDisplayTime } from '../../utils/dateUtils';
 import StatusBadge, { getDisplayStatus } from './StatusBadge';
 import AccentListCard from './AccentListCard';
+import ColorDotLabel from './ColorDotLabel';
 
 interface SessionNumberInfo {
   session_number: number;
@@ -39,16 +40,31 @@ export default function SessionCard({
   const { accentPalette, colors } = useAppTheme();
   const trainee = traineeLabel(session.trainee_names);
   const metadataParts = [
-    showDate ? formatDisplayDate(session.session_date) : formatDisplayTime(session.class_time),
-    showDate ? formatDisplayTime(session.class_time) : session.class_type_name,
-    showDate ? session.class_type_name : `${session.duration_minutes} min`,
+    ...(showDate ? [formatDisplayDate(session.session_date)] : []),
+    formatDisplayTime(session.class_time),
+    `${session.duration_minutes} min`,
   ];
 
   return (
-    <AccentListCard accentColor={session.class_type_color} onPress={onPress} style={style}>
+    <AccentListCard
+      accentColor={session.class_type_color}
+      onPress={onPress}
+      showAccentRail={false}
+      dense
+      style={style}
+    >
       <View style={styles.sessionInfo}>
+        <View style={styles.badgeRow}>
+          <ColorDotLabel color={session.class_type_color} label={session.class_type_name} />
+          <StatusBadge status={getDisplayStatus(session.status, session.session_date, session.class_time)} />
+        </View>
         <Text variant="titleSmall" style={{ color: colors.textPrimary }}>
           {session.series_title}
+          {session.location ? (
+            <Text variant="bodySmall" style={{ color: colors.textMuted }}>
+              {` · ${session.location}`}
+            </Text>
+          ) : null}
         </Text>
         <Text variant="bodySmall" style={{ color: colors.textSecondary }}>
           {metadataParts.join(' · ')}
@@ -63,17 +79,18 @@ export default function SessionCard({
             Session {sessionNumber.session_number} / {sessionNumber.total_sessions}
           </Text>
         )}
-        {session.location && (
-          <Text variant="bodySmall" style={{ color: colors.textMuted }}>
-            {session.location}
-          </Text>
-        )}
       </View>
-      <StatusBadge status={getDisplayStatus(session.status, session.session_date, session.class_time)} />
     </AccentListCard>
   );
 }
 
 const styles = StyleSheet.create({
   sessionInfo: { flex: 1, gap: 0 },
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: Spacing.sm,
+    marginBottom: Spacing.xs,
+  },
 });

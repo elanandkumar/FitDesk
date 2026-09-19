@@ -72,6 +72,6 @@ const styles = StyleSheet.create({
   colorDot: {
     width: 14,
     height: 14,
-    borderRadius: 999,
+    borderRadius: Radius.full,
   },
 });

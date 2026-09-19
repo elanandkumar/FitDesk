@@ -54,7 +54,7 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   content: { padding: Spacing.lg, gap: Spacing.xl, paddingBottom: Spacing.section },
   introCard: {
     backgroundColor: colors.surface,
-    borderRadius: Radius.item,
+    borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: colors.border,
     padding: Spacing.lg,

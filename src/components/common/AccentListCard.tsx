@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native';
-import { Radius, Spacing, useAppTheme } from '../../theme';
+import { Elevation, Radius, Spacing, useAppTheme } from '../../theme';
 import { withAlpha } from '../../utils/colorUtils';
 
 interface Props {
@@ -8,6 +8,8 @@ interface Props {
   children: React.ReactNode;
   onPress?: () => void;
   muted?: boolean;
+  showAccentRail?: boolean;
+  dense?: boolean;
   style?: ViewStyle;
   accessibilityLabel?: string;
   accessibilityHint?: string;
@@ -18,6 +20,8 @@ export default function AccentListCard({
   children,
   onPress,
   muted = false,
+  showAccentRail = true,
+  dense = false,
   style,
   accessibilityLabel,
   accessibilityHint,
@@ -31,6 +35,9 @@ export default function AccentListCard({
       shadowColor: colors.shadow,
       backgroundColor: muted ? colors.surfaceCard : colors.surface,
     },
+    !showAccentRail && [styles.noAccentRail, { borderLeftColor: colors.border }],
+    onPress ? styles.interactive : styles.flat,
+    dense && styles.dense,
     style,
   ];
 
@@ -60,12 +67,16 @@ const styles = StyleSheet.create({
     paddingLeft: Spacing.md,
     paddingRight: Spacing.md,
     gap: Spacing.md,
-    borderRadius: Radius.item,
+    borderRadius: Radius.card,
     borderWidth: 1,
     borderLeftWidth: 4,
-    elevation: 4,
-    shadowOpacity: 0.18,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
+  },
+  noAccentRail: {
+    borderLeftWidth: 1,
+  },
+  flat: Elevation.flat,
+  interactive: Elevation.interactive,
+  dense: {
+    paddingVertical: Spacing.sm,
   },
 });

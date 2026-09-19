@@ -26,7 +26,12 @@ export type RootStackParamList = {
   AddSession: { initialDate?: string; selectedOrganizerId?: number };
   IncomeSummary: undefined;
   IncomeMonthDetail: { month: string };
-  OrganizerPaymentDetail: { organizerId: number; organizerName: string };
+  OrganizerPaymentDetail: {
+    organizerId: number;
+    organizerName: string;
+    pendingOnly: boolean;
+    sortOrder: 'pending' | 'az' | 'za';
+  };
   Notifications: undefined;
   PaymentThresholds: undefined;
   WhatsNew: undefined;

@@ -6,7 +6,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAppTheme } from '../../theme';
-import { AppThemeColors, BrandCore, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { AppThemeColors, BrandCore, Elevation, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { EnrichedTraineePackage } from '../../types';
 import {
   deleteUnusedPendingTraineePackage,
@@ -178,74 +178,56 @@ export default function TraineePackagesScreen() {
           index > 0 && styles.packageRowDivider,
         ]}
       >
-        <View style={styles.packageMainRow}>
-          <View style={styles.itemLeft}>
-            <Text style={styles.itemTitle}>{formatMonth(item.month)}</Text>
-            <Text style={styles.itemSub}>{item.used_sessions}/{item.total_sessions} sessions used</Text>
-            {item.notes ? (
-              <Text style={styles.itemNote} numberOfLines={1}>{item.notes}</Text>
-            ) : null}
+        <Text style={styles.itemTitle}>{formatMonth(item.month)}</Text>
+        <View style={styles.packageDetailsRow}>
+          <View style={styles.metricColumn}>
+            <Text style={styles.amountLabel} numberOfLines={1}>Sessions used</Text>
+            <Text style={styles.sessionCount} numberOfLines={1}>
+              {item.used_sessions}/{item.total_sessions}
+            </Text>
           </View>
-          <View style={styles.packageAmountRow}>
-            {item.status === 'pending' ? (
-              <>
-                <View style={styles.packageStatusColumn}>
-                  <Text style={styles.amountLabel}>Paid</Text>
-                  <Text style={[styles.amount, styles.zeroAmount]}>
-                    {formatCurrency(0)}
-                  </Text>
-                </View>
-                <View style={styles.packageStatusColumn}>
-                  <Text style={styles.amountLabel}>Pending</Text>
-                  <Text style={[styles.amount, styles.pendingAmount]}>
-                    {formatCurrency(item.amount)}
-                  </Text>
-                </View>
-              </>
-            ) : (
-              <>
-                <View style={styles.packageStatusColumn}>
-                  <Text style={styles.amountLabel}>Paid</Text>
-                  <Text style={[styles.amount, styles.paidAmount]}>
-                    {formatCurrency(item.amount)}
-                  </Text>
-                </View>
-                <View style={styles.packageStatusColumn}>
-                  <Text style={styles.amountLabel}>Pending</Text>
-                  <Text style={[styles.amount, styles.zeroAmount]}>
-                    {formatCurrency(0)}
-                  </Text>
-                </View>
-              </>
-            )}
+          <View style={styles.metricColumn}>
+            <Text style={styles.amountLabel} numberOfLines={1}>Paid</Text>
+            <Text
+              style={[styles.amount, item.status === 'paid' ? styles.paidAmount : styles.zeroAmount]}
+              numberOfLines={1}
+            >
+              {formatCurrency(item.status === 'paid' ? item.amount : 0)}
+            </Text>
+          </View>
+          <View style={styles.metricColumn}>
+            <Text style={styles.amountLabel} numberOfLines={1}>Pending</Text>
+            <Text
+              style={[styles.amount, item.status === 'pending' ? styles.pendingAmount : styles.zeroAmount]}
+              numberOfLines={1}
+            >
+              {formatCurrency(item.status === 'pending' ? item.amount : 0)}
+            </Text>
           </View>
         </View>
+        {item.notes ? (
+          <Text style={styles.itemNote} numberOfLines={1}>{item.notes}</Text>
+        ) : null}
         {item.status === 'pending' ? (
         <View style={styles.packageActionRow}>
           {canEditOrDelete ? (
             <>
-              <TouchableOpacity
-                accessibilityRole="button"
+              <AppIconButton
+                icon="pencil"
+                iconColor={colors.textSecondary}
+                size={18}
                 accessibilityLabel={`Edit ${item.trainee_name} package`}
-                activeOpacity={0.72}
-                hitSlop={6}
-                style={[styles.packageUtilityBtn, { borderColor: colors.border }]}
                 onPress={() => openEditPackage(item)}
-              >
-                <AppIcon name="pencil" size={14} color={colors.textSecondary} weight="bold" />
-                <Text style={styles.packageUtilityText}>Edit</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                accessibilityRole="button"
+                style={[styles.packageUtilityIconBtn, { borderColor: colors.border }]}
+              />
+              <AppIconButton
+                icon="trash"
+                iconColor="#FF5252"
+                size={18}
                 accessibilityLabel={`Delete ${item.trainee_name} package`}
-                activeOpacity={0.72}
-                hitSlop={6}
-                style={[styles.packageUtilityBtn, styles.packageDeleteBtn]}
                 onPress={() => setDeletePkg(item)}
-              >
-                <AppIcon name="trash" size={14} color="#FF5252" weight="bold" />
-                <Text style={styles.packageDeleteText}>Delete</Text>
-              </TouchableOpacity>
+                style={[styles.packageUtilityIconBtn, styles.packageDeleteBtn]}
+              />
             </>
           ) : null}
           <TouchableOpacity
@@ -267,26 +249,29 @@ export default function TraineePackagesScreen() {
 
   const renderItem = ({ item }: { item: Section }) => (
     <View style={styles.card}>
-      <View style={styles.cardTop}>
-        <View style={styles.cardTitleBlock}>
-          <Text style={styles.traineeName}>{item.trainee}</Text>
-          <Text style={styles.packageCount}>
-            {item.data.length} package{item.data.length !== 1 ? 's' : ''}
+      <Text style={styles.traineeName}>{item.trainee}</Text>
+      <View style={styles.cardDetailsRow}>
+        <View style={styles.metricColumn}>
+          <Text style={styles.amountLabel} numberOfLines={1}>Packages</Text>
+          <Text style={styles.packageCount} numberOfLines={1}>{item.data.length}</Text>
+        </View>
+        <View style={styles.metricColumn}>
+          <Text style={styles.amountLabel} numberOfLines={1}>Paid</Text>
+          <Text
+            style={[styles.cardAmount, item.paidTotal > 0 ? styles.paidAmount : styles.zeroAmount]}
+            numberOfLines={1}
+          >
+            {formatCurrency(item.paidTotal)}
           </Text>
         </View>
-        <View style={styles.amountRow}>
-          <View style={styles.amountStatus}>
-            <Text style={styles.amountLabel}>Paid</Text>
-            <Text style={[styles.cardAmount, item.paidTotal > 0 ? styles.paidAmount : styles.zeroAmount]}>
-              {formatCurrency(item.paidTotal)}
-            </Text>
-          </View>
-          <View style={styles.amountStatus}>
-            <Text style={styles.amountLabel}>Pending</Text>
-            <Text style={[styles.cardAmount, item.pendingTotal > 0 ? styles.pendingAmount : styles.zeroAmount]}>
-              {formatCurrency(item.pendingTotal)}
-            </Text>
-          </View>
+        <View style={styles.metricColumn}>
+          <Text style={styles.amountLabel} numberOfLines={1}>Pending</Text>
+          <Text
+            style={[styles.cardAmount, item.pendingTotal > 0 ? styles.pendingAmount : styles.zeroAmount]}
+            numberOfLines={1}
+          >
+            {formatCurrency(item.pendingTotal)}
+          </Text>
         </View>
       </View>
       <View style={styles.packageList}>
@@ -526,6 +511,8 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   },
   filterSummary: { ...Typography.bodySm, color: colors.textSecondary, flex: 1 },
   filterButton: {
+    width: 36,
+    height: 36,
     borderWidth: 1,
     borderRadius: Radius.md,
     backgroundColor: colors.surface,
@@ -534,6 +521,7 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
     borderWidth: 1.5,
   },
   summaryCard: {
+    ...Elevation.flat,
     flexDirection: 'row',
     backgroundColor: colors.surfaceRaised,
     borderRadius: Radius.card,
@@ -543,11 +531,6 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
     marginBottom: Spacing.sm,
     paddingVertical: Spacing.lg,
     paddingHorizontal: Spacing.xl,
-    elevation: 4,
-    shadowColor: colors.shadow,
-    shadowOpacity: 0.12,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
   },
   summaryCardSingle: { justifyContent: 'center' },
   summaryItem: { flex: 1, alignItems: 'center' },
@@ -565,21 +548,15 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
     paddingVertical: Spacing.md,
     marginBottom: Spacing.sm,
   },
-  cardTop: {
+  cardDetailsRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    gap: Spacing.md,
+    marginTop: Spacing.xs,
   },
-  cardTitleBlock: { flex: 1 },
+  metricColumn: { alignItems: 'center' },
   traineeName: { ...Typography.h4, color: colors.textPrimary },
-  packageCount: { ...Typography.bodySm, color: colors.textSecondary, marginTop: Spacing.xs },
-  amountRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: Spacing.sm,
-  },
-  amountStatus: { alignItems: 'center', minWidth: 86 },
+  packageCount: { ...Typography.h4, fontWeight: '700', color: colors.textPrimary },
   amountLabel: { ...Typography.caption, color: colors.textSecondary },
   cardAmount: { ...Typography.h4, fontWeight: '700' },
   packageList: {
@@ -591,48 +568,34 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   packageRow: {
     paddingVertical: Spacing.sm,
   },
-  packageMainRow: {
+  packageDetailsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginTop: Spacing.xs,
   },
   packageRowDivider: { borderTopWidth: 1, borderTopColor: colors.border },
-  itemLeft: { flex: 1 },
   itemTitle: { ...Typography.body, fontWeight: '500', color: colors.textPrimary },
-  itemSub: { ...Typography.bodySm, color: colors.textSecondary, marginTop: 0 },
+  sessionCount: { ...Typography.h4, fontWeight: '700', color: colors.textPrimary },
   itemNote: { ...Typography.bodySm, color: colors.textMuted, marginTop: 0 },
-  packageAmountRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: Spacing.sm,
-    marginLeft: Spacing.sm,
-  },
-  packageStatusColumn: { alignItems: 'center', gap: Spacing.xs, minWidth: 86 },
   packageActionRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     alignItems: 'center',
     gap: Spacing.xs,
-    marginTop: Spacing.xs,
-    flexWrap: 'wrap',
+    marginTop: Spacing.sm,
   },
   amount: { ...Typography.h4, fontWeight: '700' },
   paidAmount: { color: BrandCore.pink },
   pendingAmount: { color: BrandCore.orange },
   zeroAmount: { color: colors.textMuted },
-  packageUtilityBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.xs,
+  packageUtilityIconBtn: {
+    width: 36,
     height: 36,
     borderRadius: Radius.md,
     borderWidth: 1,
-    paddingHorizontal: Spacing.md,
   },
-  packageUtilityText: { ...Typography.labelSm, color: colors.textSecondary },
   packageDeleteBtn: { borderColor: '#FF5252' },
-  packageDeleteText: { ...Typography.labelSm, color: '#FF5252' },
   markPaidBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -665,8 +628,8 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   },
   sheet: {
     backgroundColor: colors.surfaceRaised,
-    borderTopLeftRadius: Radius.item,
-    borderTopRightRadius: Radius.item,
+    borderTopLeftRadius: Radius.card,
+    borderTopRightRadius: Radius.card,
     borderTopWidth: 1,
     borderTopColor: colors.border,
     paddingHorizontal: Spacing.lg,

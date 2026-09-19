@@ -369,7 +369,7 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   content: { padding: Spacing.lg, paddingBottom: 96 },
   card: {
     backgroundColor: colors.surface,
-    borderRadius: Radius.item,
+    borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: colors.border,
     overflow: 'hidden',
@@ -422,7 +422,7 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   rowDot: {
     width: 8,
     height: 8,
-    borderRadius: 4,
+    borderRadius: Radius.full,
     backgroundColor: BrandCore.orange,
     marginRight: Spacing.xs,
   },

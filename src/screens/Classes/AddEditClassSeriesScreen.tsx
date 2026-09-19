@@ -1,11 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { KeyboardAvoidingView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, ScrollView, StyleSheet, View } from 'react-native';
 import ThemedDatePickerModal from '../../components/common/ThemedDatePickerModal';
 import ThemedTimePickerModal from '../../components/common/ThemedTimePickerModal';
 import PickerModal from '../../components/common/PickerModal';
 import PickerField from '../../components/common/PickerField';
 import SectionHeader from '../../components/common/SectionHeader';
 import ThemedSegmentedButtons from '../../components/common/ThemedSegmentedButtons';
+import ThemedMultiSegmentedButtons from '../../components/common/ThemedMultiSegmentedButtons';
+import AppNotesInput from '../../components/common/AppNotesInput';
 import {
   Text,
   TextInput,
@@ -103,7 +105,7 @@ function generateSessionDatesForCount(
 }
 
 export default function AddEditClassSeriesScreen() {
-  const { accentPalette, colors, theme } = useAppTheme();
+  const { colors } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
@@ -247,12 +249,6 @@ export default function AddEditClassSeriesScreen() {
       returnToPaymentsWithNotice();
     });
   }, [navigation, prefillPackage, returnToPaymentsWithNotice]);
-
-  function toggleDay(day: number) {
-    setSelectedDays((prev) =>
-      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day].sort((a, b) => a - b)
-    );
-  }
 
   function validate(): boolean {
     const errs: Record<string, string> = {};
@@ -439,6 +435,7 @@ export default function AddEditClassSeriesScreen() {
     if (!seriesId) return;
     try {
       await deactivateClassSeries(seriesId);
+      await scheduleUpcomingNotifications();
       navigation.goBack();
     } catch {
       setModalError({ title: 'Error', message: 'Could not end series. Please try again.' });
@@ -549,13 +546,16 @@ export default function AddEditClassSeriesScreen() {
           {/* Class Info section */}
           <SectionHeader label="Class Info" />
           <View style={styles.card}>
+            <Text variant="labelMedium" style={styles.fieldLabel}>Title *</Text>
             <TextInput
-              label="Title *"
+              accessibilityLabel="Title"
+              placeholder="Enter title"
               value={title}
               onChangeText={setTitle}
               mode="outlined"
               dense
               error={!!errors.title}
+              style={styles.textInput}
             />
             {errors.title ? <ErrorText msg={errors.title} /> : null}
 
@@ -654,27 +654,11 @@ export default function AddEditClassSeriesScreen() {
               <>
                 <View style={styles.fieldGap} />
                 <Text variant="labelMedium" style={styles.fieldLabel}>Days *</Text>
-                <View style={styles.daysRow}>
-                  {DAYS.map((d) => {
-                    const active = selectedDays.includes(d.value);
-                    return (
-                      <TouchableOpacity
-                        key={d.value}
-                        onPress={() => toggleDay(d.value)}
-                        style={[
-                          styles.dayButton,
-                          active
-                            ? { backgroundColor: accentPalette.main, borderColor: accentPalette.main }
-                            : { backgroundColor: colors.surface, borderColor: colors.border },
-                        ]}
-                      >
-                        <Text style={[styles.dayButtonText, { color: active ? theme.colors.onPrimary : colors.textSecondary }]}>
-                          {d.label}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
+                <ThemedMultiSegmentedButtons
+                  value={selectedDays}
+                  onValueChange={(days) => setSelectedDays([...days].sort((a, b) => a - b))}
+                  buttons={DAYS}
+                />
                 {errors.days ? <ErrorText msg={errors.days} /> : null}
               </>
             )}
@@ -692,7 +676,7 @@ export default function AddEditClassSeriesScreen() {
                 {errors.startDate ? <ErrorText msg={errors.startDate} /> : null}
               </View>
               <View style={styles.twoColCell}>
-                <Text variant="labelMedium" style={styles.fieldLabel}>End Date (optional)</Text>
+                <Text variant="labelMedium" style={styles.fieldLabel}>End Date</Text>
                 <PickerField
                   placeholder="Ongoing"
                   value={endDate ? displayDate(endDate) : undefined}
@@ -718,12 +702,15 @@ export default function AddEditClassSeriesScreen() {
               <View style={styles.twoColCell}>
                 <Text variant="labelMedium" style={styles.fieldLabel}>Duration (min)</Text>
                 <TextInput
+                  accessibilityLabel="Duration in minutes"
+                  placeholder="Enter duration"
                   value={duration}
                   onChangeText={setDuration}
                   mode="outlined"
                   keyboardType="numeric"
                   dense
                   error={!!errors.duration}
+                  style={styles.textInput}
                 />
                 {errors.duration ? <ErrorText msg={errors.duration} /> : null}
               </View>
@@ -734,23 +721,22 @@ export default function AddEditClassSeriesScreen() {
           <SectionHeader label="Location" />
           <View style={styles.card}>
             <TextInput
-              label="Address (optional)"
+              accessibilityLabel="Address"
+              placeholder="Enter address"
               value={location}
               onChangeText={setLocation}
               mode="outlined"
               dense
+              style={styles.textInput}
             />
           </View>
 
           {/* Notes section */}
           <SectionHeader label="Notes" />
           <View style={styles.card}>
-            <TextInput
-              label="Notes (optional)"
+            <AppNotesInput
               value={notes}
               onChangeText={setNotes}
-              mode="outlined"
-              multiline
               numberOfLines={3}
             />
           </View>
@@ -892,7 +878,7 @@ export default function AddEditClassSeriesScreen() {
       <ConfirmDialog
         visible={endSeriesVisible}
         title="End Series"
-        message="This will stop future sessions for this series. Existing sessions and payment history will remain."
+        message="This will remove upcoming sessions for this series. Completed sessions and payment history will remain."
         confirmLabel="End Series"
         onConfirm={handleEndSeries}
         onDismiss={() => setEndSeriesVisible(false)}
@@ -933,23 +919,7 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   },
   fieldLabel: { color: colors.textSecondary, marginBottom: Spacing.xs },
   fieldGap: { height: Spacing.sm },
-  daysRow: { flexDirection: 'row', gap: Spacing.xs },
-  dayButton: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: Radius.md,
-    minWidth: 0,
-    height: 40,
-    minHeight: 40,
-    maxHeight: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 0,
-  },
-  dayButtonText: {
-    ...Typography.labelSm,
-    lineHeight: 16,
-  },
+  textInput: { height: Layout.INPUT_HEIGHT },
   pickerButton: {
     borderWidth: 1,
     borderRadius: Radius.md,

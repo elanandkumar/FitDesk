@@ -8,7 +8,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAppTheme } from '../../theme';
-import { AppThemeColors, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { AppThemeColors, Elevation, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { Organizer } from '../../types';
 import { getAllOrganizers } from '../../database/repositories/organizerRepository';
 import { formatCurrency } from '../../utils/currencyUtils';
@@ -108,15 +108,18 @@ export default function OrganizerListScreen() {
                   <Text style={[styles.avatarText, { color: accentPalette.textAccent }]}>{initials(item.name)}</Text>
                 </View>
                 <View style={styles.cardContent}>
-                  <Text style={styles.cardTitle}>{item.name}</Text>
+                  <Text style={styles.cardTitle} numberOfLines={2}>{item.name}</Text>
+                  <View style={styles.cardMetaRow}>
+                    <Text style={styles.cardMeta}>
+                      {item.contact_type === 'one_time' ? 'One-time' : 'Regular'}
+                    </Text>
+                    {item.contact_type === 'regular' && item.per_class_rate > 0 ? (
+                      <Text style={styles.cardRate}>
+                        {formatCurrency(item.per_class_rate)}/session
+                      </Text>
+                    ) : null}
+                  </View>
                 </View>
-                <Text style={styles.cardRate}>
-                  {item.contact_type === 'one_time'
-                    ? 'One-time'
-                    : item.per_class_rate > 0
-                      ? `Regular · Default ${formatCurrency(item.per_class_rate)}`
-                      : 'Regular'}
-                </Text>
               </TouchableOpacity>
             </Animated.View>
           </View>
@@ -138,23 +141,20 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   filters: { marginHorizontal: Spacing.md, marginBottom: Spacing.md },
   listContent: { paddingHorizontal: Spacing.md, paddingBottom: Layout.LIST_PAD_WITH_FAB },
   cardShadow: {
+    ...Elevation.interactive,
     backgroundColor: colors.surface,
-    borderRadius: Radius.item,
+    borderRadius: Radius.card,
     marginBottom: Spacing.sm,
-    elevation: 4,
     shadowColor: colors.shadow,
-    shadowOpacity: 0.15,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 6,
   },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.surface,
-    borderRadius: Radius.item,
+    borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingVertical: Spacing.lg,
+    paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.lg,
     gap: Spacing.md,
   },
@@ -169,9 +169,11 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
     justifyContent: 'center',
   },
   avatarText: { ...Typography.bodyLg, fontWeight: '700', color: colors.textPrimary },
-  cardContent: { flex: 1 },
+  cardContent: { flex: 1, gap: Spacing.xs },
   cardTitle: { ...Typography.h4, color: colors.textPrimary },
-  cardRate: { ...Typography.labelMd, fontFamily: 'Outfit_400Regular', color: colors.textSecondary },
+  cardMetaRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.sm },
+  cardMeta: { ...Typography.bodySm, color: colors.textSecondary },
+  cardRate: { ...Typography.bodySm, color: colors.textSecondary, flexShrink: 0 },
   fab: {
     position: 'absolute',
     right: Spacing.lg,

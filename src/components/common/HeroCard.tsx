@@ -36,12 +36,14 @@ export default function HeroCard({ todayCount, weekTotal, trainerName }: Props) 
       <View style={styles.statsRow}>
         <View style={styles.stat}>
           <Text style={[styles.count, { color: colors.textPrimary }]}>{todayCount === 0 ? '—' : String(todayCount)}</Text>
-          <Text style={[styles.label, { color: colors.textSecondary }]}>{todayCount === 1 ? 'session today' : 'sessions today'}</Text>
+          <Text numberOfLines={1} style={[styles.label, { color: colors.textSecondary }]}>
+            {todayCount === 1 ? 'session today' : 'sessions today'}
+          </Text>
         </View>
         <View style={[styles.divider, { backgroundColor: colors.border }]} />
         <View style={styles.stat}>
           <Text style={[styles.count, { color: colors.textPrimary }]}>{weekTotal === 0 ? '—' : String(weekTotal)}</Text>
-          <Text style={[styles.label, { color: colors.textSecondary }]}>this week</Text>
+          <Text numberOfLines={1} style={[styles.label, { color: colors.textSecondary }]}>this week</Text>
         </View>
       </View>
     </LinearGradient>
@@ -66,6 +68,7 @@ const styles = StyleSheet.create({
   },
   stat: {
     flex: 1,
+    minWidth: 0,
     gap: 2,
     alignItems: 'flex-start',
   },
@@ -76,6 +79,7 @@ const styles = StyleSheet.create({
   },
   label: {
     ...Typography.labelMd,
+    width: '100%',
   },
   divider: {
     width: 1,

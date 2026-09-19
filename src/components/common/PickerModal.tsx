@@ -171,8 +171,8 @@ const styles = StyleSheet.create({
   },
   sheet: {
     height: '55%',
-    borderTopLeftRadius: Radius.item,
-    borderTopRightRadius: Radius.item,
+    borderTopLeftRadius: Radius.card,
+    borderTopRightRadius: Radius.card,
     borderTopWidth: 1,
     overflow: 'hidden',
   },

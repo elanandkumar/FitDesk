@@ -31,6 +31,12 @@
 
 - Keep the app visually quiet and operational: dense, readable, and consistent rather than decorative.
 - Avoid nested cards and decorative gradients on passive content.
+- Treat elevation as an interaction or floating-layer signal, not as default card decoration.
+- Passive cards, summary panels, grouped form sections, and containers whose only actions are nested buttons must be flat (`elevation: 0` with no shadow). Use a neutral surface, border, or tonal contrast for separation.
+- A whole-card press target may use only slight, neutral elevation and must have a pressed state. It does not need an added chevron, icon, or action label when the existing interaction is clear.
+- Do not infer that every clickable row needs elevation. Flat pressable rows are valid when their pressed state and surrounding context make the interaction clear.
+- Reserve stronger elevation for genuinely floating or temporary layers such as FABs, menus, tooltips, modal sheets, and bottom navigation.
+- When a shared card supports optional `onPress`, derive its elevation and pressed styling from whether `onPress` is present; do not expose styling flags that can make passive cards look interactive.
 - Prefer reusable controls for buttons, icons, pickers, empty states, and navigation affordances.
 - Use FitDesk shared modal/dialog components (`AppModal`, `ConfirmDialog`, or another app-styled wrapper) for user-facing alerts and confirmations; do not introduce native `Alert.alert` for new UI flows.
 - Before adding a new visual treatment, check whether it should be accent-driven, semantic, or neutral.

@@ -7,6 +7,7 @@ import {
   AccentPalettes,
   AppThemeColors,
   getAccentPalette,
+  Radius,
   ResolvedThemeMode,
   ResolvedAccentPalette,
   ThemePalettes,
@@ -19,6 +20,7 @@ export {
   BadgeTonePalettes,
   BadgeTones,
   BrandCore,
+  Elevation,
   getAccentPalette,
   getBadgeTones,
   Gradients,
@@ -64,7 +66,7 @@ export function createFitDeskTheme(
   const colors: AppThemeColors = ThemePalettes[mode];
   return {
     ...baseTheme,
-    roundness: 6,
+    roundness: Radius.default,
     colors: {
       ...baseTheme.colors,
       primary: accent.main,

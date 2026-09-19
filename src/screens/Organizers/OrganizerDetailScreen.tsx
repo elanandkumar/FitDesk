@@ -8,7 +8,7 @@ import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navig
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAppTheme } from '../../theme';
-import { AppThemeColors, BrandCore, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { AppThemeColors, BrandCore, Elevation, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { Organizer, EnrichedOrganizerPayment } from '../../types';
 import {
@@ -23,6 +23,7 @@ import {
 } from '../../database/repositories/paymentRepository';
 import { formatCurrency } from '../../utils/currencyUtils';
 import { formatDisplayDate, formatDisplayTime } from '../../utils/dateUtils';
+import ColorDotLabel from '../../components/common/ColorDotLabel';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import HelpSheet from '../../components/common/HelpSheet';
 import AppIconButton from '../../components/common/AppIconButton';
@@ -124,9 +125,14 @@ export default function OrganizerDetailScreen() {
         <SectionHeader label="Payment" />
         <View style={styles.card}>
           {organizer.contact_type === 'regular' ? (
-            <InfoRow label="Default session rate" value={formatCurrency(organizer.per_class_rate)} />
+            <View style={styles.paymentSummaryRow}>
+              <Text variant="bodyMedium" style={{ color: colors.textSecondary }}>Default session rate</Text>
+              <Text variant="bodyMedium" style={{ color: colors.textPrimary }}>
+                {formatCurrency(organizer.per_class_rate)}
+              </Text>
+            </View>
           ) : null}
-          <View style={styles.balanceRow}>
+          <View style={styles.paymentSummaryRow}>
             <Text variant="bodyMedium" style={{ color: colors.textSecondary }}>Outstanding balance</Text>
             <Text
               variant="bodyMedium"
@@ -258,17 +264,18 @@ function PaymentRow({
     <>
       {showDivider && <Divider style={{ backgroundColor: colors.border, marginVertical: Spacing.xs }} />}
       <View style={styles.paymentRow}>
-        <View style={[styles.colorDot, { backgroundColor: payment.class_type_color }]} />
         <View style={{ flex: 1, gap: 0 }}>
-          <Text variant="bodySmall" style={{ color: colors.textPrimary }}>
-            {payment.series_title}
-          </Text>
+          <ColorDotLabel
+            color={payment.class_type_color}
+            label={payment.series_title}
+            style={styles.paymentTitle}
+          />
           <Text variant="bodySmall" style={{ color: colors.textSecondary }}>
             {formatDisplayDate(payment.session_date)} · {formatDisplayTime(payment.class_time)}
           </Text>
           {payment.status === 'paid' && payment.paid_date && (
             <Text variant="bodySmall" style={{ color: colors.textMuted }}>
-              Paid {formatDisplayDate(payment.paid_date)}
+              Paid on {formatDisplayDate(payment.paid_date)}
             </Text>
           )}
         </View>
@@ -277,6 +284,7 @@ function PaymentRow({
           style={{
             color: payment.status === 'pending' ? BrandCore.orange : BrandCore.pink,
             fontWeight: '600',
+            alignSelf: 'flex-start',
           }}
         >
           {formatCurrency(payment.amount)}
@@ -314,20 +322,16 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   card: {
+    ...Elevation.flat,
     backgroundColor: colors.surface,
     borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: colors.border,
-    elevation: 4,
-    shadowColor: colors.shadow,
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
     padding: Spacing.lg,
     gap: Spacing.xs,
   },
   infoRow: { gap: 0, marginBottom: Spacing.xs },
-  balanceRow: {
+  paymentSummaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -335,7 +339,7 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   },
   balanceAmount: { ...Typography.h4, fontWeight: '700' },
   paymentRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, paddingVertical: Spacing.xs },
-  colorDot: { width: 8, height: 8, borderRadius: Radius.full, marginTop: 2 },
+  paymentTitle: { ...Typography.bodySm },
   fab: {
     position: 'absolute',
     right: Spacing.lg,

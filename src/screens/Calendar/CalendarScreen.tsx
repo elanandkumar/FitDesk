@@ -19,6 +19,7 @@ import HelpSheet from '../../components/common/HelpSheet';
 import SessionCard from '../../components/common/SessionCard';
 import { HELP } from '../../constants/helpContent';
 import { listItemEntering } from '../../animations/listItemEntering';
+import { withAlpha } from '../../utils/colorUtils';
 
 type Nav = StackNavigationProp<RootStackParamList>;
 type ViewMode = 'week' | 'month';
@@ -52,12 +53,13 @@ function monthRange(dateStr: string): { start: string; end: string } {
 const CALENDAR_THEME = (
   theme: ReturnType<typeof useAppTheme>['theme'],
   accentPalette: AccentPalette,
+  isDark: boolean,
 ) => ({
   backgroundColor: theme.colors.surface,
   calendarBackground: theme.colors.surface,
   textSectionTitleColor: theme.colors.onSurfaceVariant,
-  selectedDayBackgroundColor: accentPalette.main,
-  selectedDayTextColor: theme.colors.onPrimary,
+  selectedDayBackgroundColor: withAlpha(accentPalette.main, isDark ? 0.28 : 0.14),
+  selectedDayTextColor: accentPalette.textAccent,
   todayTextColor: accentPalette.warm,
   dayTextColor: theme.colors.onSurface,
   textDisabledColor: theme.colors.onSurfaceVariant,
@@ -65,10 +67,16 @@ const CALENDAR_THEME = (
   monthTextColor: theme.colors.onSurface,
   dotColor: accentPalette.main,
   selectedDotColor: theme.colors.onPrimary,
+  'stylesheet.day.basic': {
+    selected: {
+      backgroundColor: withAlpha(accentPalette.main, isDark ? 0.28 : 0.14),
+      borderRadius: Radius.default,
+    },
+  },
 });
 
 export default function CalendarScreen() {
-  const { accentPalette, colors, theme } = useAppTheme();
+  const { accentPalette, colors, isDark, theme } = useAppTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const today = todayISO();
@@ -88,7 +96,10 @@ export default function CalendarScreen() {
 
   const isFocused = useIsFocused();
 
-  const calTheme = useMemo(() => CALENDAR_THEME(theme, accentPalette), [accentPalette, theme]);
+  const calTheme = useMemo(
+    () => CALENDAR_THEME(theme, accentPalette, isDark),
+    [accentPalette, isDark, theme],
+  );
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -168,7 +179,7 @@ export default function CalendarScreen() {
     marked[selectedDate] = {
       ...(marked[selectedDate] ?? { dots: [] }),
       selected: true,
-      selectedColor: accentPalette.main,
+      selectedColor: withAlpha(accentPalette.main, isDark ? 0.28 : 0.14),
     };
   }
 

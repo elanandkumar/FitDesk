@@ -3,11 +3,11 @@
 **Your personal fitness class companion — built with love, for a freelance fitness instructor.**
 
 <p align="center">
-  <img src="assets/screenshots/welcome.png" width="220" alt="Welcome Screen" />
+  <img src="assets/store/phone-screenshots/01-dashboard.png" width="220" alt="FitDesk dashboard" />
   &nbsp;&nbsp;
-  <img src="assets/screenshots/dashboard.png" width="220" alt="Dashboard" />
+  <img src="assets/store/phone-screenshots/02-calendar.png" width="220" alt="FitDesk calendar" />
   &nbsp;&nbsp;
-  <img src="assets/screenshots/payments.png" width="220" alt="Payments" />
+  <img src="assets/store/phone-screenshots/04-payments.png" width="220" alt="FitDesk payments" />
 </p>
 
 ---
@@ -36,11 +36,9 @@ So I built FitDesk — a simple, local-first Android app that puts everything in
 - **Export / Import** — SQLite backup files so data is never lost; imports refresh backup reminder state after restore
 
 <p align="center">
-  <img src="assets/screenshots/calendar.png" width="220" alt="Calendar" />
+  <img src="assets/store/phone-screenshots/03-class-details.png" width="220" alt="FitDesk class details" />
   &nbsp;&nbsp;
-  <img src="assets/screenshots/class-details.png" width="220" alt="Session Detail" />
-  &nbsp;&nbsp;
-  <img src="assets/screenshots/settings.png" width="220" alt="Settings" />
+  <img src="assets/store/phone-screenshots/05-notifications.png" width="220" alt="FitDesk notifications" />
 </p>
 
 ---
@@ -52,7 +50,7 @@ So I built FitDesk — a simple, local-first Android app that puts everything in
 No login. No analytics. No backend server. Everything is stored locally using SQLite on your phone. Export your data anytime from Settings → Export / Import.
 
 <p align="center">
-  <img src="assets/screenshots/data-privacy.png" width="220" alt="Your Data, Your Device" />
+  <img src="assets/store/phone-screenshots/06-data-privacy.png" width="220" alt="FitDesk data privacy settings" />
 </p>
 
 ---

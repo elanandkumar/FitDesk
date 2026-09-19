@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Text } from 'react-native-paper';
 import { useAppTheme } from '../../theme';
-import { AppThemeColors, BrandCore, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { AppThemeColors, BrandCore, Elevation, Radius, Spacing, Typography } from '../../theme/brandColors';
 import AppButton from '../../components/common/AppButton';
 import AppIcon from '../../components/common/AppIcon';
 import AppModal from '../../components/common/AppModal';
@@ -121,15 +121,11 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   content: { padding: Spacing.lg, gap: Spacing.lg },
   card: {
+    ...Elevation.flat,
     backgroundColor: colors.surface,
-    borderRadius: Radius.item,
+    borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: colors.border,
-    elevation: 4,
-    shadowColor: colors.shadow,
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
     padding: Spacing.lg,
     gap: Spacing.lg,
   },

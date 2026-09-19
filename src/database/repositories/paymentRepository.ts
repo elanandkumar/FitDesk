@@ -56,7 +56,7 @@ export async function getAllEnrichedOrganizerPayments(
     JOIN class_series ser ON cs.series_id = ser.id
     JOIN class_types ct ON ser.class_type_id = ct.id
     ${whereClause}
-    ORDER BY mp.status ASC, cs.session_date DESC`
+    ORDER BY CASE WHEN mp.status = "pending" THEN 0 ELSE 1 END, cs.session_date DESC`
   );
 }
 
@@ -69,9 +69,11 @@ export async function getOrganizerPaymentsByOrganizer(organizerId: number): Prom
 }
 
 export async function getEnrichedOrganizerPaymentsByOrganizer(
-  organizerId: number
+  organizerId: number,
+  pendingOnly: boolean = false
 ): Promise<EnrichedOrganizerPayment[]> {
   const db = await getDatabase();
+  const statusClause = pendingOnly ? 'AND mp.status = "pending"' : '';
   return db.getAllAsync<EnrichedOrganizerPayment>(
     `SELECT
       mp.id, mp.session_id, mp.organizer_id, mp.amount, mp.status, mp.paid_date, mp.notes, mp.created_at,
@@ -87,7 +89,8 @@ export async function getEnrichedOrganizerPaymentsByOrganizer(
     JOIN class_series ser ON cs.series_id = ser.id
     JOIN class_types ct ON ser.class_type_id = ct.id
     WHERE mp.organizer_id = ?
-    ORDER BY mp.status ASC, cs.session_date DESC`,
+    ${statusClause}
+    ORDER BY CASE WHEN mp.status = "pending" THEN 0 ELSE 1 END, cs.session_date DESC`,
     [organizerId]
   );
 }

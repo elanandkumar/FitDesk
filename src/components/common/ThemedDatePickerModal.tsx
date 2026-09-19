@@ -3,6 +3,7 @@ import { StyleSheet } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { useAppTheme, Radius } from '../../theme';
 import AppModal from './AppModal';
+import { withAlpha } from '../../utils/colorUtils';
 
 interface Props {
   visible: boolean;
@@ -23,7 +24,7 @@ export default function ThemedDatePickerModal({
   maxDate,
   title = 'Select Date',
 }: Props) {
-  const { colors, theme } = useAppTheme();
+  const { accentPalette, colors, isDark, theme } = useAppTheme();
   const [selected, setSelected] = React.useState(value);
 
   React.useEffect(() => {
@@ -36,13 +37,19 @@ export default function ThemedDatePickerModal({
     backgroundColor: colors.surfaceRaised,
     calendarBackground: colors.surfaceRaised,
     textSectionTitleColor: theme.colors.onSurfaceVariant,
-    selectedDayBackgroundColor: theme.colors.primary,
-    selectedDayTextColor: theme.colors.onPrimary,
+    selectedDayBackgroundColor: withAlpha(theme.colors.primary, isDark ? 0.28 : 0.14),
+    selectedDayTextColor: accentPalette.textAccent,
     todayTextColor: theme.colors.primary,
     dayTextColor: theme.colors.onSurface,
     textDisabledColor: theme.colors.onSurfaceVariant,
     arrowColor: theme.colors.primary,
     monthTextColor: theme.colors.onSurface,
+    'stylesheet.day.basic': {
+      selected: {
+        backgroundColor: withAlpha(theme.colors.primary, isDark ? 0.28 : 0.14),
+        borderRadius: Radius.default,
+      },
+    },
   };
 
   return (

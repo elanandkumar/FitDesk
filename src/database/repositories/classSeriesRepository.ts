@@ -123,7 +123,20 @@ export async function removeTraineeFromSeries(seriesId: number, traineeId: numbe
 
 export async function deactivateClassSeries(id: number): Promise<void> {
   const db = await getDatabase();
-  await db.runAsync('UPDATE class_series SET is_active = 0 WHERE id = ?', [id]);
+  await db.withTransactionAsync(async () => {
+    await db.runAsync(
+      `DELETE FROM session_trainees
+       WHERE session_id IN (
+         SELECT id FROM class_sessions WHERE series_id = ? AND status = 'upcoming'
+       )`,
+      [id]
+    );
+    await db.runAsync(
+      `DELETE FROM class_sessions WHERE series_id = ? AND status = 'upcoming'`,
+      [id]
+    );
+    await db.runAsync('UPDATE class_series SET is_active = 0 WHERE id = ?', [id]);
+  });
 }
 
 export async function hasSeriesHistory(id: number): Promise<boolean> {

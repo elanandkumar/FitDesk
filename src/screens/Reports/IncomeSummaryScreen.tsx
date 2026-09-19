@@ -1,18 +1,20 @@
-import React, { useCallback, useLayoutEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAppTheme } from '../../theme';
-import { AppThemeColors, BrandCore, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { AppThemeColors, BrandCore, Elevation, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { RootStackParamList } from '../../navigation/types';
 import { MonthlyIncomeSummary } from '../../types';
 import { getMonthlyIncomeSummary } from '../../database/repositories/paymentRepository';
 import { formatCurrency } from '../../utils/currencyUtils';
 import EmptyState from '../../components/common/EmptyState';
 import HelpSheet from '../../components/common/HelpSheet';
+import AppIcon from '../../components/common/AppIcon';
 import AppIconButton from '../../components/common/AppIconButton';
+import ThemedSegmentedButtons from '../../components/common/ThemedSegmentedButtons';
 import { withAlpha } from '../../utils/colorUtils';
 
 type Nav = StackNavigationProp<RootStackParamList>;
@@ -24,11 +26,11 @@ type MonthComparison = {
 
 import { HELP } from '../../constants/helpContent';
 
-const PERIOD_META: Record<IncomePeriod, { labelTop: string; labelBottom: string }> = {
-  thisMonth: { labelTop: 'This', labelBottom: 'Month' },
-  lastMonth: { labelTop: 'Last', labelBottom: 'Month' },
-  thisYear: { labelTop: 'This', labelBottom: 'Year' },
-  allTime: { labelTop: 'All', labelBottom: 'Time' },
+const PERIOD_META: Record<IncomePeriod, string> = {
+  thisMonth: 'This\nMonth',
+  lastMonth: 'Last\nMonth',
+  thisYear: 'This\nYear',
+  allTime: 'All\nTime',
 };
 
 const PERIODS: IncomePeriod[] = ['thisMonth', 'lastMonth', 'thisYear', 'allTime'];
@@ -64,6 +66,10 @@ function addMonths(monthKey: string, offset: number): string {
 
 function getMonthTotal(row: MonthlyIncomeSummary): number {
   return row.total_paid + row.total_pending;
+}
+
+function isFutureMonth(month: string): boolean {
+  return month > toMonthKey(new Date());
 }
 
 function getPeriodSubtitle(period: IncomePeriod): string {
@@ -156,6 +162,11 @@ export default function IncomeSummaryScreen() {
   const [rows, setRows] = useState<MonthlyIncomeSummary[]>([]);
   const [period, setPeriod] = useState<IncomePeriod>('thisMonth');
   const [helpVisible, setHelpVisible] = useState(false);
+  const [selectedChartMonth, setSelectedChartMonth] = useState<string | null>(null);
+  const chartScrollRef = useRef<ScrollView>(null);
+  const chartViewportWidthRef = useRef(0);
+  const chartContentWidthRef = useRef(0);
+  const [chartEdges, setChartEdges] = useState({ left: false, right: false });
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -183,6 +194,33 @@ export default function IncomeSummaryScreen() {
   const monthComparison = getMonthComparison(rows, period);
   const shouldShowChart = (period === 'thisYear' || period === 'allTime') && chartRows.length > 1;
   const chartMax = Math.max(...chartRows.map(getMonthTotal), 1);
+  const chartKey = `${period}:${chartRows.map((row) => row.month).join(',')}`;
+
+  useEffect(() => {
+    chartContentWidthRef.current = 0;
+    setChartEdges({ left: false, right: false });
+  }, [chartKey]);
+
+  const updateChartEdges = (offsetX: number) => {
+    const maxOffset = Math.max(0, chartContentWidthRef.current - chartViewportWidthRef.current);
+    const next = {
+      left: offsetX > 4,
+      right: offsetX < maxOffset - 4,
+    };
+    setChartEdges((current) => (
+      current.left === next.left && current.right === next.right ? current : next
+    ));
+  };
+
+  const scrollChartToLatest = () => {
+    const maxOffset = Math.max(0, chartContentWidthRef.current - chartViewportWidthRef.current);
+    if (maxOffset <= 0) {
+      updateChartEdges(0);
+      return;
+    }
+    requestAnimationFrame(() => chartScrollRef.current?.scrollToEnd({ animated: false }));
+    updateChartEdges(maxOffset);
+  };
 
   const renderItem = ({ item }: { item: MonthlyIncomeSummary }) => (
     <TouchableOpacity
@@ -203,19 +241,23 @@ export default function IncomeSummaryScreen() {
             {(item.organizer_paid > 0 || item.organizer_pending > 0) && (
               <View style={styles.monthCategory}>
                 <Text style={styles.monthCategoryLabel}>Organizer sessions</Text>
-                <View style={styles.monthAmounts}>
-                  <View style={styles.monthAmountStatus}>
-                    <Text style={styles.monthAmountLabel}>Paid</Text>
-                    <Text style={[styles.monthAmount, item.organizer_paid > 0 ? styles.monthAmountPaid : styles.zeroAmount]}>
-                      {formatCurrency(item.organizer_paid)}
-                    </Text>
-                  </View>
-                  <View style={styles.monthAmountStatus}>
-                    <Text style={styles.monthAmountLabel}>Pending</Text>
-                    <Text style={[styles.monthAmount, item.organizer_pending > 0 ? styles.monthAmountPending : styles.zeroAmount]}>
-                      {formatCurrency(item.organizer_pending)}
-                    </Text>
-                  </View>
+                <View style={styles.monthAmountStatus}>
+                  <Text style={styles.monthAmountLabel} numberOfLines={1}>Paid</Text>
+                  <Text
+                    style={[styles.monthAmount, item.organizer_paid > 0 ? styles.monthAmountPaid : styles.zeroAmount]}
+                    numberOfLines={1}
+                  >
+                    {formatCurrency(item.organizer_paid)}
+                  </Text>
+                </View>
+                <View style={styles.monthAmountStatus}>
+                  <Text style={styles.monthAmountLabel} numberOfLines={1}>Pending</Text>
+                  <Text
+                    style={[styles.monthAmount, item.organizer_pending > 0 ? styles.monthAmountPending : styles.zeroAmount]}
+                    numberOfLines={1}
+                  >
+                    {formatCurrency(item.organizer_pending)}
+                  </Text>
                 </View>
               </View>
             )}
@@ -227,19 +269,23 @@ export default function IncomeSummaryScreen() {
             {(item.trainee_paid > 0 || item.trainee_pending > 0) && (
               <View style={styles.monthCategory}>
                 <Text style={styles.monthCategoryLabel}>Trainee packages</Text>
-                <View style={styles.monthAmounts}>
-                  <View style={styles.monthAmountStatus}>
-                    <Text style={styles.monthAmountLabel}>Paid</Text>
-                    <Text style={[styles.monthAmount, item.trainee_paid > 0 ? styles.monthAmountPaid : styles.zeroAmount]}>
-                      {formatCurrency(item.trainee_paid)}
-                    </Text>
-                  </View>
-                  <View style={styles.monthAmountStatus}>
-                    <Text style={styles.monthAmountLabel}>Pending</Text>
-                    <Text style={[styles.monthAmount, item.trainee_pending > 0 ? styles.monthAmountPending : styles.zeroAmount]}>
-                      {formatCurrency(item.trainee_pending)}
-                    </Text>
-                  </View>
+                <View style={styles.monthAmountStatus}>
+                  <Text style={styles.monthAmountLabel} numberOfLines={1}>Paid</Text>
+                  <Text
+                    style={[styles.monthAmount, item.trainee_paid > 0 ? styles.monthAmountPaid : styles.zeroAmount]}
+                    numberOfLines={1}
+                  >
+                    {formatCurrency(item.trainee_paid)}
+                  </Text>
+                </View>
+                <View style={styles.monthAmountStatus}>
+                  <Text style={styles.monthAmountLabel} numberOfLines={1}>Pending</Text>
+                  <Text
+                    style={[styles.monthAmount, item.trainee_pending > 0 ? styles.monthAmountPending : styles.zeroAmount]}
+                    numberOfLines={1}
+                  >
+                    {formatCurrency(item.trainee_pending)}
+                  </Text>
                 </View>
               </View>
             )}
@@ -250,38 +296,24 @@ export default function IncomeSummaryScreen() {
   );
 
   const renderPeriodSelector = () => (
-    <View style={styles.periodSegment}>
-      {PERIODS.map((option) => {
-        const isSelected = option === period;
-        const meta = PERIOD_META[option];
-
-        return (
-          <TouchableOpacity
-            key={option}
-            activeOpacity={0.8}
-            accessibilityRole="button"
-            accessibilityState={{ selected: isSelected }}
-            style={[
-              styles.periodOption,
-              isSelected && { backgroundColor: accentPalette.main },
-            ]}
-            onPress={() => setPeriod(option)}
-          >
-            <Text style={[styles.periodLabel, isSelected && { color: theme.colors.onPrimary }]}>
-              {meta.labelTop}
-            </Text>
-            <Text style={[styles.periodLabel, isSelected && { color: theme.colors.onPrimary }]}>
-              {meta.labelBottom}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
-    </View>
+    <ThemedSegmentedButtons
+      value={period}
+      onValueChange={(value) => {
+        setSelectedChartMonth(null);
+        setPeriod(value as IncomePeriod);
+      }}
+      buttons={PERIODS.map((option) => ({
+        value: option,
+        label: PERIOD_META[option],
+      }))}
+      style={styles.periodSegment}
+    />
   );
 
   const renderIncomeChart = () => {
     if (!shouldShowChart) return null;
     const includeYear = period === 'allTime';
+    const selectedRow = chartRows.find((row) => row.month === selectedChartMonth) ?? null;
 
     return (
       <View style={styles.chartPanel}>
@@ -299,55 +331,140 @@ export default function IncomeSummaryScreen() {
           </View>
         </View>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chartScrollContent}
-        >
-          {chartRows.map((item) => {
-            const total = getMonthTotal(item);
-            const { barHeight, paidHeight, pendingHeight } = getChartSegmentHeights(item, chartMax);
+        {selectedRow && getMonthTotal(selectedRow) > 0 && (
+          <View style={styles.chartTooltip}>
+            <View style={styles.chartTooltipHeader}>
+              <View style={styles.chartTooltipHeading}>
+                <Text style={styles.chartTooltipMonth}>{formatMonth(selectedRow.month)}</Text>
+                {isFutureMonth(selectedRow.month) && selectedRow.total_pending > 0 && (
+                  <Text style={styles.chartTooltipScheduled}>Scheduled</Text>
+                )}
+              </View>
+              <AppIconButton
+                icon="xCircle"
+                iconColor={colors.textMuted}
+                accessibilityLabel="Close income details"
+                size={18}
+                style={styles.chartTooltipClose}
+                onPress={() => setSelectedChartMonth(null)}
+              />
+            </View>
+            <View style={styles.chartTooltipMetrics}>
+              <View style={styles.chartTooltipMetric}>
+                <Text style={styles.chartTooltipMetricLabel}>Total</Text>
+                <Text style={[styles.chartTooltipMetricValue, { color: colors.textPrimary }]}>
+                  {formatCurrency(getMonthTotal(selectedRow))}
+                </Text>
+              </View>
+              <View style={styles.chartTooltipMetricDivider} />
+              <View style={styles.chartTooltipMetric}>
+                <Text style={styles.chartTooltipMetricLabel}>Paid</Text>
+                <Text style={[styles.chartTooltipMetricValue, { color: BrandCore.pink }]}>
+                  {formatCurrency(selectedRow.total_paid)}
+                </Text>
+              </View>
+              <View style={styles.chartTooltipMetricDivider} />
+              <View style={styles.chartTooltipMetric}>
+                <Text style={styles.chartTooltipMetricLabel}>Pending</Text>
+                <Text style={[styles.chartTooltipMetricValue, { color: BrandCore.orange }]}>
+                  {formatCurrency(selectedRow.total_pending)}
+                </Text>
+              </View>
+            </View>
+          </View>
+        )}
 
-            return (
-              <TouchableOpacity
-                key={item.month}
-                activeOpacity={0.75}
-                accessibilityRole="button"
-                accessibilityLabel={`${formatMonth(item.month)} income ${formatCurrency(total)}`}
-                style={styles.chartBarItem}
-                onPress={() => navigation.navigate('IncomeMonthDetail', { month: item.month })}
-              >
-                <View style={styles.chartBarTrack}>
-                  <View
-                    style={[
-                      styles.chartBarStack,
-                      pendingHeight > 0 && styles.chartBarPending,
-                      { height: barHeight },
-                    ]}
-                  >
-                    {paidHeight > 0 && (
-                      <View
-                        style={[
-                          styles.chartBarSegment,
-                          styles.chartBarPaid,
-                          { height: paidHeight },
-                        ]}
-                      />
-                    )}
+        <View style={styles.chartScrollViewport}>
+          <ScrollView
+            key={chartKey}
+            ref={chartScrollRef}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.chartScrollContent}
+            onContentSizeChange={(width) => {
+              chartContentWidthRef.current = width;
+              scrollChartToLatest();
+            }}
+            onLayout={(event) => {
+              chartViewportWidthRef.current = event.nativeEvent.layout.width;
+              scrollChartToLatest();
+            }}
+            onScroll={(event) => updateChartEdges(event.nativeEvent.contentOffset.x)}
+            scrollEventThrottle={16}
+          >
+            {chartRows.map((item) => {
+              const total = getMonthTotal(item);
+              const { barHeight, paidHeight, pendingHeight } = getChartSegmentHeights(item, chartMax);
+              const scheduled = isFutureMonth(item.month) && item.total_pending > 0;
+              const selected = item.month === selectedChartMonth;
+
+              return (
+                <TouchableOpacity
+                  key={item.month}
+                  activeOpacity={0.75}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${formatMonth(item.month)} income ${formatCurrency(total)}${scheduled ? ', scheduled' : ''}`}
+                  accessibilityState={{ selected }}
+                  style={styles.chartBarItem}
+                  onPress={() => setSelectedChartMonth((current) => current === item.month ? null : item.month)}
+                >
+                  <View style={[styles.chartBarTrack, selected && styles.chartBarTrackSelected]}>
+                    <View
+                      style={[
+                        styles.chartBarStack,
+                        pendingHeight > 0 && styles.chartBarPending,
+                        { height: barHeight },
+                      ]}
+                    >
+                      {paidHeight > 0 && (
+                        <View
+                          style={[
+                            styles.chartBarSegment,
+                            styles.chartBarPaid,
+                            { height: paidHeight },
+                          ]}
+                        />
+                      )}
+                    </View>
                   </View>
-                </View>
-                <Text style={styles.chartMonthLabel}>{formatChartMonth(item.month, includeYear)}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+                  <Text
+                    style={[styles.chartMonthLabel, selected && styles.chartMonthLabelSelected]}
+                  >
+                    {formatChartMonth(item.month, includeYear)}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+          {chartEdges.left && (
+            <LinearGradient
+              pointerEvents="none"
+              colors={[colors.surface, withAlpha(colors.surface, 0)]}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={[styles.chartEdgeHint, styles.chartEdgeHintLeft]}
+            >
+              <AppIcon name="caretLeft" size={16} color={colors.textSecondary} weight="bold" />
+            </LinearGradient>
+          )}
+          {chartEdges.right && (
+            <LinearGradient
+              pointerEvents="none"
+              colors={[withAlpha(colors.surface, 0), colors.surface]}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={[styles.chartEdgeHint, styles.chartEdgeHintRight]}
+            >
+              <AppIcon name="caretRight" size={16} color={colors.textSecondary} weight="bold" />
+            </LinearGradient>
+          )}
+        </View>
       </View>
     );
   };
 
   const renderListHeader = () => (
     <>
-      {rows.length > 0 && renderPeriodSelector()}
       {visibleRows.length > 0 && (
         <LinearGradient
           colors={heroColors}
@@ -356,47 +473,50 @@ export default function IncomeSummaryScreen() {
           locations={[0, 0.34, 1]}
           style={styles.heroCard}
         >
-          <View style={styles.heroLeft}>
+          <View style={styles.heroHeader}>
             <Text style={styles.heroLabel}>Total Income</Text>
-            <Text style={styles.heroAmount}>{formatCurrency(totalEarned + totalPending)}</Text>
             <Text style={styles.heroSub}>{periodSubtitle}</Text>
-            {monthComparison && (
-              <View
+          </View>
+
+          <Text
+            style={styles.heroAmount}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.72}
+          >
+            {formatCurrency(totalEarned + totalPending)}
+          </Text>
+
+          {monthComparison && (
+            <View
+              style={[
+                styles.heroComparisonBadge,
+                monthComparison.tone === 'positive' && styles.heroComparisonPositive,
+                monthComparison.tone === 'negative' && styles.heroComparisonNegative,
+              ]}
+            >
+              <Text
                 style={[
-                  styles.heroComparisonBadge,
-                  monthComparison.tone === 'positive' && styles.heroComparisonPositive,
-                  monthComparison.tone === 'negative' && styles.heroComparisonNegative,
+                  styles.heroComparisonText,
+                  monthComparison.tone === 'positive' && styles.heroComparisonPositiveText,
+                  monthComparison.tone === 'negative' && styles.heroComparisonNegativeText,
                 ]}
               >
-                <Text
-                  style={[
-                    styles.heroComparisonText,
-                    monthComparison.tone === 'positive' && styles.heroComparisonPositiveText,
-                    monthComparison.tone === 'negative' && styles.heroComparisonNegativeText,
-                  ]}
-                >
-                  {monthComparison.label}
-                </Text>
-              </View>
-            )}
-          </View>
-          <View style={styles.heroRight}>
-            <View style={styles.heroMetric}>
-              <View style={[styles.heroMetricBar, styles.heroMetricBarEarned]} />
-              <View style={styles.heroMetricText}>
-                <Text style={styles.heroMetricLabel}>Earned</Text>
-                <Text style={[styles.heroMetricValue, { color: BrandCore.pink }]}>{formatCurrency(totalEarned)}</Text>
-              </View>
+                {monthComparison.label}
+              </Text>
             </View>
-            <View style={styles.heroMetricDivider} />
+          )}
+
+          <View style={styles.heroMetrics}>
             <View style={styles.heroMetric}>
-              <View style={[styles.heroMetricBar, totalPending > 0 ? styles.heroMetricBarPending : styles.heroMetricBarMuted]} />
-              <View style={styles.heroMetricText}>
-                <Text style={styles.heroMetricLabel}>Pending</Text>
-                <Text style={[styles.heroMetricValue, totalPending > 0 ? styles.pendingMetricValue : styles.zeroMetricValue]}>
-                  {formatCurrency(totalPending)}
-                </Text>
-              </View>
+              <Text style={styles.heroMetricLabel}>Paid</Text>
+              <Text style={[styles.heroMetricValue, { color: BrandCore.pink }]}>{formatCurrency(totalEarned)}</Text>
+            </View>
+            <View style={styles.heroMetric}>
+              <Text style={styles.heroMetricLabel}>Pending</Text>
+              <Text style={[styles.heroMetricValue, totalPending > 0 ? styles.pendingMetricValue : styles.zeroMetricValue]}>
+                {formatCurrency(totalPending)}
+              </Text>
             </View>
           </View>
         </LinearGradient>
@@ -407,13 +527,10 @@ export default function IncomeSummaryScreen() {
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={visibleRows}
-        keyExtractor={(item) => item.month}
-        renderItem={renderItem}
-        contentContainerStyle={visibleRows.length === 0 ? styles.emptyContainer : styles.listContent}
-        ListHeaderComponent={renderListHeader}
-        ListEmptyComponent={
+      {rows.length > 0 && renderPeriodSelector()}
+
+      {visibleRows.length === 0 ? (
+        <View style={styles.emptyContainer}>
           <EmptyState
             icon="chartBar"
             title={rows.length === 0 ? 'No income data yet' : `No income for ${periodSubtitle}`}
@@ -423,8 +540,16 @@ export default function IncomeSummaryScreen() {
                 : 'Use another period to view older income.'
             }
           />
-        }
-      />
+        </View>
+      ) : (
+        <FlatList
+          data={visibleRows}
+          keyExtractor={(item) => item.month}
+          renderItem={renderItem}
+          contentContainerStyle={styles.listContent}
+          ListHeaderComponent={renderListHeader}
+        />
+      )}
 
       <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP.incomeSummary} />
     </View>
@@ -434,49 +559,32 @@ export default function IncomeSummaryScreen() {
 const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   periodSegment: {
-    flexDirection: 'row',
-    overflow: 'hidden',
-    backgroundColor: colors.background,
-    borderColor: colors.border,
-    borderRadius: Radius.full,
-    borderWidth: 1,
     marginHorizontal: Spacing.lg,
     marginTop: Spacing.lg,
     marginBottom: Spacing.sm,
   },
-  periodOption: {
-    alignItems: 'center',
-    flex: 1,
-    height: 58,
-    justifyContent: 'center',
-  },
-  periodLabel: {
-    ...Typography.labelSm,
-    color: colors.textPrimary,
-    lineHeight: 17,
-    textAlign: 'center',
-  },
   heroCard: {
     margin: Spacing.lg,
     marginTop: Spacing.sm,
-    borderRadius: Radius.hero,
-    paddingVertical: Spacing.xxl,
+    borderRadius: Radius.card,
     paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.xl,
+    gap: Spacing.md,
+  },
+  heroHeader: {
+    alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    minHeight: 140,
   },
-  heroLeft: { flex: 1, gap: Spacing.xs },
   heroLabel: {
     ...Typography.labelMd,
     fontFamily: 'Outfit_400Regular', // override: softer weight for hero label context
     color: colors.textSecondary,
   },
   heroAmount: {
-    ...Typography.h1,
-    fontSize: 32, // between h1(24) and heroNum(52) — income hero figure
-    lineHeight: 40,
+    ...Typography.heroNum,
+    fontSize: 40,
+    lineHeight: 48,
     color: colors.textPrimary,
   },
   heroSub: {
@@ -511,30 +619,17 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   heroComparisonNegativeText: {
     color: colors.danger,
   },
-  heroRight: {
-    alignItems: 'flex-end',
-    gap: Spacing.sm,
-    width: 128,
+  heroMetrics: {
+    alignItems: 'stretch',
+    borderTopColor: colors.border,
+    borderTopWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingTop: Spacing.md,
   },
   heroMetric: {
     alignItems: 'center',
-    flexDirection: 'row',
-    gap: Spacing.sm,
-    justifyContent: 'space-between',
-    width: 112,
-  },
-  heroMetricBar: {
-    borderRadius: Radius.full,
-    height: 34,
-    width: 3,
-  },
-  heroMetricBarEarned: { backgroundColor: BrandCore.pink },
-  heroMetricBarPending: { backgroundColor: BrandCore.orange },
-  heroMetricBarMuted: { backgroundColor: colors.border },
-  heroMetricText: {
-    alignItems: 'flex-end',
-    gap: 1,
-    width: 92,
+    gap: Spacing.xs,
   },
   heroMetricLabel: {
     ...Typography.caption,
@@ -542,13 +637,6 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   },
   heroMetricValue: {
     ...Typography.labelLg,
-  },
-  heroMetricDivider: {
-    alignSelf: 'flex-end',
-    backgroundColor: colors.border,
-    height: 1,
-    opacity: 0.7,
-    width: 112,
   },
   pendingMetricValue: { color: BrandCore.orange },
   zeroMetricValue: { color: colors.textMuted },
@@ -562,20 +650,24 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.lg,
     paddingBottom: Spacing.md,
+    position: 'relative',
   },
   chartHeader: {
     alignItems: 'center',
     flexDirection: 'row',
+    gap: Spacing.sm,
     justifyContent: 'space-between',
     marginBottom: Spacing.md,
   },
   chartTitle: {
     ...Typography.labelLg,
     color: colors.textPrimary,
+    flexShrink: 1,
   },
   chartLegend: {
     alignItems: 'center',
     flexDirection: 'row',
+    flexShrink: 0,
     gap: Spacing.sm,
   },
   legendItem: {
@@ -592,10 +684,95 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
     ...Typography.caption,
     color: colors.textSecondary,
   },
+  chartTooltip: {
+    backgroundColor: colors.surfaceRaised,
+    borderColor: colors.border,
+    borderRadius: Radius.card,
+    borderWidth: 1,
+    elevation: 6,
+    left: Spacing.md,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    position: 'absolute',
+    right: Spacing.md,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    top: Spacing.sm,
+    zIndex: 2,
+  },
+  chartTooltipHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: Spacing.xs,
+    justifyContent: 'space-between',
+  },
+  chartTooltipHeading: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    flexShrink: 1,
+    gap: Spacing.xs,
+  },
+  chartTooltipClose: {
+    height: 28,
+    marginRight: -6,
+    width: 28,
+  },
+  chartTooltipMonth: {
+    ...Typography.caption,
+    color: colors.textSecondary,
+  },
+  chartTooltipScheduled: {
+    ...Typography.microLabel,
+    color: BrandCore.orange,
+  },
+  chartTooltipMetrics: {
+    alignItems: 'stretch',
+    flexDirection: 'row',
+    marginTop: Spacing.xs,
+    paddingHorizontal: Spacing.xs,
+  },
+  chartTooltipMetric: {
+    alignItems: 'center',
+    flex: 1,
+    minWidth: 0,
+  },
+  chartTooltipMetricDivider: {
+    backgroundColor: colors.border,
+    width: 1,
+  },
+  chartTooltipMetricLabel: {
+    ...Typography.microLabel,
+    color: colors.textSecondary,
+  },
+  chartTooltipMetricValue: {
+    ...Typography.labelMd,
+    fontWeight: '600',
+  },
+  chartScrollViewport: {
+    position: 'relative',
+  },
+  chartEdgeHint: {
+    alignItems: 'center',
+    bottom: 0,
+    justifyContent: 'center',
+    position: 'absolute',
+    top: 0,
+    width: 32,
+    zIndex: 1,
+  },
+  chartEdgeHintLeft: {
+    left: 0,
+  },
+  chartEdgeHintRight: {
+    right: 0,
+  },
   chartScrollContent: {
     alignItems: 'flex-end',
     gap: Spacing.md,
     minWidth: '100%',
+    paddingRight: Spacing.sm,
     paddingTop: Spacing.xs,
   },
   chartBarItem: {
@@ -607,21 +784,25 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   chartBarTrack: {
     backgroundColor: colors.surfaceRaised,
     borderColor: colors.border,
-    borderRadius: Radius.full,
+    borderRadius: Radius.default,
     borderWidth: 1,
     height: CHART_BAR_HEIGHT,
     justifyContent: 'flex-end',
     overflow: 'hidden',
-    width: 18,
+    width: 24,
+  },
+  chartBarTrackSelected: {
+    borderColor: colors.textSecondary,
   },
   chartBarStack: {
-    borderRadius: Radius.full,
+    alignSelf: 'center',
+    borderTopLeftRadius: Radius.default,
+    borderTopRightRadius: Radius.default,
     justifyContent: 'flex-end',
     overflow: 'hidden',
-    width: '100%',
+    width: 24,
   },
   chartBarSegment: {
-    borderRadius: Radius.full,
     width: '100%',
   },
   chartBarPaid: {
@@ -634,23 +815,24 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
     ...Typography.caption,
     color: colors.textMuted,
     lineHeight: 16,
-    minHeight: 32,
     textAlign: 'center',
   },
-  listContent: { padding: Spacing.lg, gap: Spacing.sm },
+  chartMonthLabelSelected: {
+    color: colors.textPrimary,
+  },
+  listContent: { paddingBottom: Spacing.lg },
   emptyContainer: { flex: 1 },
   monthCard: {
+    ...Elevation.interactive,
     paddingVertical: Spacing.lg,
     paddingHorizontal: Spacing.lg,
     backgroundColor: colors.surface,
-    borderRadius: Radius.item,
+    borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: colors.border,
-    elevation: 4,
     shadowColor: colors.shadow,
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
+    marginHorizontal: Spacing.lg,
+    marginBottom: Spacing.sm,
   },
   monthCardContent: {
     flexDirection: 'row',
@@ -671,9 +853,8 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
     paddingTop: Spacing.xs,
   },
   monthCategory: {
-    alignItems: 'flex-start',
+    alignItems: 'center',
     flexDirection: 'row',
-    gap: Spacing.md,
     justifyContent: 'space-between',
   },
   monthCategorySep: {
@@ -683,16 +864,10 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   monthCategoryLabel: {
     ...Typography.bodySm,
     color: colors.textSecondary,
-    flex: 1,
-  },
-  monthAmounts: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-    justifyContent: 'flex-end',
+    width: 60,
   },
   monthAmountStatus: {
     alignItems: 'center',
-    minWidth: 86,
   },
   monthAmountLabel: { ...Typography.caption, color: colors.textSecondary },
   monthAmount: {

@@ -15,7 +15,7 @@ import {
 } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAppTheme } from '../../theme';
-import { AppThemeColors, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { AppThemeColors, Elevation, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { EnrichedSession, Trainee } from '../../types';
 import {
   getEnrichedSessionById,
@@ -34,9 +34,9 @@ import { getTraineesForSeries, getClassSeriesById } from '../../database/reposit
 import { getTraineesForSession } from '../../database/repositories/sessionTraineeRepository';
 import { formatDisplayDate, formatDisplayTime, isSessionInFuture } from '../../utils/dateUtils';
 import { formatCurrency } from '../../utils/currencyUtils';
-import { withAlpha } from '../../utils/colorUtils';
 import { RootStackParamList } from '../../navigation/types';
 import StatusBadge from '../../components/common/StatusBadge';
+import ColorDotLabel from '../../components/common/ColorDotLabel';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import HelpSheet from '../../components/common/HelpSheet';
 import AppButton from '../../components/common/AppButton';
@@ -46,7 +46,6 @@ import InfoDialog from '../../components/common/InfoDialog';
 import { schedulePendingPaymentNotification } from '../../notifications/scheduler';
 import Constants from 'expo-constants';
 import { HELP } from '../../constants/helpContent';
-import AppBadge from '../../components/common/AppBadge';
 import SectionHeader from '../../components/common/SectionHeader';
 
 const isExpoGo = Constants.appOwnership === 'expo';
@@ -310,12 +309,12 @@ export default function ClassSessionDetailScreen() {
       keyboardShouldPersistTaps="handled"
     >
       {/* Hero strip */}
-      <View style={[styles.heroStrip, { borderLeftColor: withAlpha(session.class_type_color, 0.7) }]}>
-        <Text style={styles.heroTitle}>{session.series_title}</Text>
+      <View style={styles.heroStrip}>
         <View style={styles.badgeRow}>
-          <AppBadge label={session.class_type_name} accentColor={session.class_type_color} />
+          <ColorDotLabel color={session.class_type_color} label={session.class_type_name} />
           <StatusBadge status={session.status} />
         </View>
+        <Text style={styles.heroTitle}>{session.series_title}</Text>
       </View>
 
       {/* Details card */}
@@ -639,11 +638,8 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   content: { padding: Spacing.lg, gap: Spacing.md, paddingBottom: Spacing.lg },
   contentWithFooter: { paddingBottom: Spacing.xxl },
   heroStrip: {
-    borderLeftWidth: 4,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.lg,
+    padding: Spacing.md,
     borderRadius: Radius.card,
-    gap: Spacing.sm,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
@@ -652,19 +648,21 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
     ...Typography.h2,
     color: colors.textPrimary,
   },
-  badgeRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, flexWrap: 'wrap' },
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: Spacing.sm,
+    marginBottom: Spacing.xs,
+  },
   detailCard: {
+    ...Elevation.flat,
     backgroundColor: colors.surface,
     borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: colors.border,
     padding: Spacing.lg,
     gap: Spacing.sm,
-    elevation: 4,
-    shadowColor: colors.shadow,
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
   },
   cardLabel: {
     color: colors.textSecondary,

@@ -6,6 +6,7 @@ interface Props {
   icon: AppIconName;
   iconColor: string;
   onPress: () => void;
+  accessibilityLabel?: string;
   size?: number;
   style?: StyleProp<ViewStyle>;
   disabled?: boolean;
@@ -15,6 +16,7 @@ export default function AppIconButton({
   icon,
   iconColor,
   onPress,
+  accessibilityLabel,
   size = 24,
   style,
   disabled,
@@ -22,6 +24,7 @@ export default function AppIconButton({
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
       disabled={disabled}
       hitSlop={8}
       onPress={onPress}

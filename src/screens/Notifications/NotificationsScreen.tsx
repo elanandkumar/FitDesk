@@ -114,7 +114,7 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
     alignItems: 'flex-start',
     gap: Spacing.md,
     backgroundColor: colors.surface,
-    borderRadius: Radius.item,
+    borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: colors.border,
     padding: Spacing.md,
@@ -140,7 +140,7 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   unreadDot: {
     width: 7,
     height: 7,
-    borderRadius: 4,
+    borderRadius: Radius.full,
     flexShrink: 0,
   },
   itemBodyText: { ...Typography.bodySm, color: colors.textSecondary },

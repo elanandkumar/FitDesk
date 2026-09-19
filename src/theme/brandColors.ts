@@ -7,6 +7,21 @@ export const BrandCore = {
   orange: '#FF7A00',
 } as const;
 
+export const Elevation = {
+  flat: {
+    elevation: 0,
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  interactive: {
+    elevation: 1,
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1 },
+  },
+} as const;
+
 export interface AppThemeColors {
   background: string;
   surface: string;
@@ -171,14 +186,17 @@ export function getBadgeTones(mode: ResolvedThemeMode): ResolvedBadgeTones {
 /** @deprecated Dark-only compatibility export. Use getBadgeTones(mode). */
 export const BadgeTones = BadgeTonePalettes.dark;
 
+const DEFAULT_RADIUS = 8;
+
 export const Radius = {
-  xs:   2,   // accent lines, tiny indicators
-  sm:   6,   // chips, segment items
-  md:   8,   // icon backgrounds, small boxes, picker fields
-  lg:   12,  // buttons, searchbars, modals
-  card: 16,  // section cards, info cards
-  item: 20,  // list item cards
-  hero: 24,  // hero sections, large containers
+  default: DEFAULT_RADIUS,
+  // Compatibility aliases: every non-circular surface uses the same radius.
+  xs: DEFAULT_RADIUS,
+  sm: DEFAULT_RADIUS,
+  md: DEFAULT_RADIUS,
+  lg: DEFAULT_RADIUS,
+  card: DEFAULT_RADIUS,
+  hero: DEFAULT_RADIUS,
   full: 999, // pills, badges, circles
 } as const;
 

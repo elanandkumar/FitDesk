@@ -8,7 +8,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAppTheme } from '../../theme';
-import { AppThemeColors, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { AppThemeColors, Elevation, Layout, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { Trainee } from '../../types';
 import { getAllTrainees } from '../../database/repositories/traineeRepository';
 import EmptyState from '../../components/common/EmptyState';
@@ -91,10 +91,10 @@ export default function TraineeListScreen() {
                   <Text style={[styles.avatarText, { color: accentPalette.textAccent }]}>{initials(item.name)}</Text>
                 </View>
                 <View style={styles.cardContent}>
-                  <Text style={styles.cardTitle}>{item.name}</Text>
+                  <Text style={styles.cardTitle} numberOfLines={2}>{item.name}</Text>
                   {(item.phone || item.email) && (
                     <Text style={styles.cardSub} numberOfLines={1}>
-                      {item.phone ?? item.email}
+                      {[item.phone, item.email].filter(Boolean).join(' · ')}
                     </Text>
                   )}
                 </View>
@@ -118,23 +118,20 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   searchbar: { margin: Spacing.md, borderRadius: Radius.lg, elevation: 0, borderWidth: 1, borderColor: colors.border },
   listContent: { paddingHorizontal: Spacing.md, paddingBottom: Layout.LIST_PAD_WITH_FAB },
   cardShadow: {
+    ...Elevation.interactive,
     backgroundColor: colors.surface,
-    borderRadius: Radius.item,
+    borderRadius: Radius.card,
     marginBottom: Spacing.sm,
-    elevation: 4,
     shadowColor: colors.shadow,
-    shadowOpacity: 0.15,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 6,
   },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.surface,
-    borderRadius: Radius.item,
+    borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingVertical: Spacing.lg,
+    paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.lg,
     gap: Spacing.md,
   },
@@ -149,9 +146,9 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
     justifyContent: 'center',
   },
   avatarText: { ...Typography.bodyLg, fontWeight: '700', color: colors.textPrimary },
-  cardContent: { flex: 1 },
+  cardContent: { flex: 1, gap: Spacing.xs },
   cardTitle: { ...Typography.h4, color: colors.textPrimary },
-  cardSub: { ...Typography.labelMd, fontFamily: 'Outfit_400Regular', color: colors.textSecondary, marginTop: 0 },
+  cardSub: { ...Typography.bodySm, color: colors.textSecondary },
   fab: {
     position: 'absolute',
     right: Spacing.lg,

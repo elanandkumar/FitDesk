@@ -263,8 +263,8 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   },
   sheet: {
     backgroundColor: colors.surfaceRaised,
-    borderTopLeftRadius: Radius.item,
-    borderTopRightRadius: Radius.item,
+    borderTopLeftRadius: Radius.card,
+    borderTopRightRadius: Radius.card,
     borderTopWidth: 1,
     borderTopColor: colors.border,
     paddingHorizontal: Spacing.lg,

@@ -19,6 +19,7 @@ export default function GradientFAB({ icon, onPress, style, color = '#FFFFFF' }:
     <View style={[styles.shadow, { shadowColor: accentPalette.main }, style]}>
       <Pressable
         onPress={onPress}
+        hitSlop={6}
         android_ripple={{ color: 'rgba(255,255,255,0.2)', borderless: false }}
         style={styles.pressable}
       >
@@ -37,19 +38,19 @@ export default function GradientFAB({ icon, onPress, style, color = '#FFFFFF' }:
 
 const styles = StyleSheet.create({
   shadow: {
-    borderRadius: Radius.card,
+    borderRadius: Radius.default,
     elevation: 8,
     shadowOpacity: 0.5,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
   },
   pressable: {
-    borderRadius: Radius.card,
+    borderRadius: Radius.default,
     overflow: 'hidden',
   },
   gradient: {
-    width: 48,
-    height: 48,
+    width: 36,
+    height: 36,
     alignItems: 'center',
     justifyContent: 'center',
   },

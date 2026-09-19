@@ -19,6 +19,8 @@ import { schedulePendingPaymentNotification } from '../../notifications/schedule
 import Constants from 'expo-constants';
 import { RootStackParamList } from '../../navigation/types';
 import AppIcon from '../../components/common/AppIcon';
+import AccentListCard from '../../components/common/AccentListCard';
+import ColorDotLabel from '../../components/common/ColorDotLabel';
 
 const isExpoGo = Constants.appOwnership === 'expo';
 
@@ -30,7 +32,7 @@ export default function OrganizerPaymentDetailScreen() {
   const styles = useMemo(() => createStyles(colors), [colors]);
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
-  const { organizerId, organizerName } = route.params;
+  const { organizerId, organizerName, pendingOnly, sortOrder } = route.params;
 
   const [payments, setPayments] = useState<EnrichedOrganizerPayment[]>([]);
   const [confirmPayment, setConfirmPayment] = useState<EnrichedOrganizerPayment | null>(null);
@@ -39,6 +41,17 @@ export default function OrganizerPaymentDetailScreen() {
   const pendingTotal = payments.filter(p => p.status === 'pending').reduce((s, p) => s + p.amount, 0);
   const paidTotal = payments.filter(p => p.status === 'paid').reduce((s, p) => s + p.amount, 0);
   const sessionCount = payments.length;
+  const sortedPayments = useMemo(() => {
+    if (sortOrder === 'pending') return payments;
+
+    const direction = sortOrder === 'az' ? 1 : -1;
+    return [...payments].sort((a, b) => {
+      const titleComparison = a.series_title.localeCompare(b.series_title);
+      if (titleComparison !== 0) return titleComparison * direction;
+      return b.session_date.localeCompare(a.session_date);
+    });
+  }, [payments, sortOrder]);
+  const sortLabel = sortOrder === 'pending' ? 'Pending first' : sortOrder === 'az' ? 'A-Z' : 'Z-A';
 
   useLayoutEffect(() => {
     navigation.setOptions({ title: organizerName });
@@ -46,12 +59,12 @@ export default function OrganizerPaymentDetailScreen() {
 
   const load = useCallback(async () => {
     try {
-      const data = await getEnrichedOrganizerPaymentsByOrganizer(organizerId);
+      const data = await getEnrichedOrganizerPaymentsByOrganizer(organizerId, pendingOnly);
       setPayments(data);
     } catch {
       // list stays empty on DB error
     }
-  }, [organizerId]);
+  }, [organizerId, pendingOnly]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
@@ -69,56 +82,70 @@ export default function OrganizerPaymentDetailScreen() {
   };
 
   const renderItem = ({ item }: { item: EnrichedOrganizerPayment }) => (
-    <View style={styles.item}>
-      <View style={styles.itemMainRow}>
-        <View style={[styles.dot, { backgroundColor: item.class_type_color }]} />
-        <View style={styles.itemText}>
-          <Text style={styles.itemTitle}>{item.series_title}</Text>
-          <Text style={styles.itemSub}>
-            {formatDisplayDate(item.session_date)} · {formatDisplayTime(item.class_time)}
-          </Text>
+    <AccentListCard
+      accentColor={item.class_type_color}
+      showAccentRail={false}
+      dense
+      style={styles.item}
+    >
+      <View style={styles.itemContent}>
+        <View style={styles.itemMainRow}>
+          <View style={styles.itemText}>
+            <ColorDotLabel color={item.class_type_color} label={item.series_title} style={styles.itemTitle} />
+            <Text style={styles.itemSub}>
+              {formatDisplayDate(item.session_date)} · {formatDisplayTime(item.class_time)}
+            </Text>
+          </View>
+          <View style={styles.itemStatus}>
+            <Text style={styles.amountLabel}>{item.status === 'paid' ? 'Paid' : 'Pending'}</Text>
+            <Text style={[styles.amount, item.status === 'paid' ? styles.paidAmount : styles.pendingAmount]}>
+              {formatCurrency(item.amount)}
+            </Text>
+          </View>
         </View>
-        <View style={styles.itemStatus}>
-          <Text style={styles.amountLabel}>{item.status === 'paid' ? 'Paid' : 'Pending'}</Text>
-          <Text style={[styles.amount, item.status === 'paid' ? styles.paidAmount : styles.pendingAmount]}>
-            {formatCurrency(item.amount)}
-          </Text>
-        </View>
+        {item.status === 'pending' ? (
+          <View style={styles.itemActionRow}>
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={`Mark ${formatCurrency(item.amount)} as paid`}
+              activeOpacity={0.72}
+              hitSlop={6}
+              style={[styles.markPaidBtn, { borderColor: accentPalette.main }]}
+              onPress={() => setConfirmPayment(item)}
+            >
+              <AppIcon name="check" size={14} color={accentPalette.main} weight="bold" />
+              <Text style={[styles.markPaidText, { color: accentPalette.main }]}>Mark Paid</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
       </View>
-      {item.status === 'pending' ? (
-        <View style={styles.itemActionRow}>
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel={`Mark ${formatCurrency(item.amount)} as paid`}
-            activeOpacity={0.72}
-            hitSlop={6}
-            style={[styles.markPaidBtn, { borderColor: accentPalette.main }]}
-            onPress={() => setConfirmPayment(item)}
-          >
-            <AppIcon name="check" size={14} color={accentPalette.main} weight="bold" />
-            <Text style={[styles.markPaidText, { color: accentPalette.main }]}>Mark Paid</Text>
-          </TouchableOpacity>
-        </View>
-      ) : null}
-    </View>
+    </AccentListCard>
   );
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <Text style={styles.filterSummary}>
+        {pendingOnly ? 'Pending only' : 'All payments'} · {sortLabel}
+      </Text>
+
       {payments.length > 0 && (
         <View style={styles.summaryCard}>
-          <View style={styles.summaryCountItem}>
+          <View style={styles.summaryItem}>
             <Text style={styles.summaryLabel}>Sessions</Text>
             <Text style={styles.summaryValue}>{sessionCount}</Text>
           </View>
           <View style={styles.summarySep} />
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Paid</Text>
-            <Text style={[styles.summaryValue, styles.paidAmount]}>
-              {formatCurrency(paidTotal)}
-            </Text>
-          </View>
-          <View style={styles.summarySep} />
+          {!pendingOnly && (
+            <>
+              <View style={styles.summaryItem}>
+                <Text style={styles.summaryLabel}>Paid</Text>
+                <Text style={[styles.summaryValue, styles.paidAmount]}>
+                  {formatCurrency(paidTotal)}
+                </Text>
+              </View>
+              <View style={styles.summarySep} />
+            </>
+          )}
           <View style={styles.summaryItem}>
             <Text style={styles.summaryLabel}>Pending</Text>
             <Text style={[styles.summaryValue, styles.pendingAmount]}>
@@ -129,14 +156,18 @@ export default function OrganizerPaymentDetailScreen() {
       )}
 
       <FlatList
-        data={payments}
+        data={sortedPayments}
         keyExtractor={(item) => String(item.id)}
         renderItem={renderItem}
         ListEmptyComponent={
           <EmptyState
             icon="handCoins"
-            title="No payments"
-            subtitle="No payments found for this organizer."
+            title={pendingOnly ? 'No pending payments' : 'No payments'}
+            subtitle={
+              pendingOnly
+                ? 'All payments for this organizer are settled.'
+                : 'No payments found for this organizer.'
+            }
           />
         }
         contentContainerStyle={payments.length === 0 ? styles.emptyContainer : styles.listContent}
@@ -168,8 +199,15 @@ export default function OrganizerPaymentDetailScreen() {
 
 const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   container: { flex: 1 },
+  filterSummary: {
+    ...Typography.bodySm,
+    color: colors.textSecondary,
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.md,
+  },
   summaryCard: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     backgroundColor: colors.surfaceRaised,
     borderRadius: Radius.card,
     borderWidth: 1,
@@ -180,32 +218,25 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.md,
   },
-  summaryItem: { flex: 1, alignItems: 'center' },
-  summaryCountItem: { flex: 0.75, alignItems: 'center' },
+  summaryItem: { alignItems: 'center', flexShrink: 1 },
   summaryLabel: { ...Typography.bodySm, fontWeight: '500', color: colors.textSecondary, marginBottom: Spacing.xs },
   summaryValue: { ...Typography.h3, color: colors.textPrimary },
   summarySep: { width: 1, backgroundColor: colors.border, marginVertical: 2 },
   listContent: { paddingHorizontal: Spacing.md, paddingTop: Spacing.sm, paddingBottom: Layout.LIST_PAD_NO_FAB },
   emptyContainer: { flex: 1 },
   item: {
-    backgroundColor: colors.surface,
-    borderRadius: Radius.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
     marginBottom: Spacing.xs,
   },
+  itemContent: { flex: 1 },
   itemMainRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
   },
-  dot: { width: 10, height: 10, borderRadius: Radius.full, flexShrink: 0 },
   itemText: { flex: 1 },
-  itemTitle: { ...Typography.body, fontWeight: '500', color: colors.textPrimary },
+  itemTitle: { ...Typography.body, fontWeight: '500', color: colors.textPrimary, flexShrink: 1 },
   itemSub: { ...Typography.bodySm, color: colors.textSecondary, marginTop: 0 },
-  itemStatus: { alignItems: 'center', minWidth: 86 },
+  itemStatus: { alignItems: 'center', flexShrink: 0 },
   amountLabel: { ...Typography.caption, color: colors.textSecondary },
   amount: { ...Typography.h4, fontWeight: '700' },
   paidAmount: { color: BrandCore.pink },

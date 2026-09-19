@@ -4,7 +4,7 @@ import { Text } from 'react-native-paper';
 import { useFocusEffect, useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { AppThemeColors, BrandCore, Radius, Spacing, Typography } from '../../theme/brandColors';
+import { AppThemeColors, BrandCore, Elevation, Radius, Spacing, Typography } from '../../theme/brandColors';
 import { useAppTheme } from '../../theme';
 import { RootStackParamList } from '../../navigation/types';
 import { OrganizerMonthIncome, TraineeMonthPackage } from '../../types';
@@ -30,8 +30,11 @@ function AmountStatus({ amount, status }: { amount: number; status: 'paid' | 'pe
 
   return (
     <View style={styles.amountStatus}>
-      <Text style={styles.amountLabel}>{status === 'paid' ? 'Paid' : 'Pending'}</Text>
-      <Text style={[styles.amount, status === 'pending' ? styles.pendingAmount : styles.paidAmount]}>
+      <Text style={styles.amountLabel} numberOfLines={1}>{status === 'paid' ? 'Paid' : 'Pending'}</Text>
+      <Text
+        style={[styles.amount, status === 'pending' ? styles.pendingAmount : styles.paidAmount]}
+        numberOfLines={1}
+      >
         {formatCurrency(amount)}
       </Text>
     </View>
@@ -71,7 +74,7 @@ export default function IncomeMonthDetailScreen() {
         style={styles.scroll}
         contentContainerStyle={[
           hasData ? styles.content : styles.emptyContent,
-          hasData && { paddingBottom: 132 + insets.bottom },
+          hasData && { paddingBottom: 104 + insets.bottom },
         ]}
       >
         {!hasData && (
@@ -84,11 +87,9 @@ export default function IncomeMonthDetailScreen() {
             {organizers.map((m) => (
               <View key={`organizer-${m.organizer_id}`} style={styles.itemCard}>
                 <View style={styles.itemRow}>
-                  <Text variant="bodyMedium" style={styles.itemName}>{m.organizer_name}</Text>
-                  <View style={styles.amounts}>
-                    {m.paid > 0 && <AmountStatus amount={m.paid} status="paid" />}
-                    {m.pending > 0 && <AmountStatus amount={m.pending} status="pending" />}
-                  </View>
+                  <Text variant="bodyMedium" style={styles.itemName} numberOfLines={1}>{m.organizer_name}</Text>
+                  {m.paid > 0 && <AmountStatus amount={m.paid} status="paid" />}
+                  {m.pending > 0 && <AmountStatus amount={m.pending} status="pending" />}
                 </View>
               </View>
             ))}
@@ -101,15 +102,13 @@ export default function IncomeMonthDetailScreen() {
             {packages.map((p) => (
               <View key={`package-${p.package_id}`} style={styles.itemCard}>
                 <View style={styles.itemRow}>
-                  <View style={{ flex: 1 }}>
-                    <Text variant="bodyMedium" style={styles.itemName}>{p.trainee_name}</Text>
+                  <View>
+                    <Text variant="bodyMedium" style={styles.itemName} numberOfLines={1}>{p.trainee_name}</Text>
                     <Text variant="bodySmall" style={{ color: colors.textMuted }}>
                       {p.used_sessions}/{p.total_sessions} sessions
                     </Text>
                   </View>
-                  <View style={styles.amounts}>
-                    <AmountStatus amount={p.amount} status={p.status === 'paid' ? 'paid' : 'pending'} />
-                  </View>
+                  <AmountStatus amount={p.amount} status={p.status === 'paid' ? 'paid' : 'pending'} />
                 </View>
               </View>
             ))}
@@ -120,11 +119,11 @@ export default function IncomeMonthDetailScreen() {
       {hasData && (
         <View style={[styles.footer, { paddingBottom: insets.bottom + Spacing.md }]}>
           <View style={styles.totalCard}>
-            <View style={styles.totalText}>
+            <View style={styles.totalHeader}>
               <Text style={styles.totalLabel}>Month Total</Text>
-              <Text style={styles.totalSub}>Organizer sessions + trainee packages</Text>
+              <Text style={styles.totalAmount}>{formatCurrency(grandTotal)}</Text>
             </View>
-            <Text style={styles.totalAmount}>{formatCurrency(grandTotal)}</Text>
+            <Text style={styles.totalSub}>Organizer sessions + trainee packages</Text>
           </View>
         </View>
       )}
@@ -138,17 +137,13 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   content: { padding: Spacing.lg, gap: Spacing.sm },
   emptyContent: { flexGrow: 1 },
   itemCard: {
+    ...Elevation.flat,
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.lg,
     backgroundColor: colors.surface,
     borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: colors.border,
-    elevation: 4,
-    shadowColor: colors.shadow,
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
   },
   itemRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   itemName: { color: colors.textPrimary, fontWeight: '600' },
@@ -156,18 +151,9 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   amount: { ...Typography.h4, fontWeight: '700' },
   paidAmount: { color: BrandCore.pink },
   pendingAmount: { color: BrandCore.orange },
-  amounts: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: Spacing.sm,
-    marginLeft: Spacing.md,
-  },
-  amountStatus: { alignItems: 'center', minWidth: 86 },
+  amountStatus: { alignItems: 'center' },
   totalCard: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: Spacing.lg,
+    paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.lg,
     backgroundColor: colors.surfaceRaised,
     borderRadius: Radius.card,
@@ -185,8 +171,13 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
     position: 'absolute',
     right: 0,
   },
-  totalText: { flex: 1, marginRight: Spacing.md },
+  totalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
   totalLabel: { ...Typography.labelLg, color: colors.textPrimary },
   totalSub: { ...Typography.bodySm, color: colors.textSecondary, marginTop: 2 },
-  totalAmount: { ...Typography.h1, color: colors.textPrimary },
+  totalAmount: { ...Typography.h2, color: colors.textPrimary },
 });

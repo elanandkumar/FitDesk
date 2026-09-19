@@ -27,6 +27,8 @@ import { DEFAULT_DURATION_MINUTES } from '../../constants';
 import { scheduleUpcomingNotifications } from '../../notifications/scheduler';
 import GradientButton from '../../components/common/GradientButton';
 import AppButton from '../../components/common/AppButton';
+import AppNotesInput from '../../components/common/AppNotesInput';
+import CurrencyInput from '../../components/common/CurrencyInput';
 
 type Nav = StackNavigationProp<RootStackParamList, 'AddSession'>;
 type Route = RouteProp<RootStackParamList, 'AddSession'>;
@@ -198,8 +200,10 @@ export default function AddSessionScreen() {
           />
 
           <View style={styles.fieldGap} />
+          <Text variant="labelMedium" style={styles.fieldLabel}>Title</Text>
           <TextInput
-            label={`Title (default: ${selectedClassType?.name ?? 'Class'} (Ad-hoc))`}
+            accessibilityLabel="Title"
+            placeholder={`Default: ${selectedClassType?.name ?? 'Class'} (Ad-hoc)`}
             value={title}
             onChangeText={setTitle}
             mode="outlined"
@@ -237,15 +241,12 @@ export default function AddSessionScreen() {
               />
 
               <View style={styles.fieldGap} />
-              <TextInput
-                label="Agreed amount *"
+              <Text variant="labelMedium" style={styles.fieldLabel}>Agreed Amount *</Text>
+              <CurrencyInput
+                accessibilityLabel="Agreed Amount"
+                placeholder="Enter amount"
                 value={agreedAmount}
                 onChangeText={(value) => setAgreedAmount(value.replace(/[^0-9.]/g, ''))}
-                keyboardType="decimal-pad"
-                mode="outlined"
-                dense
-                style={styles.textInput}
-                left={<TextInput.Affix text="₹" />}
               />
               {selectedOrganizer !== undefined && selectedOrganizer.per_class_rate > 0 && (
                 <Text variant="bodySmall" style={styles.fieldHint}>
@@ -328,8 +329,10 @@ export default function AddSessionScreen() {
           </View>
 
           <View style={styles.fieldGap} />
+          <Text variant="labelMedium" style={styles.fieldLabel}>Duration (min)</Text>
           <TextInput
-            label="Duration (min) (optional)"
+            accessibilityLabel="Duration in minutes"
+            placeholder="Enter duration"
             value={duration}
             onChangeText={(v) => setDuration(v.replace(/[^0-9]/g, ''))}
             keyboardType="numeric"
@@ -342,7 +345,8 @@ export default function AddSessionScreen() {
         <SectionHeader label="Location" />
         <View style={styles.card}>
           <TextInput
-            label="Address (optional)"
+            accessibilityLabel="Address"
+            placeholder="Enter address"
             value={location}
             onChangeText={setLocation}
             mode="outlined"
@@ -353,12 +357,9 @@ export default function AddSessionScreen() {
 
         <SectionHeader label="Notes" />
         <View style={styles.card}>
-          <TextInput
-            label="Notes (optional)"
+          <AppNotesInput
             value={notes}
             onChangeText={setNotes}
-            mode="outlined"
-            multiline
             numberOfLines={2}
           />
         </View>

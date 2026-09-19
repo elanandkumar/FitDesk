@@ -179,10 +179,10 @@ export default function QuickAddSessionModal({ visible, initialDate, onDismiss, 
               }))
             }
             buttons={[
-              { value: 'organizer', label: 'Organizer', style: { borderRadius: Radius.sm } },
-              { value: 'personal', label: 'Personal', style: { borderRadius: Radius.sm } },
+              { value: 'organizer', label: 'Organizer' },
+              { value: 'personal', label: 'Personal' },
             ]}
-            style={{ marginBottom: 8, borderRadius: Radius.sm }}
+            style={{ marginBottom: 8 }}
           />
 
           {/* Organizer picker */}
@@ -391,7 +391,7 @@ export default function QuickAddSessionModal({ visible, initialDate, onDismiss, 
 }
 
 const styles = StyleSheet.create({
-  modal: { margin: Spacing.lg, borderRadius: Radius.lg, padding: Spacing.xxl, maxHeight: '90%' },
+  modal: { margin: Spacing.lg, borderRadius: Radius.card, padding: Spacing.xxl, maxHeight: '90%' },
   label: { marginBottom: Spacing.xs, marginTop: Spacing.xs },
   input: { marginBottom: Spacing.sm },
   actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: Spacing.sm, marginTop: Spacing.sm },
