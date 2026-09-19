@@ -16,6 +16,7 @@ Options:
   --format <aab|apk>      Android artifact format. Defaults to aab for Play Store uploads.
   --previous-tag <tag>    Compare commits after this tag. Defaults to latest semver tag before current tag.
   --target <ref>          Commit/ref to tag. Defaults to HEAD.
+  --notes-file <path>     Use curated Markdown instead of generating notes from git.
   --github-release        Push the tag and create a GitHub release with gh after build/tag.
   --draft                 Create the GitHub release as a draft.
   --prerelease            Mark the GitHub release as a prerelease.
@@ -28,6 +29,7 @@ Options:
 Examples:
   scripts/release.sh
   scripts/release.sh --version 1.2.2 --version-code 5 --update-version --commit-version
+  scripts/release.sh --version 1.2.2 --notes-file release-notes/v1.2.2.md
   scripts/release.sh --format apk --github-release --draft
 EOF
 }
@@ -52,6 +54,7 @@ commit_version=false
 format="aab"
 previous_tag=""
 target_ref="HEAD"
+custom_notes_file=""
 github_release=false
 draft=false
 prerelease=false
@@ -95,6 +98,11 @@ while [[ $# -gt 0 ]]; do
       target_ref="$2"
       shift 2
       ;;
+    --notes-file)
+      [[ $# -ge 2 ]] || die "--notes-file requires a value"
+      custom_notes_file="$2"
+      shift 2
+      ;;
     --github-release)
       github_release=true
       shift
@@ -136,6 +144,7 @@ done
 
 [[ "$format" == "aab" || "$format" == "apk" ]] || die "--format must be aab or apk"
 [[ -z "$version_code" || "$version_code" =~ ^[0-9]+$ ]] || die "--version-code must be a number"
+[[ -z "$custom_notes_file" || -f "$custom_notes_file" ]] || die "notes file not found: $custom_notes_file"
 
 command -v node >/dev/null 2>&1 || die "node is required"
 [[ -f package.json ]] || die "package.json not found"
@@ -240,7 +249,6 @@ const releaseNotes = fs.readFileSync(releaseNotesPath, 'utf8');
 const existingEntryPattern = new RegExp(
   `\\n  \\{\\n    version: ${quote(version).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')},[\\s\\S]*?\\n  \\},`
 );
-const withoutExistingEntry = releaseNotes.replace(existingEntryPattern, '');
 const entry = [
   '  {',
   `    version: ${quote(version)},`,
@@ -250,12 +258,15 @@ const entry = [
   '    ],',
   '  },',
 ].join('\n');
-const updatedReleaseNotes = withoutExistingEntry.replace(
-  'export const RELEASE_NOTES: readonly ReleaseNote[] = [',
-  `export const RELEASE_NOTES: readonly ReleaseNote[] = [\n${entry}`
-);
+const hasExistingEntry = existingEntryPattern.test(releaseNotes);
+const updatedReleaseNotes = hasExistingEntry
+  ? releaseNotes
+  : releaseNotes.replace(
+      'export const RELEASE_NOTES: readonly ReleaseNote[] = [',
+      `export const RELEASE_NOTES: readonly ReleaseNote[] = [\n${entry}`
+    );
 
-if (updatedReleaseNotes === withoutExistingEntry) {
+if (!hasExistingEntry && updatedReleaseNotes === releaseNotes) {
   throw new Error('Could not update src/constants/releases.ts');
 }
 
@@ -284,9 +295,10 @@ if [[ "$skip_build" == false ]]; then
 fi
 
 mkdir -p dist/releases
-notes_file="dist/releases/${tag}.md"
+notes_file="${custom_notes_file:-dist/releases/${tag}.md}"
 
-node - "$tag" "$version" "$previous_tag" "$compare_range" "$notes_file" "$artifact" <<'NODE'
+if [[ -z "$custom_notes_file" ]]; then
+  node - "$tag" "$version" "$previous_tag" "$compare_range" "$notes_file" "$artifact" <<'NODE'
 const fs = require('fs');
 const { execFileSync } = require('child_process');
 
@@ -352,6 +364,7 @@ lines.push('## Version', `- Version: ${version}`, '');
 
 fs.writeFileSync(notesFile, lines.join('\n'));
 NODE
+fi
 
 if [[ "$dry_run" == false ]]; then
   if git rev-parse --verify --quiet "refs/tags/$tag" >/dev/null; then

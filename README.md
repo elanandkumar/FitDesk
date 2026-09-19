@@ -107,6 +107,14 @@ npm run release -- --version 1.2.3 --version-code 6 --update-version --commit-ve
 
 This updates the app version files and in-app What's New notes, commits the version bump, builds `bundleRelease`, generates notes in `dist/releases/`, creates an annotated tag like `v1.2.3`, and publishes a GitHub release when the `gh` CLI is available.
 
+To use curated GitHub release notes instead of generating them from commit messages, save the Markdown in the repository and pass it to the release command:
+
+```bash
+npm run release -- --version 1.5.0 --version-code 9 --update-version --commit-version --notes-file release-notes/v1.5.0.md --github-release
+```
+
+When `src/constants/releases.ts` already contains an entry for the requested version, the release helper preserves that curated in-app entry.
+
 For a local APK build instead:
 
 ```bash
