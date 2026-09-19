@@ -34,7 +34,7 @@ export function BackupProvider({ children }: { children: React.ReactNode }) {
       setIsBackupOverdue(true);
       insertNotificationIfNew(
         'backup_overdue',
-        'Back up FitDesk',
+        'Back up Solo Class HQ',
         "Your data has never been backed up."
       ).catch(() => {});
       return;
@@ -45,7 +45,7 @@ export function BackupProvider({ children }: { children: React.ReactNode }) {
     if (overdue) {
       insertNotificationIfNew(
         'backup_overdue',
-        'Back up FitDesk',
+        'Back up Solo Class HQ',
         `Your data hasn't been backed up in ${Math.floor(daysSince)} days.`
       ).catch(() => {});
     }

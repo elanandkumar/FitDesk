@@ -356,7 +356,7 @@ export default function SettingsScreen() {
           resizeMode="contain"
         />
         <Text style={styles.version}>{versionLabel}</Text>
-        <Text style={styles.tagline}>Your fitness class companion</Text>
+        <Text style={styles.tagline}>Teach. Track. Earn.</Text>
       </View>
 
       <HelpSheet visible={helpVisible} onDismiss={() => setHelpVisible(false)} content={HELP.settings} />
@@ -432,8 +432,8 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   minutesLabel: { ...Typography.labelMd, fontFamily: 'Outfit_400Regular', color: colors.textSecondary },
   about: { alignItems: 'center', paddingTop: Spacing.section, paddingBottom: Spacing.lg, gap: Spacing.xs },
   logoImage: {
-    width: 120,
-    height: 30,
+    width: 200,
+    height: 46,
     marginBottom: Spacing.xs,
   },
   version: { ...Typography.labelMd, fontFamily: 'Outfit_400Regular', color: colors.textMuted },

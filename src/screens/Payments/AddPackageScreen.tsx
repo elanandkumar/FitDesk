@@ -118,7 +118,7 @@ export default function AddPackageScreen() {
       const maxSessions = maxSixDayWeekSessionsForMonth(month);
       if (parsedTotalSessions > maxSessions) {
         setErrorMessage(
-          `${formatMonth(month)} supports up to ${maxSessions} package session${maxSessions === 1 ? '' : 's'} with FitDesk's one-session-per-day scheduling.`
+          `${formatMonth(month)} supports up to ${maxSessions} package session${maxSessions === 1 ? '' : 's'} with Solo Class HQ's one-session-per-day scheduling.`
         );
         return;
       }

@@ -39,7 +39,7 @@ const createSlides = (): Slide[] => [
   {
     key: "1",
     icon: "barbell",
-    title: "Welcome to FitDesk",
+    title: "Welcome to Solo Class HQ",
     body: "Your personal fitness class companion. Manage your classes, clients, and payments — all in one place, right on your device.",
   },
   {
@@ -262,8 +262,8 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
     gap: Spacing.xxl,
   },
   logoImage: {
-    width: 100,
-    height: 30,
+    width: 180,
+    height: 42,
   },
   namePhase: { flex: 1 },
   nameContent: {

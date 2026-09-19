@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "FitDesk",
+    "name": "Solo Class HQ",
     "slug": "fitdesk",
     "version": "1.4.0",
     "orientation": "portrait",
@@ -21,7 +21,7 @@
       ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundColor": "#111018",
+        "backgroundColor": "#6724F9",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false
@@ -37,19 +37,19 @@
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
-          "color": "#7B35FF"
+          "color": "#6D28D9"
         }
       ],
       "expo-font",
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#111018",
+          "backgroundColor": "#6724F9",
           "image": "./assets/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "dark": {
-            "backgroundColor": "#111018",
+            "backgroundColor": "#6724F9",
             "image": "./assets/splash-icon.png"
           }
         }

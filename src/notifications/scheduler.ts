@@ -145,7 +145,7 @@ export async function scheduleBackupReminderNotification(): Promise<void> {
   await Notifications.scheduleNotificationAsync({
     identifier: BACKUP_REMINDER_ID,
     content: {
-      title: 'Back up FitDesk',
+      title: 'Back up Solo Class HQ',
       body: "Your data hasn't been backed up in a while. Tap to export.",
       data: { type: 'backup-reminder' },
     },

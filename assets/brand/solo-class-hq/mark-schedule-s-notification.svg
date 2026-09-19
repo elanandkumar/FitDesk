@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Solo Class HQ notification mark</title>
+  <desc id="desc">A white calendar-shaped S with schedule cells and a transparent completion check.</desc>
+  <defs>
+    <mask id="detail-cutouts">
+      <rect width="1024" height="1024" fill="#FFFFFF"/>
+      <g fill="#000000">
+        <rect x="338" y="302" width="46" height="46" rx="10"/>
+        <rect x="406" y="302" width="46" height="46" rx="10"/>
+        <rect x="474" y="302" width="46" height="46" rx="10"/>
+        <rect x="334" y="682" width="46" height="46" rx="10"/>
+        <rect x="402" y="682" width="46" height="46" rx="10"/>
+        <rect x="470" y="682" width="46" height="46" rx="10"/>
+        <rect x="334" y="746" width="46" height="46" rx="10"/>
+        <rect x="402" y="746" width="46" height="46" rx="10"/>
+      </g>
+      <path d="M635 664L663 692L717 637" fill="none" stroke="#000000" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
+    </mask>
+  </defs>
+  <g transform="translate(82 82) scale(.84)" mask="url(#detail-cutouts)" fill="#FFFFFF" stroke="#FFFFFF">
+    <path d="M720 300H382C292 300 246 345 246 414C246 485 302 520 394 520H616C706 520 758 560 758 632C758 704 708 742 616 742H300" fill="none" stroke-width="170" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M414 216V310M568 216V310" fill="none" stroke-width="40" stroke-linecap="round"/>
+    <circle cx="674" cy="665" r="82" stroke="none"/>
+  </g>
+</svg>

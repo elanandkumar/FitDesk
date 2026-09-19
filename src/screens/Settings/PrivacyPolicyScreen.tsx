@@ -9,11 +9,11 @@ import { AppThemeColors, Radius, Spacing, Typography } from '../../theme/brandCo
 const SECTIONS = [
   {
     title: 'Local-first by design',
-    body: 'The information you enter in FitDesk is stored in the app database on your device. FitDesk has no account system, advertising, or analytics.',
+    body: 'The information you enter in Solo Class HQ is stored in the app database on your device. Solo Class HQ has no account system, advertising, or analytics.',
   },
   {
     title: 'Local notifications',
-    body: 'If you allow notifications, FitDesk schedules class, payment, and backup reminders on your device. It does not use push notifications.',
+    body: 'If you allow notifications, Solo Class HQ schedules class, payment, and backup reminders on your device. It does not use push notifications.',
   },
   {
     title: 'User-controlled backups',
@@ -30,7 +30,7 @@ export default function PrivacyPolicyScreen() {
       <View style={styles.introCard}>
         <Text style={styles.introTitle}>Your data stays under your control</Text>
         <Text style={styles.body}>
-          Here is a summary of how FitDesk handles your information. The published policy is the authoritative and most current version.
+          Here is a summary of how Solo Class HQ handles your information. The published policy is the authoritative and most current version.
         </Text>
       </View>
       {SECTIONS.map((section) => (

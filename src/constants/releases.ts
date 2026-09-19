@@ -7,7 +7,7 @@ export interface ReleaseNote {
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
     version: '1.5.0',
-    title: 'Clearer income and payments',
+    title: 'FitDesk is now Solo Class HQ',
     changes: [
       'Redesigned Income Summary with period filters, month comparisons, and an interactive paid-versus-pending chart.',
       'Improved organizer payments and trainee packages with clearer totals, sorting, filtering, and payment actions.',

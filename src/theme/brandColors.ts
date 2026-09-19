@@ -86,6 +86,14 @@ export const Gradients = {
 } as const;
 
 export const AccentPalettes = {
+  solo: {
+    label: 'Solo',
+    main: '#6724F9',
+    accent: '#8848FF',
+    warm: '#F06432',
+    textAccent: '#B69BFF',
+    gradient: ['#8848FF', '#6724F9', '#F06432'] as const,
+  },
   purple: {
     label: 'Violet',
     main: '#7C3AED',
@@ -132,12 +140,14 @@ export interface AccentPalette {
 
 const AccentTextByMode = {
   light: {
+    solo: '#5B1ED6',
     purple: '#6530C9',
     ocean: '#006C75',
     rose: '#B01858',
     ember: '#1D4ED8',
   },
   dark: {
+    solo: AccentPalettes.solo.textAccent,
     purple: AccentPalettes.purple.textAccent,
     ocean: AccentPalettes.ocean.textAccent,
     rose: AccentPalettes.rose.textAccent,

@@ -1,14 +1,13 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Dimensions, Image, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ThemePalettes } from '../../theme';
 
 interface Props {
   onDone: () => void;
 }
 
-const { width, height } = Dimensions.get('window');
-const SPLASH_BACKGROUND = ThemePalettes.dark.background;
+const { height } = Dimensions.get('window');
+const SPLASH_BACKGROUND = '#6724F9';
 const TRANSPARENT = 'transparent';
 
 export default function AppSplashScreen({ onDone }: Props) {
@@ -62,7 +61,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     zIndex: 999,
   },
-  image: { width, height },
+  image: { width: 200, height: 200 },
   fadeTop: {
     position: 'absolute',
     top: 0,

@@ -30,7 +30,7 @@ export const HELP = {
     'Trainee packages are grouped by trainee. Use Pending or All to filter, add packages with +, and mark packages paid after receiving payment. Usage increases when personal sessions are completed.',
 
   settings:
-    'Configure class reminders, payment reminders, overdue alert thresholds, class types, centers, and backups. Export regularly because FitDesk stores data locally on this device.',
+    'Configure class reminders, payment reminders, overdue alert thresholds, class types, centers, and backups. Export regularly because Solo Class HQ stores data locally on this device.',
 
   incomeSummary:
     'Shows earned and pending income by period. This Month and Last Month compare against the prior month; yearly and all-time views include a monthly chart when enough data exists. Organizer income comes from completed organizer sessions. Trainee income comes from created packages. Tap a month to see its detailed breakdown.',

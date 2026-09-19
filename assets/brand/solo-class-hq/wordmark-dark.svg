@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 320" role="img" aria-labelledby="title desc">
+  <title id="title">Solo Class HQ wordmark for dark backgrounds</title>
+  <desc id="desc">Solo Class HQ with its home-base calendar mark and the tagline Teach. Track. Earn.</desc>
+  <rect x="24" y="24" width="272" height="272" rx="64" fill="#6D28D9"/>
+  <g transform="translate(24 24) scale(.265625)">
+    <path d="M240 706V420L512 210L784 420V706" fill="none" stroke="#FFFFFF" stroke-width="82" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="350" y="430" width="324" height="282" rx="58" fill="#6D28D9" stroke="#FFFFFF" stroke-width="58"/>
+    <path d="M424 392V476M600 392V476" fill="none" stroke="#FFFFFF" stroke-width="46" stroke-linecap="round"/>
+    <path d="M421 583L488 648L610 524" fill="none" stroke="#F06432" stroke-width="54" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="344" y="158" fill="#FFFFFF" font-family="Poppins, Arial, sans-serif" font-size="104" font-weight="700" letter-spacing="-3">Solo Class HQ</text>
+  <text x="350" y="224" fill="#C8C4DA" font-family="Montserrat, Arial, sans-serif" font-size="38" font-weight="600" letter-spacing="2">Teach. Track. Earn.</text>
+</svg>

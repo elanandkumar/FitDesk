@@ -97,7 +97,7 @@ export async function exportData(): Promise<void> {
   await db.execAsync('PRAGMA wal_checkpoint(TRUNCATE);');
 
   const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-  const filename = `fitdesk_backup_${date}.fitdeskbackup`;
+  const filename = `solo_class_hq_backup_${date}.fitdeskbackup`;
   const file = new File(Paths.cache, filename);
   if (file.exists) {
     file.delete();
@@ -120,7 +120,7 @@ export async function exportData(): Promise<void> {
 
   await Sharing.shareAsync(file.uri, {
     mimeType: 'application/octet-stream',
-    dialogTitle: 'Export FitDesk Backup',
+    dialogTitle: 'Export Solo Class HQ Backup',
   });
 
   await db.runAsync(
@@ -175,14 +175,14 @@ export async function exportJsonData(): Promise<void> {
   };
 
   const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-  const filename = `fitdesk_backup_${date}.json`;
+  const filename = `solo_class_hq_backup_${date}.json`;
   const file = new File(Paths.cache, filename);
   file.write(JSON.stringify(backup, null, 2));
 
   const canShare = await Sharing.isAvailableAsync();
   if (!canShare) throw new Error('Sharing not available on this device');
 
-  await Sharing.shareAsync(file.uri, { mimeType: 'application/json', dialogTitle: 'Export FitDesk Backup' });
+  await Sharing.shareAsync(file.uri, { mimeType: 'application/json', dialogTitle: 'Export Solo Class HQ Backup' });
 
   await db.runAsync(
     "INSERT OR REPLACE INTO settings (key, value) VALUES ('last_backup_at', ?)",
@@ -259,7 +259,7 @@ async function validateSqliteBackup(db: SQLite.SQLiteDatabase): Promise<void> {
   const hasLegacyTables =
     tableNames.has('managers') && tableNames.has('manager_payments');
   if (missingCommonTables.length > 0 || (!hasOrganizerTables && !hasLegacyTables)) {
-    throw new Error('Invalid backup: not a FitDesk backup file');
+    throw new Error('Invalid backup: not a supported Solo Class HQ or FitDesk backup file');
   }
 }
 

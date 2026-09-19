@@ -1,13 +1,13 @@
-# FitDesk
+# Solo Class HQ
 
-**Your personal fitness class companion — built with love, for a freelance fitness instructor.**
+**Teach. Track. Earn. Classes, clients, and payments for independent fitness instructors.**
 
 <p align="center">
-  <img src="assets/store/phone-screenshots/01-dashboard.png" width="220" alt="FitDesk dashboard" />
+  <img src="assets/store/phone-screenshots/01-dashboard.png" width="220" alt="Solo Class HQ dashboard" />
   &nbsp;&nbsp;
-  <img src="assets/store/phone-screenshots/02-calendar.png" width="220" alt="FitDesk calendar" />
+  <img src="assets/store/phone-screenshots/02-calendar.png" width="220" alt="Solo Class HQ calendar" />
   &nbsp;&nbsp;
-  <img src="assets/store/phone-screenshots/04-payments.png" width="220" alt="FitDesk payments" />
+  <img src="assets/store/phone-screenshots/04-payments.png" width="220" alt="Solo Class HQ payments" />
 </p>
 
 ---
@@ -16,7 +16,7 @@
 
 My wife Khushi is a freelance Yoga, Zumba, and Dance Fitness instructor. She also runs personal training sessions at the gym. Over time I noticed her juggling multiple WhatsApp chats, notebooks, and her own memory just to track which manager assigned which class, when it was, and whether she'd been paid.
 
-So I built FitDesk — a simple, local-first Android app that puts everything in one place: classes, clients, schedules, and payments. No account. No cloud. No subscription. Just her phone.
+So I built Solo Class HQ — formerly FitDesk — a simple, local-first Android app that puts everything in one place: classes, clients, schedules, and payments. No account. No cloud. No subscription. Just her phone.
 
 ---
 
@@ -36,9 +36,9 @@ So I built FitDesk — a simple, local-first Android app that puts everything in
 - **Export / Import** — SQLite backup files so data is never lost; imports refresh backup reminder state after restore
 
 <p align="center">
-  <img src="assets/store/phone-screenshots/03-class-details.png" width="220" alt="FitDesk class details" />
+  <img src="assets/store/phone-screenshots/03-class-details.png" width="220" alt="Solo Class HQ class details" />
   &nbsp;&nbsp;
-  <img src="assets/store/phone-screenshots/05-notifications.png" width="220" alt="FitDesk notifications" />
+  <img src="assets/store/phone-screenshots/05-notifications.png" width="220" alt="Solo Class HQ notifications" />
 </p>
 
 ---
@@ -50,7 +50,7 @@ So I built FitDesk — a simple, local-first Android app that puts everything in
 No login. No analytics. No backend server. Everything is stored locally using SQLite on your phone. Export your data anytime from Settings → Export / Import.
 
 <p align="center">
-  <img src="assets/store/phone-screenshots/06-data-privacy.png" width="220" alt="FitDesk data privacy settings" />
+  <img src="assets/store/phone-screenshots/06-data-privacy.png" width="220" alt="Solo Class HQ data privacy settings" />
 </p>
 
 ---
@@ -97,7 +97,7 @@ Backups are exported from Settings → Data as `.fitdeskbackup` SQLite database 
 
 ## Release Workflow
 
-FitDesk includes a release helper that builds the Android app, creates release notes from git commits, and tags the release.
+Solo Class HQ includes a release helper that builds the Android app, creates release notes from git commits, and tags the release.
 
 For Play Store uploads, use the default Android App Bundle (`.aab`) format:
 
