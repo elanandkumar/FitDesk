@@ -57,8 +57,10 @@ text. Coral orange is a semantic accent in the mark, not a body-text color.
 These families match the app's existing typography and avoid adding another
 font dependency.
 
-The Solo app accent is available alongside Violet, Ocean, Rose, and Cobalt.
-Existing saved accent selections are preserved.
+Solo Violet is the brand-aligned default accent alongside Ocean, Rose, Cobalt,
+and Graphite. Graphite provides a quiet neutral option without reusing semantic
+success, warning, or danger colors. The internal `purple` key is retained so
+existing saved selections continue to work.
 
 ## Spacing and minimum size
 

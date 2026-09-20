@@ -86,21 +86,13 @@ export const Gradients = {
 } as const;
 
 export const AccentPalettes = {
-  solo: {
-    label: 'Solo',
+  purple: {
+    label: 'Solo Violet',
     main: '#6724F9',
     accent: '#8848FF',
     warm: '#F06432',
     textAccent: '#B69BFF',
     gradient: ['#8848FF', '#6724F9', '#F06432'] as const,
-  },
-  purple: {
-    label: 'Violet',
-    main: '#7C3AED',
-    accent: '#B91C5C',
-    warm: '#C65300',
-    textAccent: '#A78BFA',
-    gradient: ['#7C3AED', '#B91C5C', '#C65300'] as const,
   },
   ocean: {
     label: 'Ocean',
@@ -126,6 +118,14 @@ export const AccentPalettes = {
     textAccent: '#93C5FD',
     gradient: ['#2563EB', '#0F766E', '#5B21B6'] as const,
   },
+  graphite: {
+    label: 'Graphite',
+    main: '#475569',
+    accent: '#64748B',
+    warm: '#6724F9',
+    textAccent: '#CBD5E1',
+    gradient: ['#475569', '#64748B', '#6724F9'] as const,
+  },
 } as const;
 
 export type AccentKey = keyof typeof AccentPalettes;
@@ -140,18 +140,18 @@ export interface AccentPalette {
 
 const AccentTextByMode = {
   light: {
-    solo: '#5B1ED6',
-    purple: '#6530C9',
+    purple: '#5B1ED6',
     ocean: '#006C75',
     rose: '#B01858',
     ember: '#1D4ED8',
+    graphite: '#334155',
   },
   dark: {
-    solo: AccentPalettes.solo.textAccent,
     purple: AccentPalettes.purple.textAccent,
     ocean: AccentPalettes.ocean.textAccent,
     rose: AccentPalettes.rose.textAccent,
     ember: AccentPalettes.ember.textAccent,
+    graphite: AccentPalettes.graphite.textAccent,
   },
 } as const satisfies Record<ResolvedThemeMode, Record<AccentKey, string>>;
 
