@@ -2,13 +2,13 @@
   "expo": {
     "name": "Solo Class HQ",
     "slug": "fitdesk",
-    "version": "1.4.0",
+    "version": "1.5.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "android": {
       "package": "com.elanandkumar.fitdesk",
-      "versionCode": 8,
+      "versionCode": 9,
       "permissions": [
         "INTERNET",
         "POST_NOTIFICATIONS",
