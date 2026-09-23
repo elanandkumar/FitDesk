@@ -1,0 +1,132 @@
+{
+  "version": 4,
+  "exported_at": "2026-09-20T06:30:00.000Z",
+  "centers": [
+    { "id": 1, "name": "Lotus Demo Studio", "address": "Demo Arts District", "is_active": 1, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 2, "name": "Northstar Demo Club", "address": "Sample Riverside Complex", "is_active": 1, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 3, "name": "Cedar Demo Hall", "address": "Fictional Garden Lane", "is_active": 1, "created_at": "2026-05-01T06:00:00.000Z" }
+  ],
+  "class_types": [
+    { "id": 1, "name": "Yoga", "color": "#00897B", "is_active": 1, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 2, "name": "Zumba", "color": "#E91E63", "is_active": 1, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 3, "name": "Mobility", "color": "#F59E0B", "is_active": 1, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 4, "name": "Strength", "color": "#6724F9", "is_active": 1, "created_at": "2026-05-01T06:00:00.000Z" }
+  ],
+  "organizers": [
+    { "id": 1, "name": "Aster Demo Collective", "contact_person": "Asha Demo", "per_class_rate": 1800, "currency": "INR", "is_active": 1, "contact_type": "regular", "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 2, "name": "Northstar Demo Wellness", "contact_person": "Nila Demo", "per_class_rate": 2200, "currency": "INR", "is_active": 1, "contact_type": "regular", "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 3, "name": "Cedar Demo Community", "contact_person": "Arun Demo", "per_class_rate": 1500, "currency": "INR", "is_active": 1, "contact_type": "regular", "created_at": "2026-05-01T06:00:00.000Z" }
+  ],
+  "trainees": [
+    { "id": 1, "name": "Mira Demo", "is_active": 1, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 2, "name": "Kabir Demo", "is_active": 1, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 3, "name": "Tara Demo", "is_active": 1, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 4, "name": "Vihaan Demo", "is_active": 1, "created_at": "2026-05-01T06:00:00.000Z" }
+  ],
+  "class_series": [
+    { "id": 1, "title": "Sunrise Yoga", "class_type_id": 1, "source_type": "organizer", "organizer_id": 1, "recurrence_type": "weekly", "recurrence_days": "[1,3,5]", "start_date": "2026-05-11", "end_date": "2026-09-28", "class_time": "07:00", "duration_minutes": 60, "location_type": "offline", "location": "Lotus Demo Studio · Main Room", "is_active": 1, "center_id": 1, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 2, "title": "Evening Dance Fitness", "class_type_id": 2, "source_type": "organizer", "organizer_id": 2, "recurrence_type": "weekly", "recurrence_days": "[2,4]", "start_date": "2026-05-12", "end_date": "2026-09-29", "class_time": "18:30", "duration_minutes": 50, "location_type": "offline", "location": "Northstar Demo Club · Studio Two", "is_active": 1, "center_id": 2, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 3, "title": "Weekend Mobility", "class_type_id": 3, "source_type": "organizer", "organizer_id": 3, "recurrence_type": "weekly", "recurrence_days": "[6]", "start_date": "2026-06-13", "end_date": "2026-10-03", "class_time": "09:30", "duration_minutes": 45, "location_type": "offline", "location": "Cedar Demo Hall · Garden Room", "is_active": 1, "center_id": 3, "created_at": "2026-06-01T06:00:00.000Z" },
+    { "id": 4, "title": "Personal Strength Lab", "class_type_id": 4, "source_type": "personal", "recurrence_type": "weekly", "recurrence_days": "[3]", "start_date": "2026-05-13", "end_date": "2026-09-30", "class_time": "17:00", "duration_minutes": 60, "location_type": "online", "location": "Demo video room", "is_active": 1, "created_at": "2026-05-01T06:00:00.000Z" }
+  ],
+  "series_trainees": [
+    { "id": 1, "series_id": 4, "trainee_id": 1 },
+    { "id": 2, "series_id": 4, "trainee_id": 2 },
+    { "id": 3, "series_id": 4, "trainee_id": 3 },
+    { "id": 4, "series_id": 4, "trainee_id": 4 }
+  ],
+  "class_sessions": [
+    { "id": 101, "series_id": 1, "session_date": "2026-05-11", "class_time": "07:00", "status": "completed", "student_count": 14, "center_id": 1, "agreed_amount": 1800, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 102, "series_id": 1, "session_date": "2026-06-08", "class_time": "07:00", "status": "completed", "student_count": 16, "center_id": 1, "agreed_amount": 1800, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 103, "series_id": 1, "session_date": "2026-07-06", "class_time": "07:00", "status": "completed", "student_count": 15, "center_id": 1, "agreed_amount": 1800, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 104, "series_id": 1, "session_date": "2026-08-10", "class_time": "07:00", "status": "completed", "student_count": 17, "center_id": 1, "agreed_amount": 1800, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 105, "series_id": 1, "session_date": "2026-09-07", "class_time": "07:00", "status": "completed", "student_count": 16, "center_id": 1, "agreed_amount": 1800, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 106, "series_id": 1, "session_date": "2026-09-14", "class_time": "07:00", "status": "completed", "student_count": 18, "center_id": 1, "agreed_amount": 1800, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 107, "series_id": 1, "session_date": "2026-09-21", "class_time": "07:00", "status": "upcoming", "student_count": 0, "center_id": 1, "agreed_amount": 1800, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 108, "series_id": 1, "session_date": "2026-09-23", "class_time": "07:00", "status": "upcoming", "student_count": 0, "center_id": 1, "agreed_amount": 1800, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 109, "series_id": 1, "session_date": "2026-09-25", "class_time": "07:00", "status": "upcoming", "student_count": 0, "center_id": 1, "agreed_amount": 1800, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 110, "series_id": 1, "session_date": "2026-09-28", "class_time": "07:00", "status": "upcoming", "student_count": 0, "center_id": 1, "agreed_amount": 1800, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 201, "series_id": 2, "session_date": "2026-05-12", "class_time": "18:30", "status": "completed", "student_count": 20, "center_id": 2, "agreed_amount": 2200, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 202, "series_id": 2, "session_date": "2026-06-09", "class_time": "18:30", "status": "completed", "student_count": 22, "center_id": 2, "agreed_amount": 2200, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 203, "series_id": 2, "session_date": "2026-07-07", "class_time": "18:30", "status": "completed", "student_count": 19, "center_id": 2, "agreed_amount": 2200, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 204, "series_id": 2, "session_date": "2026-08-11", "class_time": "18:30", "status": "completed", "student_count": 21, "center_id": 2, "agreed_amount": 2200, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 205, "series_id": 2, "session_date": "2026-09-08", "class_time": "18:30", "status": "completed", "student_count": 23, "center_id": 2, "agreed_amount": 2200, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 206, "series_id": 2, "session_date": "2026-09-15", "class_time": "18:30", "status": "completed", "student_count": 20, "center_id": 2, "agreed_amount": 2200, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 207, "series_id": 2, "session_date": "2026-09-20", "class_time": "18:30", "status": "upcoming", "student_count": 0, "center_id": 2, "agreed_amount": 2200, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 208, "series_id": 2, "session_date": "2026-09-22", "class_time": "18:30", "status": "upcoming", "student_count": 0, "center_id": 2, "agreed_amount": 2200, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 209, "series_id": 2, "session_date": "2026-09-24", "class_time": "18:30", "status": "upcoming", "student_count": 0, "center_id": 2, "agreed_amount": 2200, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 210, "series_id": 2, "session_date": "2026-09-29", "class_time": "18:30", "status": "upcoming", "student_count": 0, "center_id": 2, "agreed_amount": 2200, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 301, "series_id": 3, "session_date": "2026-06-13", "class_time": "09:30", "status": "completed", "student_count": 11, "center_id": 3, "agreed_amount": 1500, "created_at": "2026-06-01T06:00:00.000Z" },
+    { "id": 302, "series_id": 3, "session_date": "2026-07-11", "class_time": "09:30", "status": "completed", "student_count": 12, "center_id": 3, "agreed_amount": 1500, "created_at": "2026-06-01T06:00:00.000Z" },
+    { "id": 303, "series_id": 3, "session_date": "2026-08-15", "class_time": "09:30", "status": "completed", "student_count": 10, "center_id": 3, "agreed_amount": 1500, "created_at": "2026-06-01T06:00:00.000Z" },
+    { "id": 304, "series_id": 3, "session_date": "2026-09-12", "class_time": "09:30", "status": "skipped", "student_count": 0, "center_id": 3, "agreed_amount": 1500, "created_at": "2026-06-01T06:00:00.000Z" },
+    { "id": 305, "series_id": 3, "session_date": "2026-09-20", "class_time": "09:30", "status": "upcoming", "student_count": 0, "center_id": 3, "agreed_amount": 1500, "created_at": "2026-06-01T06:00:00.000Z" },
+    { "id": 306, "series_id": 3, "session_date": "2026-09-26", "class_time": "09:30", "status": "upcoming", "student_count": 0, "center_id": 3, "agreed_amount": 1500, "created_at": "2026-06-01T06:00:00.000Z" },
+    { "id": 307, "series_id": 3, "session_date": "2026-10-03", "class_time": "09:30", "status": "upcoming", "student_count": 0, "center_id": 3, "agreed_amount": 1500, "created_at": "2026-06-01T06:00:00.000Z" },
+    { "id": 401, "series_id": 4, "session_date": "2026-05-13", "class_time": "17:00", "status": "completed", "student_count": 2, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 402, "series_id": 4, "session_date": "2026-06-10", "class_time": "17:00", "status": "completed", "student_count": 2, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 403, "series_id": 4, "session_date": "2026-07-08", "class_time": "17:00", "status": "completed", "student_count": 2, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 404, "series_id": 4, "session_date": "2026-08-12", "class_time": "17:00", "status": "completed", "student_count": 3, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 405, "series_id": 4, "session_date": "2026-09-09", "class_time": "17:00", "status": "completed", "student_count": 3, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 406, "series_id": 4, "session_date": "2026-09-16", "class_time": "17:00", "status": "completed", "student_count": 3, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 407, "series_id": 4, "session_date": "2026-09-20", "class_time": "16:00", "status": "upcoming", "student_count": 0, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 408, "series_id": 4, "session_date": "2026-09-23", "class_time": "17:00", "status": "upcoming", "student_count": 0, "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 409, "series_id": 4, "session_date": "2026-09-30", "class_time": "17:00", "status": "upcoming", "student_count": 0, "created_at": "2026-05-01T06:00:00.000Z" }
+  ],
+  "session_trainees": [
+    { "id": 1, "session_id": 401, "trainee_id": 1 }, { "id": 2, "session_id": 401, "trainee_id": 2 },
+    { "id": 3, "session_id": 402, "trainee_id": 1 }, { "id": 4, "session_id": 402, "trainee_id": 2 },
+    { "id": 5, "session_id": 403, "trainee_id": 2 }, { "id": 6, "session_id": 403, "trainee_id": 3 },
+    { "id": 7, "session_id": 404, "trainee_id": 1 }, { "id": 8, "session_id": 404, "trainee_id": 3 }, { "id": 9, "session_id": 404, "trainee_id": 4 },
+    { "id": 10, "session_id": 405, "trainee_id": 1 }, { "id": 11, "session_id": 405, "trainee_id": 2 }, { "id": 12, "session_id": 405, "trainee_id": 4 },
+    { "id": 13, "session_id": 406, "trainee_id": 1 }, { "id": 14, "session_id": 406, "trainee_id": 3 }, { "id": 15, "session_id": 406, "trainee_id": 4 }
+  ],
+  "organizer_payments": [
+    { "id": 1, "session_id": 101, "organizer_id": 1, "amount": 1800, "status": "paid", "paid_date": "2026-05-15", "created_at": "2026-05-11T08:30:00.000Z" },
+    { "id": 2, "session_id": 102, "organizer_id": 1, "amount": 1800, "status": "paid", "paid_date": "2026-06-12", "created_at": "2026-06-08T08:30:00.000Z" },
+    { "id": 3, "session_id": 103, "organizer_id": 1, "amount": 1800, "status": "paid", "paid_date": "2026-07-10", "created_at": "2026-07-06T08:30:00.000Z" },
+    { "id": 4, "session_id": 104, "organizer_id": 1, "amount": 1800, "status": "paid", "paid_date": "2026-08-14", "created_at": "2026-08-10T08:30:00.000Z" },
+    { "id": 5, "session_id": 105, "organizer_id": 1, "amount": 1800, "status": "paid", "paid_date": "2026-09-11", "created_at": "2026-09-07T08:30:00.000Z" },
+    { "id": 6, "session_id": 106, "organizer_id": 1, "amount": 1800, "status": "pending", "created_at": "2026-09-14T08:30:00.000Z" },
+    { "id": 7, "session_id": 201, "organizer_id": 2, "amount": 2200, "status": "paid", "paid_date": "2026-05-18", "created_at": "2026-05-12T20:00:00.000Z" },
+    { "id": 8, "session_id": 202, "organizer_id": 2, "amount": 2200, "status": "paid", "paid_date": "2026-06-15", "created_at": "2026-06-09T20:00:00.000Z" },
+    { "id": 9, "session_id": 203, "organizer_id": 2, "amount": 2200, "status": "paid", "paid_date": "2026-07-13", "created_at": "2026-07-07T20:00:00.000Z" },
+    { "id": 10, "session_id": 204, "organizer_id": 2, "amount": 2200, "status": "paid", "paid_date": "2026-08-17", "created_at": "2026-08-11T20:00:00.000Z" },
+    { "id": 11, "session_id": 205, "organizer_id": 2, "amount": 2200, "status": "pending", "created_at": "2026-09-08T20:00:00.000Z" },
+    { "id": 12, "session_id": 206, "organizer_id": 2, "amount": 2200, "status": "pending", "created_at": "2026-09-15T20:00:00.000Z" },
+    { "id": 13, "session_id": 301, "organizer_id": 3, "amount": 1500, "status": "paid", "paid_date": "2026-06-18", "created_at": "2026-06-13T11:00:00.000Z" },
+    { "id": 14, "session_id": 302, "organizer_id": 3, "amount": 1500, "status": "paid", "paid_date": "2026-07-16", "created_at": "2026-07-11T11:00:00.000Z" },
+    { "id": 15, "session_id": 303, "organizer_id": 3, "amount": 1500, "status": "pending", "created_at": "2026-08-15T11:00:00.000Z" }
+  ],
+  "trainee_packages": [
+    { "id": 1, "trainee_id": 1, "series_id": 4, "month": "2026-05", "total_sessions": 8, "used_sessions": 1, "amount": 4800, "status": "paid", "paid_date": "2026-05-05", "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 2, "trainee_id": 2, "series_id": 4, "month": "2026-05", "total_sessions": 8, "used_sessions": 1, "amount": 4800, "status": "paid", "paid_date": "2026-05-06", "created_at": "2026-05-01T06:00:00.000Z" },
+    { "id": 3, "trainee_id": 1, "series_id": 4, "month": "2026-06", "total_sessions": 8, "used_sessions": 1, "amount": 5000, "status": "paid", "paid_date": "2026-06-05", "created_at": "2026-06-01T06:00:00.000Z" },
+    { "id": 4, "trainee_id": 2, "series_id": 4, "month": "2026-06", "total_sessions": 8, "used_sessions": 1, "amount": 5000, "status": "paid", "paid_date": "2026-06-06", "created_at": "2026-06-01T06:00:00.000Z" },
+    { "id": 5, "trainee_id": 2, "series_id": 4, "month": "2026-07", "total_sessions": 8, "used_sessions": 1, "amount": 5200, "status": "paid", "paid_date": "2026-07-05", "created_at": "2026-07-01T06:00:00.000Z" },
+    { "id": 6, "trainee_id": 3, "series_id": 4, "month": "2026-07", "total_sessions": 8, "used_sessions": 1, "amount": 5200, "status": "paid", "paid_date": "2026-07-06", "created_at": "2026-07-01T06:00:00.000Z" },
+    { "id": 7, "trainee_id": 1, "series_id": 4, "month": "2026-08", "total_sessions": 8, "used_sessions": 1, "amount": 5400, "status": "paid", "paid_date": "2026-08-05", "created_at": "2026-08-01T06:00:00.000Z" },
+    { "id": 8, "trainee_id": 3, "series_id": 4, "month": "2026-08", "total_sessions": 8, "used_sessions": 1, "amount": 5400, "status": "paid", "paid_date": "2026-08-06", "created_at": "2026-08-01T06:00:00.000Z" },
+    { "id": 9, "trainee_id": 4, "series_id": 4, "month": "2026-08", "total_sessions": 8, "used_sessions": 1, "amount": 5400, "status": "pending", "created_at": "2026-08-01T06:00:00.000Z" },
+    { "id": 10, "trainee_id": 1, "series_id": 4, "month": "2026-09", "total_sessions": 8, "used_sessions": 2, "amount": 5600, "status": "paid", "paid_date": "2026-09-05", "created_at": "2026-09-01T06:00:00.000Z" },
+    { "id": 11, "trainee_id": 2, "series_id": 4, "month": "2026-09", "total_sessions": 8, "used_sessions": 1, "amount": 5600, "status": "pending", "created_at": "2026-09-01T06:00:00.000Z" },
+    { "id": 12, "trainee_id": 3, "series_id": 4, "month": "2026-09", "total_sessions": 8, "used_sessions": 1, "amount": 5600, "status": "pending", "created_at": "2026-09-01T06:00:00.000Z" },
+    { "id": 13, "trainee_id": 4, "series_id": 4, "month": "2026-09", "total_sessions": 8, "used_sessions": 2, "amount": 5600, "status": "pending", "created_at": "2026-09-01T06:00:00.000Z" }
+  ],
+  "settings": [
+    { "key": "theme", "value": "dark" },
+    { "key": "accent_color", "value": "purple" },
+    { "key": "onboarding_done", "value": "true" },
+    { "key": "trainer_name", "value": "Maya Demo" },
+    { "key": "notification_enabled", "value": "false" },
+    { "key": "notification_minutes_before", "value": "60" },
+    { "key": "payment_notification_enabled", "value": "false" },
+    { "key": "payment_notification_time", "value": "09:00" },
+    { "key": "payment_threshold_reminder", "value": "3" },
+    { "key": "payment_threshold_high", "value": "10" },
+    { "key": "payment_threshold_urgent", "value": "15" },
+    { "key": "last_backup_at", "value": "2026-09-20T06:30:00.000Z" },
+    { "key": "last_session_extend_date", "value": "2026-09-20" },
+    { "key": "last_seen_whats_new_version", "value": "1.5.0" }
+  ]
+}

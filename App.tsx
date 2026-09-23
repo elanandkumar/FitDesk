@@ -19,6 +19,7 @@ import { getDatabase } from './src/database/db';
 import { extendActiveSeriesSessions } from './src/database/repositories/classSeriesRepository';
 import { scheduleUpcomingNotifications, schedulePendingPaymentNotification, scheduleBackupReminderNotification } from './src/notifications/scheduler';
 import { requestNotificationPermission } from './src/notifications/permissions';
+import { importStoreDemoFixtureIfRequested } from './src/dev/storeDemoSeed';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -56,6 +57,8 @@ function AppContent() {
   useEffect(() => {
     async function init() {
       const db = await getDatabase();
+
+      await importStoreDemoFixtureIfRequested();
 
       await purgeOldNotifications().catch(() => {});
 

@@ -264,7 +264,10 @@ async function validateSqliteBackup(db: SQLite.SQLiteDatabase): Promise<void> {
 }
 
 async function importJsonFile(pickedFile: File): Promise<void> {
-  const raw = await pickedFile.text();
+  await importJsonData(await pickedFile.text());
+}
+
+export async function importJsonData(raw: string): Promise<void> {
 
   let parsed: FitDeskBackup | LegacyFitDeskBackup;
   try {
