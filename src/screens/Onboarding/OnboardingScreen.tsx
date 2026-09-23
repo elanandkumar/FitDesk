@@ -17,7 +17,7 @@ import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppTheme } from "../../theme";
-import { AppThemeColors, Radius, Spacing, ThemePalettes, Typography } from "../../theme/brandColors";
+import { AppThemeColors, Radius, Spacing, Typography } from "../../theme/brandColors";
 import { getDatabase } from "../../database/db";
 import { RootStackParamList } from "../../navigation/types";
 import GradientButton from "../../components/common/GradientButton";
@@ -200,7 +200,7 @@ export default function OnboardingScreen() {
                   resizeMode="contain"
                 />
               ) : (
-                <AppIcon name={item.icon} size={52} color={accentPalette.textAccent} />
+                <AppIcon name={item.icon} size={64} color={accentPalette.textAccent} />
               )}
             </View>
 
@@ -331,13 +331,9 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   heroBadge: {
     width: 136,
     height: 136,
-    borderRadius: Radius.full,
-    backgroundColor: ThemePalettes.dark.background,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: Spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   heroLogo: {
     width: 112,
